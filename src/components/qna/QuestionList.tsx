@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Question } from '@/lib/types';
@@ -6,7 +7,7 @@ import { mockQuestions } from '@/lib/mockData'; // Using mock data for now
 import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ListFilter, PlusCircle, Search } from 'lucide-react';
+import { ListFilter, PlusCircle, Search, HelpCircle } from 'lucide-react'; // Added HelpCircle
 import Link from 'next/link';
 import {
   Select,
@@ -97,11 +98,21 @@ export default function QuestionList() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12">
-          <h3 className="text-2xl font-semibold text-muted-foreground">No questions found.</h3>
-          <p className="text-muted-foreground mt-2">
-            {searchTerm || communityFilter || tagFilter ? "Try adjusting your search or filters." : "Be the first to ask a question!"}
+        <div className="text-center py-16 bg-card rounded-lg shadow-sm mt-8">
+           <HelpCircle className="mx-auto h-16 w-16 text-muted-foreground mb-6" />
+          <h3 className="text-2xl font-semibold text-foreground mb-2">No Questions Found</h3>
+          <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+            {searchTerm || communityFilter || tagFilter 
+              ? "No questions match your current search or filters. Try a different query!" 
+              : "It's quiet in here... Be the first to spark a discussion by asking a question!"}
           </p>
+          {!(searchTerm || communityFilter || tagFilter) && (
+            <Button asChild className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Link href="/qna/ask">
+                <PlusCircle className="mr-2 h-4 w-4" /> Ask a Question
+              </Link>
+            </Button>
+          )}
         </div>
       )}
     </div>
