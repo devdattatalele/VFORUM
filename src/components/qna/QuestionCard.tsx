@@ -9,7 +9,7 @@ import { MessageSquare, Tag as TagIcon, CalendarDays, UserCircle } from 'lucide-
 import { formatDistanceToNow } from 'date-fns';
 import VoteButtons from './VoteButtons';
 import { COMMUNITIES } from '@/lib/constants';
-import React from 'react';
+import React, { useState } from 'react'; // Added useState import
 
 interface QuestionCardProps {
   question: Question;
@@ -17,7 +17,7 @@ interface QuestionCardProps {
 
 export default function QuestionCard({ question }: QuestionCardProps) {
   const community = COMMUNITIES.find(c => c.id === question.communityId);
-  const [commentCount, setCommentCount] = React.useState(Math.floor(Math.random() * 20)); // Mock comment count
+  const [commentCount, setCommentCount] = useState(Math.floor(Math.random() * 20)); // Mock comment count, Changed React.useState
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -78,3 +78,6 @@ export default function QuestionCard({ question }: QuestionCardProps) {
           <span>{commentCount} Answers</span>
         </Link>
       </CardFooter>
+    </Card>
+  );
+}

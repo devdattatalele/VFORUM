@@ -9,14 +9,15 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { COMMUNITIES } from '@/lib/constants';
+import React, { useState } from 'react'; // Added useState import
 
 interface EventCardProps {
   event: Event;
 }
 
 export default function EventCard({ event }: EventCardProps) {
-  const [isRsvpd, setIsRsvpd] = React.useState(false);
-  const [rsvpCount, setRsvpCount] = React.useState(event.rsvpCount || 0);
+  const [isRsvpd, setIsRsvpd] = useState(false); // Changed React.useState to useState
+  const [rsvpCount, setRsvpCount] = useState(event.rsvpCount || 0); // Changed React.useState to useState
 
   const handleRsvp = () => {
     setIsRsvpd(!isRsvpd);
@@ -79,6 +80,3 @@ export default function EventCard({ event }: EventCardProps) {
     </Card>
   );
 }
-
-// Add React to global for standalone client components if not automatically handled
-// import React from 'react'; (usually not needed with Next.js App Router)

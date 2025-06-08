@@ -51,4 +51,5 @@ export interface Comment {
 
 export interface Tag {
   name: string;
-  count?: number; // Optional: for tag clouds or popular
+  count?: number; // Optional: for tag clouds or popular tags
+}

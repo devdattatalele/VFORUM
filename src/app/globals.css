@@ -8,48 +8,6 @@ body {
 
 @layer base {
   :root {
-    --background: 197 88% 94%; /* Light Blue - #E5F6FD */
-    --foreground: 210 40% 10%; /* Dark Blue/Black for text */
-
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 210 40% 10%;
-
-    --popover: 0 0% 100%; /* White */
-    --popover-foreground: 210 40% 10%;
-
-    --primary: 197 78% 52%; /* Vibrant Blue - #29ABE2 */
-    --primary-foreground: 0 0% 100%; /* White */
-
-    --secondary: 197 60% 85%; /* Lighter Blue */
-    --secondary-foreground: 197 78% 30%; /* Darker Blue for text on secondary */
-
-    --muted: 197 50% 90%; /* Very Light Blue/Grey */
-    --muted-foreground: 197 30% 50%; /* Greyish Blue */
-
-    --accent: 291 64% 42%; /* Purple - #9C27B0 */
-    --accent-foreground: 0 0% 100%; /* White */
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 197 50% 80%; /* Light Blue Border */
-    --input: 197 50% 80%; /* Light Blue Input Border */
-    --ring: 197 78% 52%; /* Vibrant Blue for Focus Rings */
-
-    --radius: 0.5rem;
-
-    /* Sidebar specific theme */
-    --sidebar-background: 0 0% 98%; /* Default light grey, can be adjusted */
-    --sidebar-foreground: 210 40% 10%;
-    --sidebar-primary: 197 78% 52%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 291 64% 42%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 197 50% 85%;
-    --sidebar-ring: 197 78% 52%;
-  }
-
-  .dark {
     --background: 210 40% 5%; /* Dark Blue */
     --foreground: 197 88% 90%; /* Light Blue text */
 
@@ -78,7 +36,9 @@ body {
     --input: 210 40% 20%;
     --ring: 197 78% 52%;
 
-    /* Sidebar specific theme for dark mode */
+    --radius: 0.5rem;
+
+    /* Sidebar specific theme for dark mode (now default) */
     --sidebar-background: 210 40% 8%;
     --sidebar-foreground: 197 88% 90%;
     --sidebar-primary: 197 78% 52%;
@@ -88,6 +48,48 @@ body {
     --sidebar-border: 210 40% 15%;
     --sidebar-ring: 197 78% 52%;
   }
+
+  /* 
+    If you want to support a light theme toggle later, you can re-introduce a .light class like this:
+  .light {
+    --background: 197 88% 94%; 
+    --foreground: 210 40% 10%; 
+
+    --card: 0 0% 100%; 
+    --card-foreground: 210 40% 10%;
+
+    --popover: 0 0% 100%; 
+    --popover-foreground: 210 40% 10%;
+
+    --primary: 197 78% 52%; 
+    --primary-foreground: 0 0% 100%; 
+
+    --secondary: 197 60% 85%; 
+    --secondary-foreground: 197 78% 30%; 
+
+    --muted: 197 50% 90%; 
+    --muted-foreground: 197 30% 50%; 
+
+    --accent: 291 64% 42%; 
+    --accent-foreground: 0 0% 100%; 
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 197 50% 80%; 
+    --input: 197 50% 80%; 
+    --ring: 197 78% 52%; 
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 210 40% 10%;
+    --sidebar-primary: 197 78% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 291 64% 42%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 197 50% 85%;
+    --sidebar-ring: 197 78% 52%;
+  }
+  */
 }
 
 @layer base {

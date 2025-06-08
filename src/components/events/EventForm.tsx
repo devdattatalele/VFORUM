@@ -245,4 +245,9 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
         />
         <Button type="submit" disabled={isLoading} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {event ? "Update Event" : "
+          {event ? "Update Event" : "Create New Event"}
+        </Button>
+      </form>
+    </Form>
+  );
+}

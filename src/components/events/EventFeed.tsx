@@ -89,4 +89,11 @@ export default function EventFeed() {
       ) : (
         <div className="text-center py-12">
           <h3 className="text-2xl font-semibold text-muted-foreground">No events found.</h3>
-          <p className="text
+          <p className="text-muted-foreground mt-2">
+            {searchTerm || communityFilter ? "Try adjusting your search or filters." : "No events match your current criteria, or there are no upcoming events."}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

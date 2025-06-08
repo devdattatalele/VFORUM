@@ -47,8 +47,6 @@ export default function VoteButtons({
     }
     
     if (onVote) {
-      // For simplicity, we pass the current vote type or 'none' if unvoting
-      // A more complex onVote might require prev/next state
       onVote(finalVoteStatus || 'none');
     }
   };
@@ -62,13 +60,17 @@ export default function VoteButtons({
     )}>
       <Button
         variant="ghost"
-        size={size === 'sm' ? 'icon-sm' : 'icon'} // Assuming 'icon-sm' is defined or use 'sm' for button
-        className={cn("p-1 h-auto", voteStatus === 'up' ? 'text-primary' : 'text-muted-foreground hover:text-primary/80')}
+        size="icon"
+        className={cn(
+            "rounded-full",
+            size === 'sm' ? "h-7 w-7" : "h-9 w-9", 
+            voteStatus === 'up' ? 'text-primary' : 'text-muted-foreground hover:text-primary/80'
+        )}
         onClick={() => handleVote('up')}
         aria-pressed={voteStatus === 'up'}
         aria-label="Upvote"
       >
-        <ArrowBigUp className={cn("h-5 w-5", voteStatus === 'up' ? 'fill-primary' : '')} />
+        <ArrowBigUp className={cn(size === 'sm' ? "h-4 w-4" : "h-5 w-5", voteStatus === 'up' ? 'fill-primary' : '')} />
       </Button>
       <span className={cn(
         "font-semibold tabular-nums", 
@@ -78,13 +80,22 @@ export default function VoteButtons({
       )}>
         {score}
       </span>
-      {initialDownvotes !== undefined && ( // Only show downvote if initialDownvotes is provided as not 0 (or if it's meant to be a feature)
+      {initialDownvotes !== undefined && ( 
         <Button
           variant="ghost"
-          size={size === 'sm' ? 'icon-sm' : 'icon'}
-          className={cn("p-1 h-auto", voteStatus === 'down' ? 'text-destructive' : 'text-muted-foreground hover:text-destructive/80')}
+          size="icon"
+          className={cn(
+            "rounded-full",
+            size === 'sm' ? "h-7 w-7" : "h-9 w-9",
+            voteStatus === 'down' ? 'text-destructive' : 'text-muted-foreground hover:text-destructive/80'
+          )}
           onClick={() => handleVote('down')}
           aria-pressed={voteStatus === 'down'}
           aria-label="Downvote"
         >
-          <ArrowBigDown className={cn("h-5 w-5", voteStatus === 'down' ? 'fill-destructive' : '')} />
+          <ArrowBigDown className={cn(size === 'sm' ? "h-4 w-4" : "h-5 w-5", voteStatus === 'down' ? 'fill-destructive' : '')} />
+        </Button>
+      )}
+    </div>
+  );
+}

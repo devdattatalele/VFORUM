@@ -100,4 +100,10 @@ export default function QuestionList() {
         <div className="text-center py-12">
           <h3 className="text-2xl font-semibold text-muted-foreground">No questions found.</h3>
           <p className="text-muted-foreground mt-2">
-            {searchTerm || communityFilter || tagFilter ? "Try adjusting your search or filters." : "Be the first to ask a question!"
+            {searchTerm || communityFilter || tagFilter ? "Try adjusting your search or filters." : "Be the first to ask a question!"}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
