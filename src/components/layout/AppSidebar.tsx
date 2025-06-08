@@ -1,10 +1,11 @@
+
 "use client";
 
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation'; // Removed useSearchParams
 import { cn } from '@/lib/utils';
 import { COMMUNITIES, NAV_LINKS } from '@/lib/constants';
-import { Button } from '@/components/ui/button';
+// Removed Button import as it's not used directly here
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sidebar,
@@ -17,8 +18,8 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarSeparator
-} from '@/components/ui/sidebar'; // Assuming these are correctly pathed from shadcn/ui or custom
-import { Zap, Settings, LifeBuoy } from 'lucide-react';
+} from '@/components/ui/sidebar';
+import { Settings, LifeBuoy } from 'lucide-react'; // Removed Zap
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { UserCircle } from 'lucide-react';
@@ -26,16 +27,16 @@ import { UserCircle } from 'lucide-react';
 
 export default function AppSidebar() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const currentCommunity = searchParams.get('community') || 'all';
+  // Removed currentCommunity and isCommunityActive as links will now directly go to community pages
   const { user } = useAuth();
-
-  const isCommunityActive = (communityId: string) => {
-    return currentCommunity === communityId;
-  };
   
   const isNavLinkActive = (href: string) => {
      if (href === '/') return pathname === href;
+     // For dynamic routes like /community/[id], check if pathname starts with the base
+     if (href.includes('[') && href.includes(']')) {
+       const baseHref = href.substring(0, href.indexOf('['));
+       return pathname.startsWith(baseHref);
+     }
      return pathname.startsWith(href);
   };
 
@@ -69,9 +70,10 @@ export default function AppSidebar() {
             <SidebarMenu className="px-0">
             {COMMUNITIES.map((community) => (
               <SidebarMenuItem key={community.id}>
-                <Link href={`${pathname}?community=${community.id}`} className="w-full">
+                {/* Updated Link to point to /community/[communityId] */}
+                <Link href={community.id === 'all' ? '/qna' : `/community/${community.id}`} className="w-full">
                    <SidebarMenuButton 
-                    isActive={isCommunityActive(community.id)}
+                    isActive={community.id !== 'all' && pathname === `/community/${community.id}`}
                     tooltip={{children: community.name, side:'right'}}
                    >
                     {community.icon && <community.icon />}

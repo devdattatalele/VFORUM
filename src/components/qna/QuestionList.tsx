@@ -7,7 +7,7 @@ import { mockQuestions } from '@/lib/mockData'; // Using mock data for now
 import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ListFilter, PlusCircle, Search, HelpCircle } from 'lucide-react'; // Added HelpCircle
+import { ListFilter, PlusCircle, Search, HelpCircle } from 'lucide-react'; 
 import Link from 'next/link';
 import {
   Select,
@@ -46,12 +46,14 @@ export default function QuestionList() {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
       if (sortBy === 'popular') {
-        return (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes);
+        return (b.upvotes - (b.downvotes || 0)) - (a.upvotes - (a.downvotes || 0));
       }
-      // 'unanswered' logic would require comment count, mocking for now
+      // 'unanswered' logic would require actual answer count
+      // This mock logic might not be accurate if mockComments isn't perfectly aligned
       if (sortBy === 'unanswered') {
-        // This is a mock logic. In a real app, you'd check actual answer count.
-        return (a.id === 'q3' ? -1 : 1); // Example: q3 is unanswered
+         // Placeholder, real logic depends on how answers are tracked.
+         // For now, we assume questions with fewer upvotes are "less answered" for sorting.
+        return (a.upvotes - (a.downvotes || 0)) - (b.upvotes - (b.downvotes || 0));
       }
       return 0;
     });
@@ -60,12 +62,12 @@ export default function QuestionList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center p-4 rounded-lg glass-card sticky top-[calc(var(--header-height,64px)+1rem)] z-30">
         <div className="relative w-full sm:max-w-sm">
            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
            <Input 
             placeholder="Search questions by keyword or tag..." 
-            className="pl-10"
+            className="pl-10 bg-background/70 focus:bg-background"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -73,14 +75,14 @@ export default function QuestionList() {
        
         <div className="flex gap-2 items-center w-full sm:w-auto">
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px] bg-background/70 focus:bg-background">
               <ListFilter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="recent">Most Recent</SelectItem>
               <SelectItem value="popular">Most Popular</SelectItem>
-              <SelectItem value="unanswered">Unanswered</SelectItem>
+              <SelectItem value="unanswered">Less Activity</SelectItem>
             </SelectContent>
           </Select>
            <Button asChild className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -98,7 +100,7 @@ export default function QuestionList() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-card rounded-lg shadow-sm mt-8">
+        <div className="text-center py-16 bg-card/80 backdrop-blur-md rounded-lg shadow-sm mt-8 border border-white/10">
            <HelpCircle className="mx-auto h-16 w-16 text-muted-foreground mb-6" />
           <h3 className="text-2xl font-semibold text-foreground mb-2">No Questions Found</h3>
           <p className="text-muted-foreground mt-2 max-w-md mx-auto">

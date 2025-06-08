@@ -7,7 +7,7 @@ import { mockEvents } from '@/lib/mockData'; // Using mock data for now
 import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ListFilter, PlusCircle, CalendarX } from 'lucide-react'; // Added CalendarX
+import { ListFilter, PlusCircle, CalendarX } from 'lucide-react'; 
 import Link from 'next/link';
 import {
   Select,
@@ -38,6 +38,10 @@ export default function EventFeed() {
       );
     }
 
+    // Filter out past events by default, unless specifically requested (future feature)
+    events = events.filter(event => new Date(event.dateTime) >= new Date(new Date().setDate(new Date().getDate() -1)));
+
+
     return events.sort((a, b) => {
       if (sortBy === 'date-desc') {
         return new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime();
@@ -45,7 +49,7 @@ export default function EventFeed() {
       if (sortBy === 'date-asc') {
         return new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime();
       }
-      if (sortBy === 'popularity') { // Assuming rsvpCount indicates popularity
+      if (sortBy === 'popularity') { 
         return (b.rsvpCount || 0) - (a.rsvpCount || 0);
       }
       return 0;
@@ -54,16 +58,16 @@ export default function EventFeed() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center p-4 rounded-lg glass-card sticky top-[calc(var(--header-height,64px)+1rem)] z-30">
         <Input 
           placeholder="Search events..." 
-          className="max-w-sm"
+          className="max-w-sm bg-background/70 focus:bg-background"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center w-full sm:w-auto">
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px] bg-background/70 focus:bg-background">
               <ListFilter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
@@ -73,7 +77,7 @@ export default function EventFeed() {
               <SelectItem value="popularity">Popularity</SelectItem>
             </SelectContent>
           </Select>
-          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
             <Link href="/events/create">
               <PlusCircle className="mr-2 h-4 w-4" /> Create Event
             </Link>
@@ -88,9 +92,9 @@ export default function EventFeed() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-card rounded-lg shadow-sm mt-8">
+        <div className="text-center py-16 bg-card/80 backdrop-blur-md rounded-lg shadow-sm mt-8 border border-white/10">
           <CalendarX className="mx-auto h-16 w-16 text-muted-foreground mb-6" />
-          <h3 className="text-2xl font-semibold text-foreground mb-2">No Events Found</h3>
+          <h3 className="text-2xl font-semibold text-foreground mb-2">No Upcoming Events Found</h3>
           <p className="text-muted-foreground mt-2 max-w-md mx-auto">
             {searchTerm || communityFilter 
               ? "It seems there are no events matching your current search or filter criteria. Try broadening your search!" 

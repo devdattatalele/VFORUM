@@ -1,23 +1,24 @@
+
 "use client";
 
 import Image from 'next/image';
 import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, Users, Tag as TagIcon, Info } from 'lucide-react';
+import { CalendarDays, Users, Info } from 'lucide-react'; // Removed TagIcon
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { COMMUNITIES } from '@/lib/constants';
-import React, { useState } from 'react'; // Added useState import
+import React, { useState } from 'react'; 
 
 interface EventCardProps {
   event: Event;
 }
 
 export default function EventCard({ event }: EventCardProps) {
-  const [isRsvpd, setIsRsvpd] = useState(false); // Changed React.useState to useState
-  const [rsvpCount, setRsvpCount] = useState(event.rsvpCount || 0); // Changed React.useState to useState
+  const [isRsvpd, setIsRsvpd] = useState(false); 
+  const [rsvpCount, setRsvpCount] = useState(event.rsvpCount || 0); 
 
   const handleRsvp = () => {
     setIsRsvpd(!isRsvpd);
@@ -28,7 +29,7 @@ export default function EventCard({ event }: EventCardProps) {
   const community = COMMUNITIES.find(c => c.id === event.communityId);
 
   return (
-    <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
+    <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full glass-card">
       <CardHeader className="p-0 relative">
         <Image
           src={event.posterImageUrl}
@@ -47,9 +48,7 @@ export default function EventCard({ event }: EventCardProps) {
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <CardTitle className="text-xl mb-2 font-headline hover:text-primary transition-colors">
-          {/* Link to a potential event detail page if needed in future */}
-          {/* <Link href={`/events/${event.id}`}>{event.title}</Link> */}
-          {event.title}
+           <Link href={`/events/${event.id}`}>{event.title}</Link>
         </CardTitle>
         <div className="flex items-center text-sm text-muted-foreground mb-2">
           <CalendarDays className="mr-2 h-4 w-4" />

@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -9,7 +10,9 @@ import { MessageSquare, Tag as TagIcon, CalendarDays, UserCircle } from 'lucide-
 import { formatDistanceToNow } from 'date-fns';
 import VoteButtons from './VoteButtons';
 import { COMMUNITIES } from '@/lib/constants';
-import React, { useState } from 'react'; // Added useState import
+import React, { useState, useEffect } from 'react'; 
+import { mockComments } from '@/lib/mockData';
+
 
 interface QuestionCardProps {
   question: Question;
@@ -17,10 +20,17 @@ interface QuestionCardProps {
 
 export default function QuestionCard({ question }: QuestionCardProps) {
   const community = COMMUNITIES.find(c => c.id === question.communityId);
-  const [commentCount, setCommentCount] = useState(Math.floor(Math.random() * 20)); // Mock comment count, Changed React.useState
+  const [commentCount, setCommentCount] = useState(0); 
+
+  useEffect(() => {
+    // In a real app, this would be fetched or part of the question data
+    const count = mockComments.filter(c => c.questionId === question.id).length;
+    setCommentCount(count);
+  }, [question.id]);
+
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
+    <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 glass-card">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <Link href={`/qna/${question.id}`} legacyBehavior passHref>
@@ -75,7 +85,7 @@ export default function QuestionCard({ question }: QuestionCardProps) {
         />
         <Link href={`/qna/${question.id}#comments`} className="flex items-center hover:text-primary transition-colors">
           <MessageSquare className="mr-1 h-4 w-4" />
-          <span>{commentCount} Answers</span>
+          <span>{commentCount} Answer{commentCount === 1 ? '' : 's'}</span>
         </Link>
       </CardFooter>
     </Card>

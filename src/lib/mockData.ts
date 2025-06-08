@@ -1,3 +1,4 @@
+
 import type { Event, Question, UserProfile, Comment } from './types';
 import { MOCK_USER_ID, MOCK_USER_DISPLAY_NAME, MOCK_USER_PHOTO_URL, COMMUNITIES } from './constants';
 
