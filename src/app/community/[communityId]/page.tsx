@@ -3,7 +3,9 @@
 
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { COMMUNITIES, mockEvents, mockQuestions } from "@/lib/constants"; // Assuming mockEvents and mockQuestions are in constants for now
+import { COMMUNITIES }
+from "@/lib/constants";
+import { mockEvents, mockQuestions } from "@/lib/mockData"; // Updated import path
 import type { Community, Event, Question } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
