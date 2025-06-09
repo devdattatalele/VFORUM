@@ -3,6 +3,7 @@
 import type { Comment, UserProfile } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { updateQuestionOnNewComment } from './questionService'; // Import the new function
 
 interface CommentDataForFirestore extends Omit<Comment, 'id' | 'createdAt' | 'author'> {
   createdAt: Timestamp;
@@ -24,6 +25,10 @@ export async function addComment(
       createdAt: serverTimestamp(),
       upvotes: 0,
     });
+    
+    // After successfully adding a comment, update the question's reply count and last activity
+    await updateQuestionOnNewComment(questionId);
+
     return docRef.id;
   } catch (error) {
     console.error('Error adding comment: ', error);
@@ -34,7 +39,6 @@ export async function addComment(
 export async function getCommentsForQuestion(questionId: string): Promise<Comment[]> {
   try {
     const commentsRef = collection(db, `questions/${questionId}/comments`);
-    // Consider ordering by createdAt, e.g., orderBy('createdAt', 'desc')
     const q = query(commentsRef, orderBy('createdAt', 'desc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(docSnap => {

@@ -36,7 +36,9 @@ export interface Question {
   upvotes: number;
   downvotes: number;
   communityId: string; // Link to Community
-  // answerCount?: number; // For quick display
+  views: number;
+  replyCount: number;
+  lastActivityAt?: string; // ISO string, for sorting or display
 }
 
 export interface Comment {

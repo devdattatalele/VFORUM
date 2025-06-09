@@ -2,15 +2,16 @@
 'use server';
 import type { Question, UserProfile } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, doc, getDoc, query, where, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, getDoc, query, where, serverTimestamp, Timestamp, updateDoc, increment } from 'firebase/firestore';
 
-interface QuestionDataForFirestore extends Omit<Question, 'id' | 'createdAt' | 'author'> {
+interface QuestionDataForFirestore extends Omit<Question, 'id' | 'createdAt' | 'author' | 'lastActivityAt'> {
   createdAt: Timestamp;
   author: UserProfile;
+  lastActivityAt: Timestamp;
 }
 
 export async function addQuestion(
-  questionData: Omit<Question, 'id' | 'upvotes' | 'downvotes' | 'author' | 'createdAt'>,
+  questionData: Omit<Question, 'id' | 'upvotes' | 'downvotes' | 'author' | 'createdAt' | 'views' | 'replyCount' | 'lastActivityAt'>,
   author: UserProfile
 ): Promise<string> {
   try {
@@ -18,8 +19,11 @@ export async function addQuestion(
       ...questionData,
       author,
       createdAt: serverTimestamp(),
+      lastActivityAt: serverTimestamp(),
       upvotes: 0,
       downvotes: 0,
+      views: 0,
+      replyCount: 0,
     });
     return docRef.id;
   } catch (error) {
@@ -37,6 +41,7 @@ export async function getQuestions(): Promise<Question[]> {
         id: docSnap.id,
         ...data,
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+        lastActivityAt: data.lastActivityAt?.toDate ? data.lastActivityAt.toDate().toISOString() : (data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString()),
       } as Question;
     });
   } catch (error) {
@@ -50,11 +55,17 @@ export async function getQuestionById(questionId: string): Promise<Question | nu
     const docRef = doc(db, 'questions', questionId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
+      // Increment views
+      await updateDoc(docRef, {
+          views: increment(1)
+      });
       const data = docSnap.data();
       return {
         id: docSnap.id,
         ...data,
+        views: (data.views || 0) + 1, // Return the incremented view
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+        lastActivityAt: data.lastActivityAt?.toDate ? data.lastActivityAt.toDate().toISOString() : (data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString()),
       } as Question;
     }
     return null;
@@ -74,10 +85,25 @@ export async function getQuestionsByCommunity(communityId: string): Promise<Ques
         id: docSnap.id,
         ...data,
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+        lastActivityAt: data.lastActivityAt?.toDate ? data.lastActivityAt.toDate().toISOString() : (data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString()),
       } as Question;
     });
   } catch (error) {
     console.error('Error fetching questions by community: ', error);
     return [];
+  }
+}
+
+// Function to update reply count and last activity
+export async function updateQuestionOnNewComment(questionId: string): Promise<void> {
+  try {
+    const questionRef = doc(db, 'questions', questionId);
+    await updateDoc(questionRef, {
+      replyCount: increment(1),
+      lastActivityAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error updating question on new comment: ', error);
+    // Potentially throw or handle more gracefully
   }
 }

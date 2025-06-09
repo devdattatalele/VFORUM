@@ -2,12 +2,13 @@
 "use client";
 
 import type { Question } from '@/lib/types';
-import QuestionCard from './QuestionCard';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ListFilter, PlusCircle, Search, HelpCircle, Loader2 } from 'lucide-react'; 
-import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ListFilter, PlusCircle, Search, HelpCircle, Loader2, MessageSquare, Eye, GitCommitVertical, TrendingUp, Pin } from 'lucide-react'; 
 import {
   Select,
   SelectContent,
@@ -17,13 +18,18 @@ import {
 } from "@/components/ui/select";
 import React, { useEffect, useState } from 'react';
 import { getQuestions } from '@/lib/services/questionService';
+import { COMMUNITIES } from '@/lib/constants';
+import { formatDistanceToNow, format } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserCircle } from 'lucide-react';
+
 
 export default function QuestionList() {
   const searchParams = useSearchParams();
   const communityFilter = searchParams.get('community');
   const tagFilter = searchParams.get('tag');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('recent'); 
+  const [sortBy, setSortBy] = useState('activity-desc'); // Default sort by last activity
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,20 +68,39 @@ export default function QuestionList() {
     }
 
     return processedQuestions.sort((a, b) => {
-      if (sortBy === 'recent') {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      const aActivity = a.lastActivityAt || a.createdAt;
+      const bActivity = b.lastActivityAt || b.createdAt;
+
+      switch (sortBy) {
+        case 'recent-desc':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'recent-asc':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'activity-desc':
+          return new Date(bActivity).getTime() - new Date(aActivity).getTime();
+        case 'activity-asc':
+          return new Date(aActivity).getTime() - new Date(bActivity).getTime();
+        case 'popular-desc': // by views
+          return (b.views || 0) - (a.views || 0);
+        case 'replies-desc':
+            return (b.replyCount || 0) - (a.replyCount || 0);
+        default:
+          return new Date(bActivity).getTime() - new Date(aActivity).getTime();
       }
-      if (sortBy === 'popular') {
-        return (b.upvotes - (b.downvotes || 0)) - (a.upvotes - (a.downvotes || 0));
-      }
-      // Placeholder for 'unanswered' - requires actual answer data
-      if (sortBy === 'unanswered') {
-        return (a.upvotes - (a.downvotes || 0)) - (b.upvotes - (b.downvotes || 0));
-      }
-      return 0;
     });
 
   }, [questions, communityFilter, tagFilter, searchTerm, sortBy]);
+
+  const formatActivityTime = (dateString?: string) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInDays = (now.getTime() - date.getTime()) / (1000 * 3600 * 24);
+    if (diffInDays > 7) {
+      return format(date, "MMM d");
+    }
+    return formatDistanceToNow(date, { addSuffix: true });
+  };
 
   if (isLoading) {
     return (
@@ -97,12 +122,12 @@ export default function QuestionList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center p-4 rounded-lg glass-card sticky top-[calc(var(--header-height,64px)+1rem)] z-30">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center p-4 rounded-lg bg-background/80 dark:bg-background/50 sticky top-[calc(var(--header-height,64px)+1rem)] z-30 border-b border-border">
         <div className="relative w-full sm:max-w-sm">
            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
            <Input 
-            placeholder="Search questions by keyword or tag..." 
-            className="pl-10 bg-background/70 focus:bg-background"
+            placeholder="Search questions..." 
+            className="pl-10 bg-background/70 focus:bg-background dark:bg-background/70 dark:focus:bg-background"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -110,14 +135,17 @@ export default function QuestionList() {
        
         <div className="flex gap-2 items-center w-full sm:w-auto">
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-background/70 focus:bg-background">
+            <SelectTrigger className="w-full sm:w-[180px] bg-background/70 focus:bg-background dark:bg-background/70 dark:focus:bg-background">
               <ListFilter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="recent">Most Recent</SelectItem>
-              <SelectItem value="popular">Most Popular</SelectItem>
-              <SelectItem value="unanswered">Less Activity</SelectItem>
+              <SelectItem value="activity-desc">Last Activity (Newest)</SelectItem>
+              <SelectItem value="activity-asc">Last Activity (Oldest)</SelectItem>
+              <SelectItem value="recent-desc">Created (Newest)</SelectItem>
+              <SelectItem value="recent-asc">Created (Oldest)</SelectItem>
+              <SelectItem value="popular-desc">Views</SelectItem>
+              <SelectItem value="replies-desc">Replies</SelectItem>
             </SelectContent>
           </Select>
            <Button asChild className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -129,13 +157,54 @@ export default function QuestionList() {
       </div>
 
       {filteredQuestions.length > 0 ? (
-        <div className="space-y-4">
-          {filteredQuestions.map(question => (
-            <QuestionCard key={question.id} question={question} />
-          ))}
-        </div>
+        <Table className="mt-0">
+          <TableHeader>
+            <TableRow className="border-b-border hover:bg-transparent">
+              <TableHead className="w-[60%] text-muted-foreground font-semibold">Topic</TableHead>
+              <TableHead className="text-center text-muted-foreground font-semibold">Replies</TableHead>
+              <TableHead className="text-center text-muted-foreground font-semibold">Views</TableHead>
+              <TableHead className="text-right text-muted-foreground font-semibold">Activity</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredQuestions.map(question => {
+              const community = COMMUNITIES.find(c => c.id === question.communityId);
+              return (
+                <TableRow key={question.id} className="border-b-border hover:bg-muted/30 dark:hover:bg-muted/10">
+                  <TableCell className="py-3 align-top">
+                    <Link href={`/qna/${question.id}`} className="block group">
+                      <h3 className="text-base font-medium text-foreground group-hover:text-primary transition-colors mb-1 line-clamp-2">
+                        {/* {question.tags.includes('pinned') && <Pin className="inline-block mr-1.5 h-4 w-4 text-accent" />} Icon for pinned questions */}
+                        {question.title}
+                      </h3>
+                    </Link>
+                    <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-1.5">
+                        {community && (
+                             <Badge variant="outline" className="py-0.5 px-1.5 border-blue-500/50 text-blue-600 dark:text-blue-400 bg-blue-500/10">
+                                {community.icon && <community.icon className="mr-1 h-3 w-3"/>}
+                                {community.name}
+                             </Badge>
+                        )}
+                        {question.tags.slice(0, 2).map(tag => (
+                          <Badge key={tag} variant="secondary" className="py-0.5 px-1.5">{tag}</Badge>
+                        ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {question.content.substring(0, 100)}{question.content.length > 100 ? '...' : ''}
+                    </p>
+                  </TableCell>
+                  <TableCell className="text-center align-middle text-sm text-foreground tabular-nums">{question.replyCount || 0}</TableCell>
+                  <TableCell className="text-center align-middle text-sm text-foreground tabular-nums">
+                    {Intl.NumberFormat('en', { notation: 'compact' }).format(question.views || 0)}
+                  </TableCell>
+                  <TableCell className="text-right align-middle text-sm text-muted-foreground tabular-nums">{formatActivityTime(question.lastActivityAt || question.createdAt)}</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       ) : (
-        <div className="text-center py-16 bg-card/80 backdrop-blur-md rounded-lg shadow-sm mt-8 border border-white/10">
+        <div className="text-center py-16 bg-muted/20 dark:bg-muted/5 rounded-lg shadow-sm mt-8 border border-border">
            <HelpCircle className="mx-auto h-16 w-16 text-muted-foreground mb-6" />
           <h3 className="text-2xl font-semibold text-foreground mb-2">No Questions Found</h3>
           <p className="text-muted-foreground mt-2 max-w-md mx-auto">

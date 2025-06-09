@@ -65,9 +65,12 @@ export const mockQuestions: Question[] = [
     tags: ['nextjs', 'vercel', 'deployment', 'webdev'],
     author: mockUser,
     createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    lastActivityAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
     upvotes: 25,
     downvotes: 2,
     communityId: 'gdg',
+    views: 150,
+    replyCount: 3,
   },
   {
     id: 'q2',
@@ -76,9 +79,12 @@ export const mockQuestions: Question[] = [
     tags: ['python', 'datascience', 'learning', 'resources'],
     author: { ...mockUser, uid: 'user2', displayName: 'Data Enthusiast' },
     createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    lastActivityAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
     upvotes: 42,
     downvotes: 1,
     communityId: 'ai-club',
+    views: 280,
+    replyCount: 5,
   },
   {
     id: 'q3',
@@ -87,9 +93,12 @@ export const mockQuestions: Question[] = [
     tags: ['arduino', 'robotics', 'hardware', 'troubleshooting'],
     author: { ...mockUser, uid: 'user3', displayName: 'Robo Builder' },
     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    lastActivityAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     upvotes: 15,
     downvotes: 0,
     communityId: 'robotics-club',
+    views: 90,
+    replyCount: 1,
   },
   {
     id: 'q4',
@@ -98,9 +107,12 @@ export const mockQuestions: Question[] = [
     tags: ['c++', 'programming', 'concepts'],
     author: { ...mockUser, uid: 'user4', displayName: 'Cpp Learner' },
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    lastActivityAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 minutes ago
     upvotes: 30,
     downvotes: 3,
     communityId: 'acm',
+    views: 120,
+    replyCount: 2,
   }
 ];
 

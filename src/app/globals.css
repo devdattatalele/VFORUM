@@ -52,43 +52,43 @@ body {
   }
 
   .dark {
-    /* Dark Theme Colors */
-    --background: 220 25% 6%; /* Very dark, slightly cool blue */
+    /* Dark Theme Colors - Updated for forum design */
+    --background: 220 5% 13%; /* RGB(32,33,35) approx HSL(220, 5%, 13%) */
     --foreground: 220 15% 92%; /* Light cool gray for text */
 
-    --card: 220 25% 10%; /* Slightly lighter dark blue */
+    --card: 220 5% 18%; /* Slightly lighter dark grey for cards if needed elsewhere */
     --card-foreground: 220 15% 92%;
 
-    --popover: 220 25% 10%;
+    --popover: 220 5% 18%;
     --popover-foreground: 220 15% 92%;
 
-    --primary: 170 70% 50%; /* Brighter Teal/Aqua for dark bg */
+    --primary: 170 70% 50%; /* Brighter Teal/Aqua for dark bg - can adjust if needed */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 170 40% 20%; /* Dark muted teal */
+    --secondary: 170 40% 25%; /* Dark muted teal - can adjust */
     --secondary-foreground: 170 50% 80%; /* Lighter teal for text on dark teal bg */
 
-    --muted: 220 20% 18%; /* Darker cool gray */
+    --muted: 220 10% 25%; /* Darker cool gray */
     --muted-foreground: 220 10% 65%; /* Medium-light cool gray for muted text */
 
-    --accent: 15 90% 60%; /* Brighter Coral/Warm Orange for dark bg */
+    --accent: 15 90% 60%; /* Brighter Coral/Warm Orange for dark bg - can adjust */
     --accent-foreground: 0 0% 100%; /* White */
 
     --destructive: 0 72.2% 50.6%; /* Red */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 20% 25%;
-    --input: 220 20% 25%;
-    --ring: 170 70% 50%; /* Primary for rings */
+    --border: 220 5% 22%; /* Adjusted for new dark background */
+    --input: 220 5% 25%; /* Adjusted for new dark background */
+    --ring: 170 70% 50%; /* Primary for rings - can adjust */
 
     /* Sidebar dark theme */
-    --sidebar-background: 220 25% 8%;
+    --sidebar-background: 220 5% 16%;
     --sidebar-foreground: 220 15% 90%;
     --sidebar-primary: 170 70% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 15 90% 60%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 20% 22%;
+    --sidebar-border: 220 5% 20%;
     --sidebar-ring: 170 70% 50%;
   }
 }
@@ -105,7 +105,7 @@ body {
   }
 }
 
-/* Add a utility class for glassmorphism */
+/* Add a utility class for glassmorphism - still available if needed elsewhere */
 .glass-card {
   @apply bg-card/80 backdrop-blur-lg border border-white/10;
 }

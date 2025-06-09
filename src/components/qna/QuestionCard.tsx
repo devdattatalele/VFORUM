@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import type { Question } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Keep for potential other uses, but not for list item
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Tag as TagIcon, CalendarDays, UserCircle } from 'lucide-react';
@@ -11,27 +11,23 @@ import { formatDistanceToNow } from 'date-fns';
 import VoteButtons from './VoteButtons';
 import { COMMUNITIES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react'; 
-// Removed mockComments import as comment count will eventually come from props or a separate fetch
+
+// This component is now less of a "Card" and more of a display item,
+// especially if QuestionList renders rows directly.
+// For now, keeping the structure but it will be styled differently or its logic moved.
 
 interface QuestionCardProps {
   question: Question;
-  commentCount?: number; // Make comment count optional, could be passed from parent list
+  // commentCount is now part of Question type as replyCount
 }
 
-export default function QuestionCard({ question, commentCount: initialCommentCount }: QuestionCardProps) {
+export default function QuestionCard({ question }: QuestionCardProps) {
   const community = COMMUNITIES.find(c => c.id === question.communityId);
-  // For now, we will assume commentCount is passed if available, or default to 0.
-  // In a full implementation, this might involve another query or be part of the question object from Firestore.
-  const [commentCount, setCommentCount] = useState(initialCommentCount !== undefined ? initialCommentCount : 0); 
 
-  // If actual comment count isn't passed, we can't realistically fetch it here efficiently for a list.
-  // This useEffect is removed as it relied on mockData.
-  // useEffect(() => {
-  //   // If initialCommentCount is not provided, you might need a way to fetch it,
-  //   // but for a list, this is often inefficient. Better to include it in the Question object if possible.
-  // }, [question.id, initialCommentCount]);
-
-
+  // This is the old card-based rendering. The new table view in QuestionList.tsx
+  // will handle the layout. This component might be used for a different view
+  // or its content parts used in the table rows. For now, leaving it as is
+  // but noting it's not directly used by the new QuestionList table.
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 glass-card">
       <CardHeader className="pb-3">
@@ -85,12 +81,10 @@ export default function QuestionCard({ question, commentCount: initialCommentCou
             id={question.id}
             orientation="horizontal"
             size="sm"
-            // onVote={(type) => console.log(`Voted ${type} on Q ${question.id}`)} // Placeholder
         />
         <Link href={`/qna/${question.id}#comments`} className="flex items-center hover:text-primary transition-colors">
           <MessageSquare className="mr-1 h-4 w-4" />
-          {/* Displaying the comment count based on state */}
-          <span>{commentCount} Answer{commentCount === 1 ? '' : 's'}</span>
+          <span>{question.replyCount || 0} Answer{question.replyCount === 1 ? '' : 's'}</span>
         </Link>
       </CardFooter>
     </Card>
