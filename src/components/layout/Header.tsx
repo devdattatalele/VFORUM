@@ -44,12 +44,12 @@ export default function Header() {
           <div className="md:hidden">
             <SidebarTrigger />
           </div>
-          <Link href="/" className="flex items-center gap-2">
-            <Zap className="h-7 w-7 text-primary" />
-            { (isMobile || sidebarState === 'collapsed') &&
+          { (isMobile || sidebarState === 'collapsed') &&
+            <Link href="/" className="flex items-center gap-2">
+              <Zap className="h-7 w-7 text-primary" />
               <span className="text-xl font-bold font-headline text-foreground">Campus Tech Hub</span>
-            }
-          </Link>
+            </Link>
+          }
         </div>
 
         <div className="flex items-center gap-3">
