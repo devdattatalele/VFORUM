@@ -17,7 +17,7 @@ import {
 import { NAV_LINKS } from '@/lib/constants';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { useTheme } from "next-themes";
 import React, { useEffect, useState } from 'react';
 
@@ -27,6 +27,7 @@ export default function Header() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { isMobile, state: sidebarState } = useSidebar();
 
   useEffect(() => {
     setMounted(true);
@@ -45,7 +46,9 @@ export default function Header() {
           </div>
           <Link href="/" className="flex items-center gap-2">
             <Zap className="h-7 w-7 text-primary" />
-            <span className="text-xl font-bold font-headline text-foreground">Campus Tech Hub</span>
+            { (isMobile || sidebarState === 'collapsed') &&
+              <span className="text-xl font-bold font-headline text-foreground">Campus Tech Hub</span>
+            }
           </Link>
         </div>
 
