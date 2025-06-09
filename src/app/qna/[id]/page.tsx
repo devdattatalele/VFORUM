@@ -2,21 +2,23 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { mockQuestions, mockComments, mockUser } from "@/lib/mockData";
 import type { Question, Comment as CommentType } from "@/lib/types";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import VoteButtons from "@/components/qna/VoteButtons";
 import CommentCard from "@/components/qna/CommentCard";
 import CommentForm from "@/components/qna/CommentForm";
 import { CalendarDays, MessageSquare, Tag as TagIcon, UserCircle, ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import React, { useEffect, useState } from "react"; // Added React import
+import React, { useEffect, useState } from "react";
+import { getQuestionById } from "@/lib/services/questionService";
+import { getCommentsForQuestion, addComment } from "@/lib/services/commentService";
+import { COMMUNITIES } from "@/lib/constants";
+
 
 export default function QuestionDetailPage() {
   const params = useParams();
@@ -24,47 +26,78 @@ export default function QuestionDetailPage() {
   const { user } = useAuth();
   const questionId = params.id as string;
 
-  const [question, setQuestion] = useState<Question | null | undefined>(undefined); // undefined for loading state
+  const [question, setQuestion] = useState<Question | null | undefined>(undefined);
   const [comments, setComments] = useState<CommentType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (questionId) {
-      const foundQuestion = mockQuestions.find(q => q.id === questionId);
-      setQuestion(foundQuestion || null); // null if not found
-      if (foundQuestion) {
-        const questionComments = mockComments.filter(c => c.questionId === questionId);
-        setComments(questionComments);
-      } else {
+      setIsLoading(true);
+      setError(null);
+      Promise.all([
+        getQuestionById(questionId),
+        getCommentsForQuestion(questionId)
+      ]).then(([fetchedQuestion, fetchedComments]) => {
+        setQuestion(fetchedQuestion || null);
+        setComments(fetchedComments || []);
+      }).catch(err => {
+        console.error("Error fetching question details:", err);
+        setError("Could not load the question or comments.");
+        setQuestion(null);
         setComments([]);
-      }
+      }).finally(() => {
+        setIsLoading(false);
+      });
     }
   }, [questionId]);
 
   const handleCommentSubmit = async (content: string) => {
-    if (!user || !question) return;
-    // Simulate API call for adding comment
-    console.log("New comment submitted:", content);
-    const newComment: CommentType = {
-      id: `c${Date.now()}`, // mock ID
-      questionId: question.id,
-      author: user,
-      content,
-      createdAt: new Date().toISOString(),
-      upvotes: 0,
-    };
-    setComments(prevComments => [newComment, ...prevComments]); // Add to top for immediate feedback
-    // In a real app, you'd likely re-fetch or append based on API response
+    if (!user || !question) {
+      alert("You must be logged in to comment or question not found.");
+      return;
+    }
+    try {
+      const newCommentId = await addComment(question.id, { content }, user);
+      // Optimistically add comment to UI or re-fetch
+      const newComment: CommentType = {
+        id: newCommentId, // This might be Firestore generated ID or a temp one
+        questionId: question.id,
+        author: user,
+        content,
+        createdAt: new Date().toISOString(),
+        upvotes: 0,
+      };
+      setComments(prevComments => [newComment, ...prevComments]);
+    } catch (err) {
+      console.error("Failed to submit comment:", err);
+      alert("Failed to post your answer. Please try again.");
+    }
   };
 
-
-  if (question === undefined) { // Loading state
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-3">Loading question...</p>
       </div>
     );
   }
 
+  if (error) {
+    return (
+      <div className="max-w-3xl mx-auto py-8 text-center">
+        <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-4" />
+        <h1 className="text-3xl font-bold mb-4">Error</h1>
+        <p className="text-muted-foreground mb-6">{error}</p>
+        <Button onClick={() => router.push('/qna')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Q&A
+        </Button>
+      </div>
+    );
+  }
+  
   if (!question) {
     return (
       <div className="max-w-3xl mx-auto py-8 text-center">
@@ -79,7 +112,7 @@ export default function QuestionDetailPage() {
     );
   }
 
-  const community = mockUser.displayName; // Placeholder, fetch actual community if needed
+  const community = COMMUNITIES.find(c => c.id === question.communityId);
 
   return (
     <div className="max-w-3xl mx-auto py-8 space-y-8">
@@ -102,7 +135,7 @@ export default function QuestionDetailPage() {
             <span className="text-muted-foreground/50">&bull;</span>
             <CalendarDays className="h-4 w-4" />
             <span>Asked {formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
-            {/* {community && <Badge variant="outline" className="ml-auto">{community}</Badge>} */}
+            {community && <Badge variant="outline" className="ml-auto">{community.name}</Badge>}
           </div>
            {question.tags && question.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
@@ -124,6 +157,7 @@ export default function QuestionDetailPage() {
             id={question.id} 
             orientation="horizontal"
             size="default"
+            // onVote={(voteType) => console.log("Voted:", voteType, "on question", question.id)} // Placeholder
           />
           <div className="flex items-center text-muted-foreground">
             <MessageSquare className="mr-2 h-5 w-5" />
@@ -138,7 +172,8 @@ export default function QuestionDetailPage() {
       ) : (
         <Card className="my-4 p-4 text-center glass-card">
           <p className="text-muted-foreground">
-            <Link href="/qna" className="text-primary hover:underline">Sign in</Link> to post an answer.
+             You need to be signed in to post an answer.
+            <Button variant="link" asChild className="px-1"><Link href={`/?redirect=/qna/${questionId}`}>Sign in</Link></Button>
           </p>
         </Card>
       )}

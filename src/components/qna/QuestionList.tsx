@@ -3,11 +3,10 @@
 
 import type { Question } from '@/lib/types';
 import QuestionCard from './QuestionCard';
-import { mockQuestions } from '@/lib/mockData'; // Using mock data for now
 import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ListFilter, PlusCircle, Search, HelpCircle } from 'lucide-react'; 
+import { ListFilter, PlusCircle, Search, HelpCircle, Loader2 } from 'lucide-react'; 
 import Link from 'next/link';
 import {
   Select,
@@ -16,49 +15,85 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { getQuestions } from '@/lib/services/questionService';
 
 export default function QuestionList() {
   const searchParams = useSearchParams();
   const communityFilter = searchParams.get('community');
   const tagFilter = searchParams.get('tag');
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [sortBy, setSortBy] = React.useState('recent'); // 'recent', 'popular', 'unanswered'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('recent'); 
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchQuestions() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const fetchedQuestions = await getQuestions();
+        setQuestions(fetchedQuestions);
+      } catch (err) {
+        console.error("Failed to fetch questions:", err);
+        setError("Could not load questions. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchQuestions();
+  }, []);
 
   const filteredQuestions = React.useMemo(() => {
-    let questions = mockQuestions;
+    let processedQuestions = questions;
     if (communityFilter && communityFilter !== 'all') {
-      questions = questions.filter(q => q.communityId === communityFilter);
+      processedQuestions = processedQuestions.filter(q => q.communityId === communityFilter);
     }
     if (tagFilter) {
-      questions = questions.filter(q => q.tags.includes(tagFilter));
+      processedQuestions = processedQuestions.filter(q => q.tags.includes(tagFilter));
     }
     if (searchTerm) {
-      questions = questions.filter(q => 
+      processedQuestions = processedQuestions.filter(q => 
         q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         q.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
         q.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
-    return questions.sort((a, b) => {
+    return processedQuestions.sort((a, b) => {
       if (sortBy === 'recent') {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
       if (sortBy === 'popular') {
         return (b.upvotes - (b.downvotes || 0)) - (a.upvotes - (a.downvotes || 0));
       }
-      // 'unanswered' logic would require actual answer count
-      // This mock logic might not be accurate if mockComments isn't perfectly aligned
+      // Placeholder for 'unanswered' - requires actual answer data
       if (sortBy === 'unanswered') {
-         // Placeholder, real logic depends on how answers are tracked.
-         // For now, we assume questions with fewer upvotes are "less answered" for sorting.
         return (a.upvotes - (a.downvotes || 0)) - (b.upvotes - (b.downvotes || 0));
       }
       return 0;
     });
 
-  }, [communityFilter, tagFilter, searchTerm, sortBy]);
+  }, [questions, communityFilter, tagFilter, searchTerm, sortBy]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2">Loading questions...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+     return (
+      <div className="text-center py-10 text-destructive">
+        <HelpCircle className="mx-auto h-12 w-12 mb-4" />
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

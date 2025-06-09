@@ -1,6 +1,7 @@
+
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-// import { getFirestore } from 'firebase/firestore'; // Example if you use Firestore
+import { getFirestore } from 'firebase/firestore';
 
 // IMPORTANT: Replace this with your actual Firebase project configuration
 // It's recommended to use environment variables for this
@@ -17,6 +18,6 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const googleAuthProvider = new GoogleAuthProvider();
-// const db = getFirestore(app); // Example if you use Firestore
+const db = getFirestore(app);
 
-export { app, auth, googleAuthProvider /*, db */ };
+export { app, auth, googleAuthProvider, db };

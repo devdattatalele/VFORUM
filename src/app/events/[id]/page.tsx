@@ -3,49 +3,79 @@
 
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { mockEvents } from "@/lib/mockData";
 import type { Event } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Users, Tag as TagIcon, Info, ArrowLeft, Loader2, AlertTriangle, MapPin } from "lucide-react";
+import { CalendarDays, Users, Info, ArrowLeft, Loader2, AlertTriangle, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { COMMUNITIES } from "@/lib/constants";
 import React, { useEffect, useState } from "react";
+import { getEventById } from "@/lib/services/eventService"; // Import the service
 
 export default function EventDetailPage() {
   const params = useParams();
   const router = useRouter();
   const eventId = params.id as string;
 
-  const [event, setEvent] = useState<Event | null | undefined>(undefined);
-  const [isRsvpd, setIsRsvpd] = useState(false);
-  const [rsvpCount, setRsvpCount] = useState(0);
-
+  const [event, setEvent] = useState<Event | null | undefined>(undefined); // undefined for loading
+  const [isRsvpd, setIsRsvpd] = useState(false); // Placeholder
+  const [rsvpCount, setRsvpCount] = useState(0); // Placeholder
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (eventId) {
-      const foundEvent = mockEvents.find(e => e.id === eventId);
-      setEvent(foundEvent || null);
-      if (foundEvent) {
-        setRsvpCount(foundEvent.rsvpCount || 0);
-        // Here you might check if user has already RSVPd
-      }
+      setIsLoading(true);
+      setError(null);
+      getEventById(eventId)
+        .then((fetchedEvent) => {
+          if (fetchedEvent) {
+            setEvent(fetchedEvent);
+            setRsvpCount(fetchedEvent.rsvpCount || 0);
+            // TODO: Check if user has RSVPd from user data or local storage
+          } else {
+            setEvent(null); // Not found
+          }
+        })
+        .catch(err => {
+          console.error("Error fetching event:", err);
+          setError("Could not load the event details.");
+          setEvent(null);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
   }, [eventId]);
 
   const handleRsvp = () => {
     if (!event) return;
+    // TODO: Implement actual RSVP logic with Firebase
     setIsRsvpd(!isRsvpd);
     setRsvpCount(prev => isRsvpd ? prev - 1 : prev + 1);
-    // API call to update RSVP status would go here
     console.log(`RSVP status for event ${event.id}: ${!isRsvpd}`);
   };
 
-  if (event === undefined) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-3">Loading event details...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-3xl mx-auto py-8 text-center">
+        <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-4" />
+        <h1 className="text-3xl font-bold mb-4">Error Loading Event</h1>
+        <p className="text-muted-foreground mb-6">{error}</p>
+        <Button onClick={() => router.push('/events')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Events
+        </Button>
       </div>
     );
   }

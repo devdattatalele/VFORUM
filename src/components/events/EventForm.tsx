@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +33,9 @@ import type { Event } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { addEvent } from "@/lib/services/eventService";
+
 
 const eventFormSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters long."),
@@ -52,6 +56,7 @@ interface EventFormProps {
 export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = React.useState(false);
 
   const defaultValues: Partial<EventFormValues> = event
@@ -62,7 +67,7 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
     : {
         title: "",
         description: "",
-        posterImageUrl: "",
+        posterImageUrl: "https://placehold.co/600x400.png", // Default placeholder
         clubName: "",
       };
 
@@ -72,21 +77,30 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
   });
 
   async function onSubmit(data: EventFormValues) {
+    if (!user) {
+      toast({ title: "Not Authenticated", description: "You must be signed in to create an event.", variant: "destructive" });
+      return;
+    }
     setIsLoading(true);
-    console.log("Event form submitted:", data);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    toast({
-      title: event ? "Event Updated!" : "Event Created!",
-      description: `"${data.title}" has been successfully ${event ? 'updated' : 'created'}.`,
-    });
-    
-    setIsLoading(false);
-    if (onSubmitSuccess) {
-      onSubmitSuccess();
-    } else {
-      router.push('/events'); // Redirect to events page after creation/update
+    try {
+      const { title, description, posterImageUrl, clubName, communityId } = data;
+      // Pass data.dateTime (which is a Date object) directly to addEvent
+      await addEvent({ title, description, posterImageUrl, clubName, communityId }, user, data.dateTime);
+      toast({
+        title: event ? "Event Updated!" : "Event Created!",
+        description: `"${data.title}" has been successfully ${event ? 'updated' : 'created'}.`,
+      });
+      if (onSubmitSuccess) {
+        onSubmitSuccess();
+      } else {
+        router.push('/events');
+        router.refresh(); // To ensure the new event list is fetched
+      }
+    } catch (error) {
+      console.error("Error submitting event:", error);
+      toast({ title: "Error", description: "Could not save the event. Please try again.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -169,17 +183,15 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
                       selected={field.value}
                       onSelect={(date) => {
                         if (date) {
-                          // Preserve time if already set, or default to noon
                           const currentTime = field.value ? { hours: field.value.getHours(), minutes: field.value.getMinutes() } : { hours: 12, minutes: 0};
                           date.setHours(currentTime.hours);
                           date.setMinutes(currentTime.minutes);
                         }
                         field.onChange(date);
                       }}
-                      disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))} // Disable past dates
+                      disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))}
                       initialFocus
                     />
-                    {/* Basic Time Picker (can be improved with dedicated component) */}
                     <div className="p-3 border-t border-border">
                        <FormLabel className="text-sm">Time (HH:mm)</FormLabel>
                        <Input 
@@ -192,6 +204,14 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
                                 newDate.setHours(parseInt(hours, 10));
                                 newDate.setMinutes(parseInt(minutes, 10));
                                 field.onChange(newDate);
+                            } else { // If field.value is null, create a new Date object
+                                const today = new Date();
+                                const [hours, minutes] = e.target.value.split(':');
+                                today.setHours(parseInt(hours, 10));
+                                today.setMinutes(parseInt(minutes, 10));
+                                today.setSeconds(0);
+                                today.setMilliseconds(0);
+                                field.onChange(today);
                             }
                         }}
                        />
@@ -243,9 +263,9 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isLoading} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+        <Button type="submit" disabled={isLoading || !user} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {event ? "Update Event" : "Create New Event"}
+          {user ? (event ? "Update Event" : "Create New Event") : "Sign in to Create"}
         </Button>
       </form>
     </Form>

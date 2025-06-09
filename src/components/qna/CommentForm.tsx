@@ -15,8 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 interface CommentFormProps {
   questionId: string;
   parentId?: string | null;
-  onSubmit: (content: string) => Promise<void>;
-  onCancel?: () => void; // For reply forms
+  onSubmit: (content: string, parentId?: string | null) => Promise<void>; // Updated to include parentId
+  onCancel?: () => void; 
   placeholder?: string;
 }
 
@@ -45,8 +45,8 @@ export default function CommentForm({ questionId, parentId, onSubmit, onCancel, 
     }
     setIsSubmitting(true);
     try {
-      await onSubmit(data.content);
-      form.reset(); // Reset form after successful submission
+      await onSubmit(data.content, parentId); // Pass parentId to the onSubmit prop
+      form.reset(); 
       toast({ title: "Answer Posted!", description: "Your answer has been added."});
     } catch (error) {
       console.error("Error submitting comment:", error);
@@ -57,7 +57,8 @@ export default function CommentForm({ questionId, parentId, onSubmit, onCancel, 
   }
 
   if (!user) {
-    return null; // Or a prompt to sign in
+    // The parent component (QuestionDetailPage) already handles showing a sign-in prompt
+    return null; 
   }
 
   return (

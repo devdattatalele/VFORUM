@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +25,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { autoTagQuestion, type AutoTagQuestionInput } from "@/ai/flows/auto-tag-question";
 import { COMMUNITIES, DEFAULT_COMMUNITY_ID } from "@/lib/constants";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { addQuestion } from "@/lib/services/questionService";
+
 
 const questionFormSchema = z.object({
   title: z.string().min(10, "Title must be at least 10 characters.").max(150, "Title too long."),
@@ -49,13 +52,13 @@ export default function QuestionForm() {
       title: "",
       content: "",
       tags: [],
-      communityId: DEFAULT_COMMUNITY_ID,
+      communityId: DEFAULT_COMMUNITY_ID === 'all' ? COMMUNITIES.find(c => c.id !== 'all')?.id || '' : DEFAULT_COMMUNITY_ID, // Ensure a valid default if 'all'
     },
   });
 
   const handleAddTag = () => {
     if (tagInput.trim() !== "" && !currentTags.includes(tagInput.trim()) && currentTags.length < 5) {
-      const newTags = [...currentTags, tagInput.trim()];
+      const newTags = [...currentTags, tagInput.trim().toLowerCase()];
       setCurrentTags(newTags);
       form.setValue("tags", newTags, { shouldValidate: true });
       setTagInput("");
@@ -79,7 +82,8 @@ export default function QuestionForm() {
       const input: AutoTagQuestionInput = { question: questionContent };
       const result = await autoTagQuestion(input);
       if (result && result.tags) {
-        const mergedTags = Array.from(new Set([...currentTags, ...result.tags])).slice(0, 5);
+        const suggestedAITags = result.tags.map(tag => tag.toLowerCase());
+        const mergedTags = Array.from(new Set([...currentTags, ...suggestedAITags])).slice(0, 5);
         setCurrentTags(mergedTags);
         form.setValue("tags", mergedTags, { shouldValidate: true });
         toast({ title: "Tags Suggested!", description: "AI has suggested tags based on your content." });
@@ -99,16 +103,20 @@ export default function QuestionForm() {
       return;
     }
     setIsSubmitting(true);
-    console.log("Question submitted:", { ...data, author: user });
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: "Question Posted!",
-      description: "Your question has been successfully posted to the forum.",
-    });
-    setIsSubmitting(false);
-    router.push('/qna'); // Redirect to Q&A page
+    try {
+      await addQuestion(data, user);
+      toast({
+        title: "Question Posted!",
+        description: "Your question has been successfully posted to the forum.",
+      });
+      router.push('/qna');
+      router.refresh();
+    } catch (error) {
+      console.error("Error submitting question:", error);
+      toast({ title: "Error", description: "Could not post your question. Please try again.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -158,7 +166,7 @@ export default function QuestionForm() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {COMMUNITIES.filter(c => c.id !== 'all').map((community) => ( // Exclude "All Communities" for posting
+                  {COMMUNITIES.filter(c => c.id !== 'all').map((community) => (
                     <SelectItem key={community.id} value={community.id}>
                       {community.name}
                     </SelectItem>
@@ -183,7 +191,7 @@ export default function QuestionForm() {
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); }}}
               className="flex-grow"
             />
-            <Button type="button" variant="outline" onClick={handleAddTag} disabled={currentTags.length >= 5}>Add Tag</Button>
+            <Button type="button" variant="outline" onClick={handleAddTag} disabled={currentTags.length >= 5 || tagInput.trim() === ""}>Add Tag</Button>
             <Button type="button" variant="outline" onClick={handleAutoTag} disabled={isTaggingAi}>
               {isTaggingAi ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
               AI Suggest
@@ -202,7 +210,7 @@ export default function QuestionForm() {
            <FormField
             control={form.control}
             name="tags"
-            render={() => ( <FormMessage className="mt-1"/>)} // To display validation errors for tags array
+            render={() => ( <FormMessage className="mt-1"/>)}
             />
           <FormDescription>Add up to 5 tags to describe what your question is about. Press Enter or click "Add Tag".</FormDescription>
         </FormItem>

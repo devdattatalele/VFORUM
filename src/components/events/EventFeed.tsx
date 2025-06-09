@@ -3,11 +3,10 @@
 
 import type { Event } from '@/lib/types';
 import EventCard from './EventCard';
-import { mockEvents } from '@/lib/mockData'; // Using mock data for now
 import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ListFilter, PlusCircle, CalendarX } from 'lucide-react'; 
+import { ListFilter, PlusCircle, CalendarX, Loader2 } from 'lucide-react'; 
 import Link from 'next/link';
 import {
   Select,
@@ -16,33 +15,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { getEvents } from '@/lib/services/eventService';
 
 
 export default function EventFeed() {
   const searchParams = useSearchParams();
   const communityFilter = searchParams.get('community');
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [sortBy, setSortBy] = React.useState('date-desc'); // 'date-asc', 'date-desc', 'popularity'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('date-desc'); // 'date-asc', 'date-desc', 'popularity'
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchEvents() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const fetchedEvents = await getEvents();
+        setEvents(fetchedEvents);
+      } catch (err) {
+        console.error("Failed to fetch events:", err);
+        setError("Could not load events. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchEvents();
+  }, []);
 
   const filteredEvents = React.useMemo(() => {
-    let events = mockEvents;
+    let processedEvents = events;
     if (communityFilter && communityFilter !== 'all') {
-      events = events.filter(event => event.communityId === communityFilter);
+      processedEvents = processedEvents.filter(event => event.communityId === communityFilter);
     }
     if (searchTerm) {
-      events = events.filter(event => 
+      processedEvents = processedEvents.filter(event => 
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.clubName.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Filter out past events by default, unless specifically requested (future feature)
-    events = events.filter(event => new Date(event.dateTime) >= new Date(new Date().setDate(new Date().getDate() -1)));
+    processedEvents = processedEvents.filter(event => new Date(event.dateTime) >= new Date(new Date().setDate(new Date().getDate() -1)));
 
-
-    return events.sort((a, b) => {
+    return processedEvents.sort((a, b) => {
       if (sortBy === 'date-desc') {
         return new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime();
       }
@@ -54,7 +72,25 @@ export default function EventFeed() {
       }
       return 0;
     });
-  }, [communityFilter, searchTerm, sortBy]);
+  }, [events, communityFilter, searchTerm, sortBy]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2">Loading events...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-10 text-destructive">
+        <CalendarX className="mx-auto h-12 w-12 mb-4" />
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

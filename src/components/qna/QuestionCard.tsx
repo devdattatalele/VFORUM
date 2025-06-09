@@ -11,22 +11,25 @@ import { formatDistanceToNow } from 'date-fns';
 import VoteButtons from './VoteButtons';
 import { COMMUNITIES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react'; 
-import { mockComments } from '@/lib/mockData';
-
+// Removed mockComments import as comment count will eventually come from props or a separate fetch
 
 interface QuestionCardProps {
   question: Question;
+  commentCount?: number; // Make comment count optional, could be passed from parent list
 }
 
-export default function QuestionCard({ question }: QuestionCardProps) {
+export default function QuestionCard({ question, commentCount: initialCommentCount }: QuestionCardProps) {
   const community = COMMUNITIES.find(c => c.id === question.communityId);
-  const [commentCount, setCommentCount] = useState(0); 
+  // For now, we will assume commentCount is passed if available, or default to 0.
+  // In a full implementation, this might involve another query or be part of the question object from Firestore.
+  const [commentCount, setCommentCount] = useState(initialCommentCount !== undefined ? initialCommentCount : 0); 
 
-  useEffect(() => {
-    // In a real app, this would be fetched or part of the question data
-    const count = mockComments.filter(c => c.questionId === question.id).length;
-    setCommentCount(count);
-  }, [question.id]);
+  // If actual comment count isn't passed, we can't realistically fetch it here efficiently for a list.
+  // This useEffect is removed as it relied on mockData.
+  // useEffect(() => {
+  //   // If initialCommentCount is not provided, you might need a way to fetch it,
+  //   // but for a list, this is often inefficient. Better to include it in the Question object if possible.
+  // }, [question.id, initialCommentCount]);
 
 
   return (
@@ -66,7 +69,7 @@ export default function QuestionCard({ question }: QuestionCardProps) {
         </CardDescription>
         {question.tags && question.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
-            {question.tags.slice(0, 4).map(tag => ( // Show max 4 tags
+            {question.tags.slice(0, 4).map(tag => ( 
               <Badge key={tag} variant="secondary" className="text-xs">
                 <TagIcon className="mr-1 h-3 w-3" /> {tag}
               </Badge>
@@ -82,9 +85,11 @@ export default function QuestionCard({ question }: QuestionCardProps) {
             id={question.id}
             orientation="horizontal"
             size="sm"
+            // onVote={(type) => console.log(`Voted ${type} on Q ${question.id}`)} // Placeholder
         />
         <Link href={`/qna/${question.id}#comments`} className="flex items-center hover:text-primary transition-colors">
           <MessageSquare className="mr-1 h-4 w-4" />
+          {/* Displaying the comment count based on state */}
           <span>{commentCount} Answer{commentCount === 1 ? '' : 's'}</span>
         </Link>
       </CardFooter>
