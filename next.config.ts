@@ -22,7 +22,35 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
+  },
+  webpack: (config, { isServer }) => {
+    // Handle handlebars and genkit-ai warnings
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        os: false,
+      };
+    }
+    
+    // Ignore handlebars warnings from genkit
+    config.ignoreWarnings = [
+      /require\.extensions is not supported by webpack/,
+      /Critical dependency: the request of a dependency is an expression/,
+    ];
+    
+    return config;
+  },
+  experimental: {
+    serverComponentsExternalPackages: ['genkit'],
   },
 };
 

@@ -1,4 +1,15 @@
+import { Suspense } from 'react';
 import QuestionList from '@/components/qna/QuestionList';
+import { Loader2 } from 'lucide-react';
+
+function QuestionListSkeleton() {
+  return (
+    <div className="flex justify-center items-center py-10">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <p className="ml-2">Loading questions...</p>
+    </div>
+  );
+}
 
 export default function QnAPage() {
   return (
@@ -9,7 +20,9 @@ export default function QnAPage() {
           Ask questions, share knowledge, and connect with the community. Browse by tags to find topics you're interested in.
         </p>
       </div>
-      <QuestionList />
+      <Suspense fallback={<QuestionListSkeleton />}>
+        <QuestionList />
+      </Suspense>
     </div>
   );
 }
