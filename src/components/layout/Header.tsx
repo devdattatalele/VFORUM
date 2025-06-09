@@ -1,7 +1,8 @@
+
 "use client";
 
 import Link from 'next/link';
-import { Zap, LogIn, LogOut, UserCircle, ChevronDown } from 'lucide-react';
+import { Zap, LogIn, LogOut, UserCircle, Moon, Sun } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,11 +18,23 @@ import { NAV_LINKS } from '@/lib/constants';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { useTheme } from "next-themes";
+import React, { useEffect, useState } from 'react';
 
 
 export default function Header() {
   const { user, signInWithGoogle, signOut, loading } = useAuth();
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -58,6 +71,11 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          {mounted && (
+            <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
+              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            </Button>
+          )}
           {loading ? (
             <Button variant="outline" size="sm" disabled>Loading...</Button>
           ) : user ? (

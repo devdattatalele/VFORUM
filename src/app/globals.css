@@ -9,45 +9,87 @@ body {
 
 @layer base {
   :root {
-    --background: 210 40% 5%; /* Dark Blue */
-    --foreground: 197 88% 90%; /* Light Blue text */
+    /* Light Theme Colors */
+    --background: 0 0% 98%; /* Off-white */
+    --foreground: 220 15% 20%; /* Dark cool gray for text */
 
-    --card: 210 40% 8%;
-    --card-foreground: 197 88% 90%;
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 220 15% 20%;
 
-    --popover: 210 40% 8%;
-    --popover-foreground: 197 88% 90%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 20%;
 
-    --primary: 197 78% 52%; /* Vibrant Blue - #29ABE2 */
+    --primary: 170 65% 40%; /* Teal/Aqua */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 210 40% 15%; /* Darker Lighter Blue */
-    --secondary-foreground: 197 60% 80%; 
+    --secondary: 170 40% 90%; /* Very light teal */
+    --secondary-foreground: 170 50% 30%; /* Darker teal for text on light teal bg */
 
-    --muted: 210 40% 12%;
-    --muted-foreground: 197 50% 70%;
+    --muted: 220 15% 94%; /* Light cool gray */
+    --muted-foreground: 220 10% 50%; /* Medium cool gray for muted text */
 
-    --accent: 291 64% 52%; /* Lighter Purple */
-    --accent-foreground: 0 0% 100%;
+    --accent: 15 85% 55%; /* Coral/Warm Orange */
+    --accent-foreground: 0 0% 100%; /* White */
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84.2% 60.2%; /* Red */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 210 40% 20%;
-    --input: 210 40% 20%;
-    --ring: 197 78% 52%;
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 170 65% 40%; /* Primary for rings */
 
     --radius: 0.5rem;
 
-    /* Sidebar specific theme for dark mode (now default) */
-    --sidebar-background: 210 40% 8%;
-    --sidebar-foreground: 197 88% 90%;
-    --sidebar-primary: 197 78% 52%;
+    /* Sidebar light theme */
+    --sidebar-background: 0 0% 96%;
+    --sidebar-foreground: 220 15% 25%;
+    --sidebar-primary: 170 65% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 291 64% 52%;
+    --sidebar-accent: 15 85% 55%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 210 40% 15%;
-    --sidebar-ring: 197 78% 52%;
+    --sidebar-border: 220 15% 85%;
+    --sidebar-ring: 170 65% 40%;
+  }
+
+  .dark {
+    /* Dark Theme Colors */
+    --background: 220 25% 6%; /* Very dark, slightly cool blue */
+    --foreground: 220 15% 92%; /* Light cool gray for text */
+
+    --card: 220 25% 10%; /* Slightly lighter dark blue */
+    --card-foreground: 220 15% 92%;
+
+    --popover: 220 25% 10%;
+    --popover-foreground: 220 15% 92%;
+
+    --primary: 170 70% 50%; /* Brighter Teal/Aqua for dark bg */
+    --primary-foreground: 0 0% 100%; /* White */
+
+    --secondary: 170 40% 20%; /* Dark muted teal */
+    --secondary-foreground: 170 50% 80%; /* Lighter teal for text on dark teal bg */
+
+    --muted: 220 20% 18%; /* Darker cool gray */
+    --muted-foreground: 220 10% 65%; /* Medium-light cool gray for muted text */
+
+    --accent: 15 90% 60%; /* Brighter Coral/Warm Orange for dark bg */
+    --accent-foreground: 0 0% 100%; /* White */
+
+    --destructive: 0 72.2% 50.6%; /* Red */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 20% 25%;
+    --input: 220 20% 25%;
+    --ring: 170 70% 50%; /* Primary for rings */
+
+    /* Sidebar dark theme */
+    --sidebar-background: 220 25% 8%;
+    --sidebar-foreground: 220 15% 90%;
+    --sidebar-primary: 170 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 15 90% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 20% 22%;
+    --sidebar-ring: 170 70% 50%;
   }
 }
 
@@ -66,4 +108,7 @@ body {
 /* Add a utility class for glassmorphism */
 .glass-card {
   @apply bg-card/80 backdrop-blur-lg border border-white/10;
+}
+.dark .glass-card {
+   @apply bg-card/70 backdrop-blur-lg border-white/5;
 }
