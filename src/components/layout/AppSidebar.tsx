@@ -2,10 +2,9 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation'; // Removed useSearchParams
+import { usePathname } from 'next/navigation'; 
 import { cn } from '@/lib/utils';
 import { COMMUNITIES, NAV_LINKS } from '@/lib/constants';
-// Removed Button import as it's not used directly here
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sidebar,
@@ -19,7 +18,7 @@ import {
   SidebarGroupLabel,
   SidebarSeparator
 } from '@/components/ui/sidebar';
-import { Settings, LifeBuoy } from 'lucide-react'; // Removed Zap
+import { Settings, LifeBuoy, Zap } from 'lucide-react'; 
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { UserCircle } from 'lucide-react';
@@ -27,12 +26,10 @@ import { UserCircle } from 'lucide-react';
 
 export default function AppSidebar() {
   const pathname = usePathname();
-  // Removed currentCommunity and isCommunityActive as links will now directly go to community pages
   const { user } = useAuth();
   
   const isNavLinkActive = (href: string) => {
      if (href === '/') return pathname === href;
-     // For dynamic routes like /community/[id], check if pathname starts with the base
      if (href.includes('[') && href.includes(']')) {
        const baseHref = href.substring(0, href.indexOf('['));
        return pathname.startsWith(baseHref);
@@ -42,8 +39,11 @@ export default function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="sidebar" side="left">
-      <SidebarHeader className="items-center justify-center p-4">
-         {/* Optionally, a smaller logo or icon for collapsed state if needed */}
+      <SidebarHeader className="flex items-center gap-2 p-4 group-data-[collapsible=icon]:justify-center border-b border-sidebar-border">
+        <Zap className="h-6 w-6 text-sidebar-primary flex-shrink-0" />
+        <span className="text-lg font-bold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+          Campus Tech Hub
+        </span>
       </SidebarHeader>
       <SidebarContent className="p-0">
         <ScrollArea className="h-full">
@@ -70,7 +70,6 @@ export default function AppSidebar() {
             <SidebarMenu className="px-0">
             {COMMUNITIES.map((community) => (
               <SidebarMenuItem key={community.id}>
-                {/* Updated Link to point to /community/[communityId] */}
                 <Link href={community.id === 'all' ? '/qna' : `/community/${community.id}`} className="w-full">
                    <SidebarMenuButton 
                     isActive={community.id !== 'all' && pathname === `/community/${community.id}`}

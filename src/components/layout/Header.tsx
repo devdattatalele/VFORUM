@@ -49,28 +49,28 @@ export default function Header() {
           </Link>
         </div>
 
-        <nav className="hidden items-center gap-2 md:flex">
-          {NAV_LINKS.map((link) => (
-            <Button
-              key={link.href}
-              variant="ghost"
-              asChild
-              className={cn(
-                "text-sm font-medium",
-                pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Link href={link.href}>
-                {/* <link.icon className="mr-2 h-4 w-4" /> */}
-                {link.label}
-              </Link>
-            </Button>
-          ))}
-        </nav>
-
         <div className="flex items-center gap-3">
+          <nav className="hidden items-center gap-1 md:flex mr-2">
+            {NAV_LINKS.map((link) => (
+              <Button
+                key={link.href}
+                variant="ghost"
+                size="sm"
+                asChild
+                className={cn(
+                  "text-sm font-medium",
+                  pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Link href={link.href}>
+                  {link.label}
+                </Link>
+              </Button>
+            ))}
+          </nav>
+
           {mounted && (
             <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
               {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
