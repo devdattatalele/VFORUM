@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -6,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { COMMUNITIES, NAV_LINKS } from '@/lib/constants';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import TagsSidebar from './TagsSidebar';
 import {
   Sidebar,
   SidebarContent,
@@ -18,10 +18,8 @@ import {
   SidebarGroupLabel,
   SidebarSeparator
 } from '@/components/ui/sidebar';
-import { Settings, LifeBuoy, Zap } from 'lucide-react'; 
+import { Zap } from 'lucide-react'; 
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { UserCircle } from 'lucide-react';
 
 
 export default function AppSidebar() {
@@ -42,7 +40,7 @@ export default function AppSidebar() {
       <SidebarHeader className="flex items-center gap-2 p-4 group-data-[collapsible=icon]:justify-center border-b border-sidebar-border">
         <Zap className="h-6 w-6 text-sidebar-primary flex-shrink-0" />
         <span className="text-lg font-bold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-          Campus Tech Hub
+          VForums And Events
         </span>
       </SidebarHeader>
       <SidebarContent className="p-0">
@@ -83,36 +81,23 @@ export default function AppSidebar() {
             ))}
             </SidebarMenu>
           </SidebarGroup>
+
+          <SidebarSeparator />
+
+          {/* Tags Section */}
+          <SidebarGroup className="pt-2 group-data-[collapsible=icon]:hidden">
+            <SidebarGroupLabel>Browse by Tags</SidebarGroupLabel>
+            <div className="px-2">
+              <TagsSidebar />
+            </div>
+          </SidebarGroup>
         </ScrollArea>
       </SidebarContent>
 
       <SidebarFooter className="p-2">
-         {user && (
-           <div className="flex items-center gap-2 p-2 rounded-md hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
-                <AvatarFallback>
-                  {user.displayName ? user.displayName.charAt(0).toUpperCase() : <UserCircle size={18} />}
-                </AvatarFallback>
-              </Avatar>
-              <div className="group-data-[collapsible=icon]:hidden flex flex-col">
-                <span className="text-sm font-medium text-sidebar-foreground">{user.displayName}</span>
-                <span className="text-xs text-sidebar-foreground/70">{user.email}</span>
-              </div>
-            </div>
-         )}
-        <SidebarMenu className="px-0 py-2">
-           <SidebarMenuItem>
-            <SidebarMenuButton tooltip={{children: "Help", side:'right'}}>
-              <LifeBuoy /> <span>Help</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip={{children: "Settings", side:'right'}}>
-              <Settings /> <span>Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <div className="text-xs text-center text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
+          Built by VIT students, for VIT students
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

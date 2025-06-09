@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -24,40 +23,43 @@ interface QuestionCardProps {
 export default function QuestionCard({ question }: QuestionCardProps) {
   const community = COMMUNITIES.find(c => c.id === question.communityId);
 
-  // This is the old card-based rendering. The new table view in QuestionList.tsx
-  // will handle the layout. This component might be used for a different view
-  // or its content parts used in the table rows. For now, leaving it as is
-  // but noting it's not directly used by the new QuestionList table.
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 glass-card">
-      <CardHeader className="pb-3">
+    <Card className="p-0 border-0 bg-transparent shadow-none">
+      <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
-          <Link href={`/qna/${question.id}`} legacyBehavior passHref>
-            <a className="block">
-              <CardTitle className="text-lg font-headline mb-1 hover:text-primary transition-colors">
-                {question.title}
-              </CardTitle>
-            </a>
-          </Link>
-          {community && (
-             <Badge variant="outline" className="ml-2 whitespace-nowrap">
-                {community.icon && <community.icon className="mr-1 h-3 w-3 text-muted-foreground"/>}
-                {community.name}
-             </Badge>
-          )}
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={question.author.photoURL || undefined} alt={question.author.displayName || 'User'} />
+              <AvatarFallback>
+                {question.author.displayName ? question.author.displayName.charAt(0).toUpperCase() : <UserCircle size={16} />}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <span className="font-medium text-foreground">{question.author.displayName}</span>
+              <div className="flex items-center gap-2 text-xs">
+                <CalendarDays className="h-3 w-3" />
+                <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
+                {community && (
+                  <>
+                    <span>•</span>
+                    <Badge variant="outline" className="px-1.5 py-0.5 text-xs border-blue-500/50 text-blue-600 dark:text-blue-400 bg-blue-500/10">
+                      {community.icon && <community.icon className="mr-1 h-3 w-3" />}
+                      {community.name}
+                    </Badge>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {question.views || 0} views
+          </div>
         </div>
-        <div className="flex items-center text-xs text-muted-foreground space-x-2">
-          <Avatar className="h-5 w-5">
-            <AvatarImage src={question.author.photoURL || undefined} alt={question.author.displayName || 'Author'} />
-            <AvatarFallback className="text-xs">
-              {question.author.displayName ? question.author.displayName.charAt(0).toUpperCase() : <UserCircle size={12}/>}
-            </AvatarFallback>
-          </Avatar>
-          <span>{question.author.displayName || 'Anonymous'}</span>
-          <span className="text-muted-foreground/50">&bull;</span>
-          <CalendarDays className="h-3 w-3" />
-          <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
-        </div>
+        <Link href={`/qna/${question.id}`} className="block group">
+          <CardTitle className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors mt-3 line-clamp-2">
+            {question.title}
+          </CardTitle>
+        </Link>
       </CardHeader>
       <CardContent className="py-0 pb-3">
         <CardDescription className="text-sm text-foreground/80 line-clamp-2 mb-2">
@@ -66,9 +68,11 @@ export default function QuestionCard({ question }: QuestionCardProps) {
         {question.tags && question.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
             {question.tags.slice(0, 4).map(tag => ( 
-              <Badge key={tag} variant="secondary" className="text-xs">
-                <TagIcon className="mr-1 h-3 w-3" /> {tag}
-              </Badge>
+              <Link key={tag} href={`/qna?tag=${encodeURIComponent(tag)}`}>
+                <Badge variant="secondary" className="text-xs hover:bg-primary/20 transition-colors cursor-pointer">
+                  <TagIcon className="mr-1 h-3 w-3" /> {tag}
+                </Badge>
+              </Link>
             ))}
             {question.tags.length > 4 && <Badge variant="secondary" className="text-xs">...</Badge>}
           </div>
@@ -79,6 +83,7 @@ export default function QuestionCard({ question }: QuestionCardProps) {
             initialUpvotes={question.upvotes} 
             initialDownvotes={question.downvotes} 
             id={question.id}
+            type="question"
             orientation="horizontal"
             size="sm"
         />

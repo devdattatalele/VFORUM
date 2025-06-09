@@ -1,4 +1,3 @@
-
 import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
@@ -18,8 +17,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'Campus Tech Hub',
-  description: 'Connecting VIT\'s tech community.',
+  title: 'VForums And Events',
+  description: 'Connect, Learn, and Grow - VIT\'s premier platform for forums and events.',
 };
 
 export default function RootLayout({

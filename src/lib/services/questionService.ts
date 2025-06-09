@@ -1,4 +1,3 @@
-
 'use server';
 import type { Question, UserProfile } from '@/lib/types';
 import { db } from '@/lib/firebase';
@@ -55,7 +54,7 @@ export async function getQuestionById(questionId: string): Promise<Question | nu
     const docRef = doc(db, 'questions', questionId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      // Increment views
+      // Increment views in database
       await updateDoc(docRef, {
           views: increment(1)
       });
@@ -63,7 +62,7 @@ export async function getQuestionById(questionId: string): Promise<Question | nu
       return {
         id: docSnap.id,
         ...data,
-        views: (data.views || 0) + 1, // Return the incremented view
+        // Don't increment views locally since it's already done in database
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
         lastActivityAt: data.lastActivityAt?.toDate ? data.lastActivityAt.toDate().toISOString() : (data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString()),
       } as Question;
@@ -91,6 +90,27 @@ export async function getQuestionsByCommunity(communityId: string): Promise<Ques
   } catch (error) {
     console.error('Error fetching questions by community: ', error);
     return [];
+  }
+}
+
+export async function updateQuestion(
+  questionId: string,
+  updates: {
+    title?: string;
+    content?: string;
+    tags?: string[];
+  },
+  userId: string
+): Promise<void> {
+  try {
+    const questionRef = doc(db, 'questions', questionId);
+    await updateDoc(questionRef, {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error updating question: ', error);
+    throw new Error('Failed to update question.');
   }
 }
 

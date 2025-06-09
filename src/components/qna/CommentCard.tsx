@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Comment as CommentType } from '@/lib/types';
@@ -7,13 +6,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import VoteButtons from './VoteButtons';
 import { UserCircle, CalendarDays } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import React from "react"; // Added React import
+import React from "react";
 
 interface CommentCardProps {
   comment: CommentType;
+  questionId: string;
 }
 
-export default function CommentCard({ comment }: CommentCardProps) {
+export default function CommentCard({ comment, questionId }: CommentCardProps) {
   return (
     <Card className="bg-card/70 backdrop-blur-md border border-white/10 shadow-sm">
       <CardHeader className="pb-2 pt-4 px-4">
@@ -36,8 +36,10 @@ export default function CommentCard({ comment }: CommentCardProps) {
       <CardFooter className="px-4 pb-3 pt-2">
         <VoteButtons 
             initialUpvotes={comment.upvotes} 
-            // initialDownvotes={0} // Assuming comments don't have downvotes in this mock data
+            initialDownvotes={comment.downvotes || 0}
             id={comment.id}
+            type="comment"
+            questionId={questionId}
             orientation="horizontal"
             size="sm"
         />

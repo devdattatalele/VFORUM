@@ -1,4 +1,3 @@
-
 'use server';
 import type { Event, UserProfile } from '@/lib/types';
 import { db } from '@/lib/firebase';
@@ -38,12 +37,12 @@ export async function getEvents(): Promise<Event[]> {
     return querySnapshot.docs.map(docSnap => {
       const data = docSnap.data();
       return {
-        id: docSnap.id,
         ...data,
+        id: docSnap.id,
         // Ensure createdAt and dateTime are strings if they come from Firestore as Timestamps
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
         dateTime: typeof data.dateTime === 'string' ? data.dateTime : (data.dateTime?.toDate ? data.dateTime.toDate().toISOString() : new Date().toISOString()),
-      } as Event;
+      } as unknown as Event;
     });
   } catch (error) {
     console.error('Error fetching events: ', error);
@@ -58,11 +57,11 @@ export async function getEventById(eventId: string): Promise<Event | null> {
     if (docSnap.exists()) {
       const data = docSnap.data();
       return {
-        id: docSnap.id,
         ...data,
+        id: docSnap.id,
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
         dateTime: typeof data.dateTime === 'string' ? data.dateTime : (data.dateTime?.toDate ? data.dateTime.toDate().toISOString() : new Date().toISOString()),
-      } as Event;
+      } as unknown as Event;
     }
     return null;
   } catch (error) {
@@ -78,11 +77,11 @@ export async function getEventsByCommunity(communityId: string): Promise<Event[]
     return querySnapshot.docs.map(docSnap => {
       const data = docSnap.data();
       return {
-        id: docSnap.id,
         ...data,
+        id: docSnap.id,
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
         dateTime: typeof data.dateTime === 'string' ? data.dateTime : (data.dateTime?.toDate ? data.dateTime.toDate().toISOString() : new Date().toISOString()),
-      } as Event;
+      } as unknown as Event;
     });
   } catch (error) {
     console.error('Error fetching events by community: ', error);

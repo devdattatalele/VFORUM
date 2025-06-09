@@ -1,8 +1,7 @@
-
 "use client";
 
 import Link from 'next/link';
-import { Zap, LogIn, LogOut, UserCircle, Moon, Sun } from 'lucide-react';
+import { Zap, LogIn, LogOut, UserCircle, Moon, Sun, Settings, LifeBuoy } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,7 +22,7 @@ import React, { useEffect, useState } from 'react';
 
 
 export default function Header() {
-  const { user, signInWithGoogle, signOut, loading } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -47,7 +46,7 @@ export default function Header() {
           { (isMobile || sidebarState === 'collapsed') &&
             <Link href="/" className="flex items-center gap-2">
               <Zap className="h-7 w-7 text-primary" />
-              <span className="text-xl font-bold font-headline text-foreground">Campus Tech Hub</span>
+              <span className="text-xl font-bold font-headline text-foreground">VForums And Events</span>
             </Link>
           }
         </div>
@@ -79,6 +78,7 @@ export default function Header() {
               {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </Button>
           )}
+          
           {loading ? (
             <Button variant="outline" size="sm" disabled>Loading...</Button>
           ) : user ? (
@@ -101,7 +101,15 @@ export default function Header() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {/* Add more items here like "Profile", "Settings" */}
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <LifeBuoy className="mr-2 h-4 w-4" />
+                  Help
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
@@ -109,9 +117,11 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="outline" size="sm" onClick={signInWithGoogle}>
-              <LogIn className="mr-2 h-4 w-4" />
-              Sign In
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/auth">
+                <LogIn className="mr-2 h-4 w-4" />
+                Sign In
+              </Link>
             </Button>
           )}
         </div>

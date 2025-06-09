@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Question } from '@/lib/types';
@@ -19,17 +18,16 @@ import {
 import React, { useEffect, useState } from 'react';
 import { getQuestions } from '@/lib/services/questionService';
 import { COMMUNITIES } from '@/lib/constants';
-import { formatDistanceToNow, format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserCircle } from 'lucide-react';
-
 
 export default function QuestionList() {
   const searchParams = useSearchParams();
   const communityFilter = searchParams.get('community');
   const tagFilter = searchParams.get('tag');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('activity-desc'); // Default sort by last activity
+  const [sortBy, setSortBy] = useState('activity-desc'); // 'activity-desc', 'activity-asc', 'recent-desc', 'recent-asc', 'popular-desc', 'replies-desc'
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,17 +89,6 @@ export default function QuestionList() {
 
   }, [questions, communityFilter, tagFilter, searchTerm, sortBy]);
 
-  const formatActivityTime = (dateString?: string) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInDays = (now.getTime() - date.getTime()) / (1000 * 3600 * 24);
-    if (diffInDays > 7) {
-      return format(date, "MMM d");
-    }
-    return formatDistanceToNow(date, { addSuffix: true });
-  };
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-10">
@@ -112,7 +99,7 @@ export default function QuestionList() {
   }
 
   if (error) {
-     return (
+    return (
       <div className="text-center py-10 text-destructive">
         <HelpCircle className="mx-auto h-12 w-12 mb-4" />
         <p>{error}</p>
@@ -156,6 +143,25 @@ export default function QuestionList() {
         </div>
       </div>
 
+      {/* Display current filters */}
+      {(tagFilter || communityFilter) && (
+        <div className="flex gap-2 items-center">
+          <span className="text-sm text-muted-foreground">Filtered by:</span>
+          {tagFilter && (
+            <Badge variant="outline" className="bg-primary/10">
+              Tag: {tagFilter}
+              <Link href="/qna" className="ml-2 hover:text-destructive">×</Link>
+            </Badge>
+          )}
+          {communityFilter && communityFilter !== 'all' && (
+            <Badge variant="outline" className="bg-blue-500/10">
+              Community: {COMMUNITIES.find(c => c.id === communityFilter)?.name || communityFilter}
+              <Link href="/qna" className="ml-2 hover:text-destructive">×</Link>
+            </Badge>
+          )}
+        </div>
+      )}
+
       {filteredQuestions.length > 0 ? (
         <Table className="mt-0">
           <TableHeader>
@@ -186,7 +192,11 @@ export default function QuestionList() {
                              </Badge>
                         )}
                         {question.tags.slice(0, 2).map(tag => (
-                          <Badge key={tag} variant="secondary" className="py-0.5 px-1.5">{tag}</Badge>
+                          <Link key={tag} href={`/qna?tag=${encodeURIComponent(tag)}`}>
+                            <Badge variant="secondary" className="py-0.5 px-1.5 hover:bg-primary/20 transition-colors cursor-pointer">
+                              {tag}
+                            </Badge>
+                          </Link>
                         ))}
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-1">
@@ -197,25 +207,38 @@ export default function QuestionList() {
                   <TableCell className="text-center align-middle text-sm text-foreground tabular-nums">
                     {Intl.NumberFormat('en', { notation: 'compact' }).format(question.views || 0)}
                   </TableCell>
-                  <TableCell className="text-right align-middle text-sm text-muted-foreground tabular-nums">{formatActivityTime(question.lastActivityAt || question.createdAt)}</TableCell>
+                  <TableCell className="text-right align-middle text-xs text-muted-foreground">
+                     <div className="flex items-center justify-end gap-2">
+                        <Avatar className="h-5 w-5">
+                          <AvatarImage src={question.author.photoURL || undefined} alt={question.author.displayName || 'Author'} />
+                          <AvatarFallback className="text-xs">
+                            {question.author.displayName ? question.author.displayName.charAt(0).toUpperCase() : <UserCircle size={12} />}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="text-right">
+                          <div className="font-medium text-foreground">{question.author.displayName || 'Anonymous'}</div>
+                          <div>{formatDistanceToNow(new Date(question.lastActivityAt || question.createdAt), { addSuffix: true })}</div>
+                        </div>
+                     </div>
+                  </TableCell>
                 </TableRow>
               );
             })}
           </TableBody>
         </Table>
       ) : (
-        <div className="text-center py-16 bg-muted/20 dark:bg-muted/5 rounded-lg shadow-sm mt-8 border border-border">
-           <HelpCircle className="mx-auto h-16 w-16 text-muted-foreground mb-6" />
+        <div className="text-center py-16 bg-card/80 backdrop-blur-md rounded-lg shadow-sm mt-8 border border-white/10">
+          <HelpCircle className="mx-auto h-16 w-16 text-muted-foreground mb-6" />
           <h3 className="text-2xl font-semibold text-foreground mb-2">No Questions Found</h3>
           <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-            {searchTerm || communityFilter || tagFilter 
-              ? "No questions match your current search or filters. Try a different query!" 
-              : "It's quiet in here... Be the first to spark a discussion by asking a question!"}
+            {searchTerm || tagFilter || communityFilter 
+              ? "It seems there are no questions matching your current search or filter criteria. Try broadening your search!" 
+              : "There are currently no questions in the forum. Why not be the first to ask one?"}
           </p>
-          {!(searchTerm || communityFilter || tagFilter) && (
+          {!(searchTerm || tagFilter || communityFilter) && (
             <Button asChild className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground">
               <Link href="/qna/ask">
-                <PlusCircle className="mr-2 h-4 w-4" /> Ask a Question
+                <PlusCircle className="mr-2 h-4 w-4" /> Ask Your First Question
               </Link>
             </Button>
           )}

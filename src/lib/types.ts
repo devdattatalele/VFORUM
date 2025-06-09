@@ -33,6 +33,7 @@ export interface Question {
   tags: string[];
   author: UserProfile;
   createdAt: string; // Store as ISO string
+  updatedAt?: string; // ISO string, for tracking edits
   upvotes: number;
   downvotes: number;
   communityId: string; // Link to Community
@@ -48,7 +49,9 @@ export interface Comment {
   content: string;
   author: UserProfile;
   createdAt: string; // Store as ISO string
+  updatedAt?: string; // ISO string, for tracking edits
   upvotes: number;
+  downvotes: number; // Add downvotes field
 }
 
 export interface Tag {

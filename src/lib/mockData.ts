@@ -1,4 +1,3 @@
-
 import type { Event, Question, UserProfile, Comment } from './types';
 import { MOCK_USER_ID, MOCK_USER_DISPLAY_NAME, MOCK_USER_PHOTO_URL, COMMUNITIES } from './constants';
 
@@ -96,7 +95,7 @@ export const mockQuestions: Question[] = [
     lastActivityAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     upvotes: 15,
     downvotes: 0,
-    communityId: 'robotics-club',
+    communityId: 'ieee',
     views: 90,
     replyCount: 1,
   },
@@ -124,6 +123,7 @@ export const mockComments: Comment[] = [
         author: { ...mockUser, uid: 'user-helper1', displayName: 'DevOps Guru' },
         createdAt: new Date(Date.now() - 23 * 60 * 60 * 1000).toISOString(), // 23 hours ago
         upvotes: 10,
+        downvotes: 1,
         parentId: null,
     },
     {
@@ -133,6 +133,7 @@ export const mockComments: Comment[] = [
         author: mockUser,
         createdAt: new Date(Date.now() - 22 * 60 * 60 * 1000).toISOString(), // 22 hours ago
         upvotes: 3,
+        downvotes: 0,
         parentId: 'c1', 
     },
     {
@@ -142,6 +143,7 @@ export const mockComments: Comment[] = [
         author: { ...mockUser, uid: 'user-datasci', displayName: 'Senior Data Scientist' },
         createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
         upvotes: 15,
+        downvotes: 2,
         parentId: null,
     },
     {
@@ -151,6 +153,7 @@ export const mockComments: Comment[] = [
         author: { ...mockUser, uid: 'user-kaggle', displayName: 'Kaggler' },
         createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
         upvotes: 8,
+        downvotes: 0,
         parentId: null,
     }
 ];
