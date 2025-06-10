@@ -2,61 +2,63 @@
 
 import type { Question } from '@/lib/types';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ListFilter, PlusCircle, Search, HelpCircle, Loader2, MessageSquare, Eye, GitCommitVertical, TrendingUp, Pin, ArrowUp } from 'lucide-react'; 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Search, HelpCircle, Loader2, ArrowUp, Trash2, Edit3, PlusCircle, AlertTriangle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { getQuestions } from '@/lib/services/questionService';
+import { getQuestions, deleteQuestion } from '@/lib/services/questionService';
 import { COMMUNITIES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
-export default function QuestionList() {
-  const searchParams = useSearchParams();
-  const communityFilter = searchParams.get('community');
-  const tagFilter = searchParams.get('tag');
+export default function MyForumsList() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('activity-desc'); // 'activity-desc', 'activity-asc', 'recent-desc', 'recent-asc', 'popular-desc', 'replies-desc', 'upvotes-desc'
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchQuestions() {
+    async function fetchMyQuestions() {
+      if (!user) return;
+      
       setIsLoading(true);
       setError(null);
       try {
         const fetchedQuestions = await getQuestions();
-        setQuestions(fetchedQuestions);
+        // Filter to only show user's questions
+        const myQuestions = fetchedQuestions.filter(q => q.author.uid === user.uid);
+        setQuestions(myQuestions);
       } catch (err) {
         console.error("Failed to fetch questions:", err);
-        setError("Could not load questions. Please try again later.");
+        setError("Could not load your forums. Please try again later.");
       } finally {
         setIsLoading(false);
       }
     }
-    fetchQuestions();
-  }, []);
+    fetchMyQuestions();
+  }, [user]);
 
   const filteredQuestions = React.useMemo(() => {
     let processedQuestions = questions;
-    if (communityFilter && communityFilter !== 'all') {
-      processedQuestions = processedQuestions.filter(q => q.communityId === communityFilter);
-    }
-    if (tagFilter) {
-      processedQuestions = processedQuestions.filter(q => q.tags.includes(tagFilter));
-    }
+    
     if (searchTerm) {
       processedQuestions = processedQuestions.filter(q => 
         q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -65,37 +67,33 @@ export default function QuestionList() {
       );
     }
 
+    // Sort by most recent activity first
     return processedQuestions.sort((a, b) => {
       const aActivity = a.lastActivityAt || a.createdAt;
       const bActivity = b.lastActivityAt || b.createdAt;
-
-      switch (sortBy) {
-        case 'recent-desc':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case 'recent-asc':
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        case 'activity-desc':
-          return new Date(bActivity).getTime() - new Date(aActivity).getTime();
-        case 'activity-asc':
-          return new Date(aActivity).getTime() - new Date(bActivity).getTime();
-        case 'popular-desc': // by views
-          return (b.views || 0) - (a.views || 0);
-        case 'replies-desc':
-            return (b.replyCount || 0) - (a.replyCount || 0);
-        case 'upvotes-desc':
-            return (b.upvotes || 0) - (a.upvotes || 0);
-        default:
-          return new Date(bActivity).getTime() - new Date(aActivity).getTime();
-      }
+      return new Date(bActivity).getTime() - new Date(aActivity).getTime();
     });
+  }, [questions, searchTerm]);
 
-  }, [questions, communityFilter, tagFilter, searchTerm, sortBy]);
+  const handleDeleteQuestion = async (questionId: string) => {
+    setDeletingId(questionId);
+    try {
+      await deleteQuestion(questionId);
+      setQuestions(prev => prev.filter(q => q.id !== questionId));
+      toast.success("Forum post deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete question:", error);
+      toast.error("Failed to delete forum post. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-10">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Loading questions...</p>
+        <p className="ml-2">Loading your forums...</p>
       </div>
     );
   }
@@ -115,7 +113,7 @@ export default function QuestionList() {
         <div className="relative w-full sm:max-w-sm">
            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
            <Input 
-            placeholder="Search questions..." 
+            placeholder="Search your forums..." 
             className="pl-10 bg-background/70 focus:bg-background dark:bg-background/70 dark:focus:bg-background"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -123,57 +121,24 @@ export default function QuestionList() {
         </div>
        
         <div className="flex gap-2 items-center w-full sm:w-auto">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-background/70 focus:bg-background dark:bg-background/70 dark:focus:bg-background">
-              <ListFilter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="activity-desc">Last Activity (Newest)</SelectItem>
-              <SelectItem value="activity-asc">Last Activity (Oldest)</SelectItem>
-              <SelectItem value="recent-desc">Created (Newest)</SelectItem>
-              <SelectItem value="recent-asc">Created (Oldest)</SelectItem>
-              <SelectItem value="upvotes-desc">Most Upvoted</SelectItem>
-              <SelectItem value="popular-desc">Views</SelectItem>
-              <SelectItem value="replies-desc">Replies</SelectItem>
-            </SelectContent>
-          </Select>
-           <Button asChild className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Button asChild className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
             <Link href="/qna/ask">
-              <PlusCircle className="mr-2 h-4 w-4" /> Ask Question
+              <PlusCircle className="mr-2 h-4 w-4" /> Ask New Question
             </Link>
           </Button>
         </div>
       </div>
 
-      {/* Display current filters */}
-      {(tagFilter || communityFilter) && (
-        <div className="flex gap-2 items-center">
-          <span className="text-sm text-muted-foreground">Filtered by:</span>
-          {tagFilter && (
-            <Badge variant="outline" className="bg-primary/10">
-              Tag: {tagFilter}
-              <Link href="/qna" className="ml-2 hover:text-destructive">×</Link>
-            </Badge>
-          )}
-          {communityFilter && communityFilter !== 'all' && (
-            <Badge variant="outline" className="bg-blue-500/10">
-              Community: {COMMUNITIES.find(c => c.id === communityFilter)?.name || communityFilter}
-              <Link href="/qna" className="ml-2 hover:text-destructive">×</Link>
-            </Badge>
-          )}
-        </div>
-      )}
-
       {filteredQuestions.length > 0 ? (
         <Table className="mt-0">
           <TableHeader>
             <TableRow className="border-b-border hover:bg-transparent">
-              <TableHead className="w-[50%] text-muted-foreground font-semibold">Topic</TableHead>
+              <TableHead className="w-[45%] text-muted-foreground font-semibold">Topic</TableHead>
               <TableHead className="text-center text-muted-foreground font-semibold">Upvotes</TableHead>
               <TableHead className="text-center text-muted-foreground font-semibold">Replies</TableHead>
               <TableHead className="text-center text-muted-foreground font-semibold">Views</TableHead>
-              <TableHead className="text-right text-muted-foreground font-semibold">Activity</TableHead>
+              <TableHead className="text-center text-muted-foreground font-semibold">Activity</TableHead>
+              <TableHead className="text-center text-muted-foreground font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -184,7 +149,6 @@ export default function QuestionList() {
                   <TableCell className="py-3 align-top">
                     <Link href={`/qna/${question.id}`} className="block group">
                       <h3 className="text-base font-medium text-foreground group-hover:text-primary transition-colors mb-1 line-clamp-2">
-                        {/* {question.tags.includes('pinned') && <Pin className="inline-block mr-1.5 h-4 w-4 text-accent" />} Icon for pinned questions */}
                         {question.title}
                       </h3>
                     </Link>
@@ -217,19 +181,62 @@ export default function QuestionList() {
                   <TableCell className="text-center align-middle text-sm text-foreground tabular-nums">
                     {Intl.NumberFormat('en', { notation: 'compact' }).format(question.views || 0)}
                   </TableCell>
-                  <TableCell className="text-right align-middle text-xs text-muted-foreground">
-                     <div className="flex items-center justify-end gap-2">
-                        <Avatar className="h-5 w-5">
-                          <AvatarImage src={question.author.photoURL || undefined} alt={question.author.displayName || 'Author'} />
-                          <AvatarFallback className="text-xs">
-                            {question.author.displayName ? question.author.displayName.charAt(0).toUpperCase() : <UserCircle size={12} />}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="text-right">
-                          <div className="font-medium text-foreground">{question.author.displayName || 'Anonymous'}</div>
+                  <TableCell className="text-center align-middle text-xs text-muted-foreground">
+                     <div className="flex items-center justify-center gap-2">
+                        <div className="text-center">
                           <div>{formatDistanceToNow(new Date(question.lastActivityAt || question.createdAt), { addSuffix: true })}</div>
                         </div>
                      </div>
+                  </TableCell>
+                  <TableCell className="text-center align-middle">
+                    <div className="flex items-center justify-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="h-8 w-8 p-0"
+                      >
+                        <Link href={`/qna/${question.id}`}>
+                          <Edit3 className="h-3 w-3" />
+                        </Link>
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            disabled={deletingId === question.id}
+                          >
+                            {deletingId === question.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3 w-3" />
+                            )}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                              <AlertTriangle className="h-5 w-5 text-destructive" />
+                              Delete Forum Post
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "<strong>{question.title}</strong>"? This action cannot be undone and will remove all replies and discussions associated with this post.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteQuestion(question.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete Post
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -239,13 +246,13 @@ export default function QuestionList() {
       ) : (
         <div className="text-center py-16 bg-card/80 backdrop-blur-md rounded-lg shadow-sm mt-8 border border-white/10">
           <HelpCircle className="mx-auto h-16 w-16 text-muted-foreground mb-6" />
-          <h3 className="text-2xl font-semibold text-foreground mb-2">No Questions Found</h3>
+          <h3 className="text-2xl font-semibold text-foreground mb-2">No Forums Posted Yet</h3>
           <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-            {searchTerm || tagFilter || communityFilter 
-              ? "It seems there are no questions matching your current search or filter criteria. Try broadening your search!" 
-              : "There are currently no questions in the forum. Why not be the first to ask one?"}
+            {searchTerm 
+              ? "No forums match your search criteria. Try a different search term." 
+              : "You haven't posted any questions yet. Start a discussion by asking your first question!"}
           </p>
-          {!(searchTerm || tagFilter || communityFilter) && (
+          {!searchTerm && (
             <Button asChild className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground">
               <Link href="/qna/ask">
                 <PlusCircle className="mr-2 h-4 w-4" /> Ask Your First Question
@@ -256,4 +263,4 @@ export default function QuestionList() {
       )}
     </div>
   );
-}
+} 

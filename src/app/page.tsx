@@ -3,16 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Calendar, MessageSquare, ArrowRight, Clock, Users, Eye } from 'lucide-react';
+import { Loader2, Calendar, MessageSquare, ArrowRight, Clock, Users, Eye, ArrowUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { getEvents } from '@/lib/services/eventService';
 import { getQuestions } from '@/lib/services/questionService';
+import { COMMUNITIES } from '@/lib/constants';
 import type { Event, Question } from '@/lib/types';
 
 export default function HomePage() {
@@ -192,61 +194,75 @@ export default function HomePage() {
               <span>Loading discussions...</span>
             </div>
           ) : recentForums.length > 0 ? (
-            <div className="space-y-4">
-              {recentForums.map((forum) => (
-                <div 
-                  key={forum.id}
-                  className="p-4 rounded-lg bg-card/50 border border-border/50 hover:bg-card/80 transition-colors"
-                >
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-10 w-10 flex-shrink-0">
-                      <AvatarImage src={forum.author.photoURL || undefined} />
-                      <AvatarFallback>
-                        {forum.author.displayName?.split(' ').map(n => n[0]).join('') || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2">
-                        <Link href={`/qna/${forum.id}`} className="hover:underline">
-                          <h3 className="font-semibold text-foreground line-clamp-2">
+            <Table className="mt-0">
+              <TableHeader>
+                <TableRow className="border-b-border hover:bg-transparent">
+                  <TableHead className="w-[50%] text-muted-foreground font-semibold">Topic</TableHead>
+                  <TableHead className="text-center text-muted-foreground font-semibold">Upvotes</TableHead>
+                  <TableHead className="text-center text-muted-foreground font-semibold">Replies</TableHead>
+                  <TableHead className="text-center text-muted-foreground font-semibold">Views</TableHead>
+                  <TableHead className="text-right text-muted-foreground font-semibold">Activity</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentForums.map(forum => {
+                  const community = COMMUNITIES.find(c => c.id === forum.communityId);
+                  return (
+                    <TableRow key={forum.id} className="border-b-border hover:bg-muted/30 dark:hover:bg-muted/10">
+                      <TableCell className="py-3 align-top">
+                        <Link href={`/qna/${forum.id}`} className="block group">
+                          <h3 className="text-base font-medium text-foreground group-hover:text-primary transition-colors mb-1 line-clamp-2">
                             {forum.title}
                           </h3>
                         </Link>
-                        <Badge variant="outline" className="flex-shrink-0 ml-2">
-                          {forum.communityId}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                        {forum.content}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>by {forum.author.displayName}</span>
-                          <div className="flex items-center gap-1">
-                            <MessageSquare className="h-3 w-3" />
-                            <span>{forum.replyCount || 0} replies</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            <span>{forum.views || 0} views</span>
-                          </div>
-                          <span>{formatDistanceToNow(new Date(forum.createdAt), { addSuffix: true })}</span>
+                        <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-1.5">
+                            {community && (
+                                 <Badge variant="outline" className="py-0.5 px-1.5 border-blue-500/50 text-blue-600 dark:text-blue-400 bg-blue-500/10">
+                                    {community.icon && <community.icon className="mr-1 h-3 w-3"/>}
+                                    {community.name}
+                                 </Badge>
+                            )}
+                            {forum.tags.slice(0, 2).map(tag => (
+                              <Link key={tag} href={`/qna?tag=${encodeURIComponent(tag)}`}>
+                                <Badge variant="secondary" className="py-0.5 px-1.5 hover:bg-primary/20 transition-colors cursor-pointer">
+                                  {tag}
+                                </Badge>
+                              </Link>
+                            ))}
                         </div>
-                        <div className="flex gap-1">
-                          {forum.tags.slice(0, 2).map((tag) => (
-                            <Link key={tag} href={`/qna?tag=${encodeURIComponent(tag)}`}>
-                              <Badge variant="secondary" className="text-xs hover:bg-primary/20 transition-colors">
-                                {tag}
-                              </Badge>
-                            </Link>
-                          ))}
+                        <p className="text-xs text-muted-foreground line-clamp-1">
+                          {forum.content.substring(0, 100)}{forum.content.length > 100 ? '...' : ''}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-center align-middle">
+                        <div className="flex items-center justify-center gap-1">
+                          <ArrowUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+                          <span className="text-sm font-medium text-foreground tabular-nums">{forum.upvotes || 0}</span>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                      </TableCell>
+                      <TableCell className="text-center align-middle text-sm text-foreground tabular-nums">{forum.replyCount || 0}</TableCell>
+                      <TableCell className="text-center align-middle text-sm text-foreground tabular-nums">
+                        {Intl.NumberFormat('en', { notation: 'compact' }).format(forum.views || 0)}
+                      </TableCell>
+                      <TableCell className="text-right align-middle text-xs text-muted-foreground">
+                         <div className="flex items-center justify-end gap-2">
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={forum.author.photoURL || undefined} alt={forum.author.displayName || 'Author'} />
+                              <AvatarFallback className="text-xs">
+                                {forum.author.displayName ? forum.author.displayName.charAt(0).toUpperCase() : 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="text-right">
+                              <div className="font-medium text-foreground">{forum.author.displayName || 'Anonymous'}</div>
+                              <div>{formatDistanceToNow(new Date(forum.lastActivityAt || forum.createdAt), { addSuffix: true })}</div>
+                            </div>
+                         </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <MessageSquare className="mx-auto h-12 w-12 mb-4 opacity-50" />

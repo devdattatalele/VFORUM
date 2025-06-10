@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
+import { Toaster as SonnerToaster } from 'sonner';
 import AppShell from '@/components/layout/AppShell';
 import { ThemeProvider } from '@/components/theme-provider';
 
@@ -43,6 +44,7 @@ export default function RootLayout({
               {children}
             </AppShell>
             <Toaster />
+            <SonnerToaster position="top-right" richColors />
           </AuthProvider>
         </ThemeProvider>
       </body>

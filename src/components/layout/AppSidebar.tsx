@@ -37,9 +37,9 @@ export default function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="sidebar" side="left">
-      <SidebarHeader className="flex items-center gap-2 p-4 group-data-[collapsible=icon]:justify-center border-b border-sidebar-border">
-        <Zap className="h-6 w-6 text-sidebar-primary flex-shrink-0" />
-        <span className="text-lg font-bold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+      <SidebarHeader className="flex flex-row items-center gap-3 p-4 group-data-[collapsible=icon]:justify-center border-b border-sidebar-border min-h-[5rem]">
+        <Zap className="h-8 w-8 text-sidebar-primary flex-shrink-0" />
+        <span className="text-xl font-bold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden whitespace-nowrap">
           VForums And Events
         </span>
       </SidebarHeader>

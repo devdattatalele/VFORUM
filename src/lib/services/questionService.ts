@@ -1,7 +1,7 @@
 'use server';
 import type { Question, UserProfile } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, doc, getDoc, query, where, serverTimestamp, Timestamp, updateDoc, increment } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, getDoc, query, where, serverTimestamp, Timestamp, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 
 interface QuestionDataForFirestore extends Omit<Question, 'id' | 'createdAt' | 'author' | 'lastActivityAt'> {
   createdAt: Timestamp;
@@ -125,5 +125,15 @@ export async function updateQuestionOnNewComment(questionId: string): Promise<vo
   } catch (error) {
     console.error('Error updating question on new comment: ', error);
     // Potentially throw or handle more gracefully
+  }
+}
+
+export async function deleteQuestion(questionId: string): Promise<void> {
+  try {
+    const questionRef = doc(db, 'questions', questionId);
+    await deleteDoc(questionRef);
+  } catch (error) {
+    console.error('Error deleting question: ', error);
+    throw new Error('Failed to delete question.');
   }
 }
