@@ -242,7 +242,7 @@ export default function QuestionDetailPage() {
       </div>
     );
   }
-
+  
   if (error || !question) {
     return (
       <div className="max-w-3xl mx-auto py-8">
@@ -268,8 +268,8 @@ export default function QuestionDetailPage() {
       <div className="max-w-5xl mx-auto py-10 px-6 space-y-8">
         <Button variant="outline" onClick={() => router.back()} className="mb-6 text-base px-6 py-3">
           <ArrowLeft className="mr-2 h-5 w-5" />
-          Back
-        </Button>
+        Back
+      </Button>
 
         {/* Question Card */}
         <Card className="glass-card shadow-lg" id="question-section">
@@ -305,46 +305,46 @@ export default function QuestionDetailPage() {
                 
                 <div className="flex items-center text-base text-muted-foreground space-x-3 mt-4">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={question.author.photoURL || undefined} alt={question.author.displayName || 'Author'} />
+              <AvatarImage src={question.author.photoURL || undefined} alt={question.author.displayName || 'Author'} />
                     <AvatarFallback className="text-sm">
                       {question.author.displayName ? question.author.displayName.charAt(0).toUpperCase() : <UserCircle size={16}/>}
-                    </AvatarFallback>
-                  </Avatar>
+              </AvatarFallback>
+            </Avatar>
                   <span className="font-medium">{question.author.displayName || 'Anonymous'}</span>
-                  <span className="text-muted-foreground/50">&bull;</span>
+            <span className="text-muted-foreground/50">&bull;</span>
                   <CalendarDays className="h-5 w-5" />
-                  <span>Asked {formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
+            <span>Asked {formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
                   <span className="text-muted-foreground/50">&bull;</span>
                   <Eye className="h-5 w-5" />
                   <span>{question.views || 0} views</span>
                   {community && <Badge variant="outline" className="ml-auto text-sm px-3 py-1">{community.name}</Badge>}
-                </div>
-                {question.tags && question.tags.length > 0 && (
+          </div>
+           {question.tags && question.tags.length > 0 && (
                   <div className="flex flex-wrap gap-3 mt-4">
-                    {question.tags.map(tag => (
+              {question.tags.map(tag => (
                       <Badge key={tag} variant="secondary" className="text-sm px-3 py-1">
                         <TagIcon className="mr-1 h-4 w-4" /> {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </CardHeader>
+                </Badge>
+              ))}
+            </div>
+          )}
+        </CardHeader>
               <CardContent className="pb-6">
                 <p className="text-lg text-foreground/90 leading-relaxed whitespace-pre-wrap">{question.content}</p>
-              </CardContent>
+        </CardContent>
               <CardFooter className="flex justify-between items-center border-t pt-6">
-                <VoteButtons 
-                  initialUpvotes={question.upvotes} 
-                  initialDownvotes={question.downvotes}
-                  id={question.id} 
+          <VoteButtons 
+            initialUpvotes={question.upvotes} 
+            initialDownvotes={question.downvotes}
+            id={question.id} 
                   type="question"
-                  orientation="horizontal"
-                  size="default"
+            orientation="horizontal"
+            size="default"
                   mode="upvote"
                   showShare={true}
                   onShare={handleShareQuestion}
-                />
-              </CardFooter>
+          />
+        </CardFooter>
             </>
           )}
         </Card>
@@ -382,8 +382,8 @@ export default function QuestionDetailPage() {
                   onReply={handleCommentSubmit}
                   onEdit={handleEditComment}
                 />
-              ))
-            ) : (
+          ))
+        ) : (
               <div className="text-center py-12 text-muted-foreground">
                 <p className="text-lg">
                   {searchQuery 
@@ -392,9 +392,9 @@ export default function QuestionDetailPage() {
                   }
                 </p>
               </div>
-            )}
-          </div>
-        </div>
+        )}
+      </div>
+    </div>
       </div>
     </>
   );

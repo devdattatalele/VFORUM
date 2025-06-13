@@ -42,7 +42,7 @@ export default function QuestionCard({ question }: QuestionCardProps) {
                 {community && (
                   <>
                     <span>•</span>
-                    <Badge variant="outline" className="px-1.5 py-0.5 text-xs border-blue-500/50 text-blue-600 dark:text-blue-400 bg-blue-500/10">
+                    <Badge variant="outline" className="px-1.5 py-0.5 text-xs border-community-tag text-community-tag bg-google-green/10 dark:bg-google-green/20">
                       {community.icon && <community.icon className="mr-1 h-3 w-3" />}
                       {community.name}
                     </Badge>

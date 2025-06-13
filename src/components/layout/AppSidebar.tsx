@@ -38,8 +38,15 @@ export default function AppSidebar() {
   return (
     <Sidebar collapsible="icon" variant="sidebar" side="left">
       <SidebarHeader className="flex flex-row items-center gap-3 p-4 group-data-[collapsible=icon]:justify-center border-b border-sidebar-border min-h-[5rem]">
-        <Zap className="h-8 w-8 text-sidebar-primary flex-shrink-0" />
-        <span className="text-xl font-bold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden whitespace-nowrap">
+        <div className="relative">
+          <Zap className="h-8 w-8 text-sidebar-primary flex-shrink-0" />
+          <div className="absolute inset-0 h-8 w-8 flex-shrink-0">
+            <div className="w-2 h-2 bg-google-red rounded-full absolute top-1 right-1"></div>
+            <div className="w-1.5 h-1.5 bg-google-yellow rounded-full absolute bottom-1 left-1"></div>
+            <div className="w-1.5 h-1.5 bg-google-blue rounded-full absolute bottom-1.5 right-1.5"></div>
+          </div>
+        </div>
+        <span className="text-2xl font-bold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden whitespace-nowrap">
           VForums And Events
         </span>
       </SidebarHeader>
@@ -52,8 +59,9 @@ export default function AppSidebar() {
                   <SidebarMenuButton
                     isActive={isNavLinkActive(link.href)}
                     tooltip={{children: link.label, side:'right'}}
+                    className="text-base font-medium h-12"
                   >
-                    <link.icon />
+                    <link.icon className="h-5 w-5" />
                     <span>{link.label}</span>
                   </SidebarMenuButton>
                 </Link>
@@ -64,7 +72,7 @@ export default function AppSidebar() {
           <SidebarSeparator />
 
           <SidebarGroup className="pt-2">
-            <SidebarGroupLabel>Communities</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-sm font-semibold mb-2">Communities</SidebarGroupLabel>
             <SidebarMenu className="px-0">
             {COMMUNITIES.map((community) => (
               <SidebarMenuItem key={community.id}>
@@ -72,8 +80,9 @@ export default function AppSidebar() {
                    <SidebarMenuButton 
                     isActive={community.id !== 'all' && pathname === `/community/${community.id}`}
                     tooltip={{children: community.name, side:'right'}}
+                    className="text-sm font-medium h-10"
                    >
-                    {community.icon && <community.icon />}
+                    {community.icon && <community.icon className="h-4 w-4" />}
                     <span>{community.name}</span>
                   </SidebarMenuButton>
                 </Link>
@@ -86,7 +95,7 @@ export default function AppSidebar() {
 
           {/* Tags Section */}
           <SidebarGroup className="pt-2 group-data-[collapsible=icon]:hidden">
-            <SidebarGroupLabel>Browse by Tags</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-sm font-semibold mb-2">Browse by Tags</SidebarGroupLabel>
             <div className="px-2">
               <TagsSidebar />
             </div>
@@ -95,9 +104,9 @@ export default function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-2">
-        <div className="text-xs text-center text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
+        <div className="text-sm text-center text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden font-medium">
           Built by VIT students, for VIT students
-        </div>
+            </div>
       </SidebarFooter>
     </Sidebar>
   );

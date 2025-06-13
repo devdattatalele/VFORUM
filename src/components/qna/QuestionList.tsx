@@ -21,8 +21,10 @@ import { COMMUNITIES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function QuestionList() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const communityFilter = searchParams.get('community');
   const tagFilter = searchParams.get('tag');
@@ -138,11 +140,19 @@ export default function QuestionList() {
               <SelectItem value="replies-desc">Replies</SelectItem>
             </SelectContent>
           </Select>
-           <Button asChild className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Link href="/qna/ask">
-              <PlusCircle className="mr-2 h-4 w-4" /> Ask Question
-            </Link>
-          </Button>
+          {user ? (
+            <Button asChild className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Link href="/qna/ask">
+                <PlusCircle className="mr-2 h-4 w-4" /> Ask Question
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="outline" className="w-full sm:w-auto">
+              <Link href="/auth">
+                <PlusCircle className="mr-2 h-4 w-4" /> Sign In to Ask
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -157,7 +167,7 @@ export default function QuestionList() {
             </Badge>
           )}
           {communityFilter && communityFilter !== 'all' && (
-            <Badge variant="outline" className="bg-blue-500/10">
+            <Badge variant="outline" className="bg-google-green/10 border-community-tag text-community-tag">
               Community: {COMMUNITIES.find(c => c.id === communityFilter)?.name || communityFilter}
               <Link href="/qna" className="ml-2 hover:text-destructive">×</Link>
             </Badge>
@@ -190,7 +200,7 @@ export default function QuestionList() {
                     </Link>
                     <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-1.5">
                         {community && (
-                             <Badge variant="outline" className="py-0.5 px-1.5 border-blue-500/50 text-blue-600 dark:text-blue-400 bg-blue-500/10">
+                             <Badge variant="outline" className="py-0.5 px-1.5 border-community-tag text-community-tag bg-google-green/10 dark:bg-google-green/20">
                                 {community.icon && <community.icon className="mr-1 h-3 w-3"/>}
                                 {community.name}
                              </Badge>
@@ -246,11 +256,19 @@ export default function QuestionList() {
               : "There are currently no questions in the forum. Why not be the first to ask one?"}
           </p>
           {!(searchTerm || tagFilter || communityFilter) && (
-            <Button asChild className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground">
-              <Link href="/qna/ask">
-                <PlusCircle className="mr-2 h-4 w-4" /> Ask Your First Question
-              </Link>
-            </Button>
+            user ? (
+              <Button asChild className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Link href="/qna/ask">
+                  <PlusCircle className="mr-2 h-4 w-4" /> Ask Your First Question
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild variant="outline" className="mt-8">
+                <Link href="/auth">
+                  <PlusCircle className="mr-2 h-4 w-4" /> Sign In to Ask Questions
+                </Link>
+              </Button>
+            )
           )}
         </div>
       )}

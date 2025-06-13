@@ -94,12 +94,6 @@ export default function ScrollProgress({
           >
             {/* Timeline bubble */}
             <div className="relative">
-              <div className="w-12 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg">
-                <span className="text-xs font-bold text-primary-foreground">
-                  {Math.round(scrollProgress)}%
-                </span>
-              </div>
-              {/* Arrow pointing to line */}
               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-primary rounded-full border-2 border-background" />
             </div>
             
@@ -131,7 +125,6 @@ export default function ScrollProgress({
             />
           ))}
         </div>
-        
         {/* End time */}
         <div className="text-sm font-medium text-muted-foreground mt-4">
           {getTimeFromStart()}

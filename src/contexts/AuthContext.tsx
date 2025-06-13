@@ -12,6 +12,7 @@ import {
   sendEmailVerification
 } from 'firebase/auth';
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from 'next/navigation';
 import type { UserProfile } from '@/lib/types';
 
 interface AuthContextType {
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
@@ -195,6 +197,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Signed Out",
         description: "Successfully signed out.",
       });
+      // Redirect to auth page after logout
+      router.push('/auth');
     } catch (error: any) {
       console.error("Error signing out: ", error);
        toast({

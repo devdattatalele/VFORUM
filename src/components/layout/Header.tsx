@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Zap, LogIn, LogOut, UserCircle, Moon, Sun, Settings, LifeBuoy, MessageSquare } from 'lucide-react';
+import { Zap, LogIn, LogOut, UserCircle, Moon, Sun, Settings, LifeBuoy, MessageSquare, Github } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,6 +13,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { NAV_LINKS } from '@/lib/constants';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -36,24 +42,43 @@ export default function Header() {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
+  // Filter navigation links based on authentication status
+  const publicNavLinks = [
+    { href: '/qna', label: 'Q&A Forum', icon: MessageSquare },
+    { href: '/help', label: 'Help', icon: LifeBuoy },
+  ];
+
+  const navLinks = user ? NAV_LINKS : publicNavLinks;
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
+          {/* Only show SidebarTrigger for authenticated users */}
+          {user && (
           <div className="md:hidden">
             <SidebarTrigger />
           </div>
-          { (isMobile || sidebarState === 'collapsed') &&
-            <Link href="/" className="flex items-center gap-3">
-              <Zap className="h-8 w-8 text-primary flex-shrink-0" />
+          )}
+          {/* Show logo/brand text when sidebar is collapsed, on mobile, or when user is not authenticated */}
+          {(!user || isMobile || sidebarState === 'collapsed') && (
+            <Link href={user ? "/" : "/qna"} className="flex items-center gap-3">
+              <div className="relative">
+                <Zap className="h-8 w-8 text-google-blue flex-shrink-0" />
+                <div className="absolute inset-0 h-8 w-8 flex-shrink-0">
+                  <div className="w-2 h-2 bg-google-red rounded-full absolute top-1 right-1"></div>
+                  <div className="w-1.5 h-1.5 bg-google-yellow rounded-full absolute bottom-1 left-1"></div>
+                  <div className="w-1.5 h-1.5 bg-google-blue rounded-full absolute bottom-1.5 right-1.5"></div>
+                </div>
+              </div>
               <span className="text-xl font-bold font-headline text-foreground whitespace-nowrap">VForums And Events</span>
             </Link>
-          }
+          )}
         </div>
 
         <div className="flex items-center gap-3">
           <nav className="hidden items-center gap-1 md:flex mr-2">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <Button
                 key={link.href}
                 variant="ghost"
@@ -72,6 +97,31 @@ export default function Header() {
               </Button>
             ))}
           </nav>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  asChild
+                  className="bg-black hover:bg-black/80 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  <Link 
+                    href="https://github.com/devdattatalele" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    aria-label="Visit GitHub Profile"
+                  >
+                    <Github className="h-5 w-5" />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Report issues or like the repo ⭐</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           {mounted && (
             <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
@@ -129,8 +179,8 @@ export default function Header() {
           ) : (
             <Button variant="outline" size="sm" asChild>
               <Link href="/auth">
-                <LogIn className="mr-2 h-4 w-4" />
-                Sign In
+              <LogIn className="mr-2 h-4 w-4" />
+              Sign In
               </Link>
             </Button>
           )}

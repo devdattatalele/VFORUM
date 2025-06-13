@@ -26,7 +26,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace('/auth');
+      router.replace('/qna');
     }
   }, [user, loading, router]);
 
@@ -78,7 +78,7 @@ export default function HomePage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <p className="text-lg text-foreground">Redirecting to sign in...</p>
+        <p className="text-lg text-foreground">Redirecting to Q&A forum...</p>
       </div>
     );
   }
@@ -207,7 +207,7 @@ export default function HomePage() {
               <TableBody>
                 {recentForums.map(forum => {
                   const community = COMMUNITIES.find(c => c.id === forum.communityId);
-                  return (
+   return (
                     <TableRow key={forum.id} className="border-b-border hover:bg-muted/30 dark:hover:bg-muted/10">
                       <TableCell className="py-3 align-top">
                         <Link href={`/qna/${forum.id}`} className="block group">
@@ -217,7 +217,7 @@ export default function HomePage() {
                         </Link>
                         <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-1.5">
                             {community && (
-                                 <Badge variant="outline" className="py-0.5 px-1.5 border-blue-500/50 text-blue-600 dark:text-blue-400 bg-blue-500/10">
+                                 <Badge variant="outline" className="py-0.5 px-1.5 border-community-tag text-community-tag bg-google-green/10 dark:bg-google-green/20">
                                     {community.icon && <community.icon className="mr-1 h-3 w-3"/>}
                                     {community.name}
                                  </Badge>
@@ -271,8 +271,8 @@ export default function HomePage() {
           )}
         </CardContent>
       </Card>
-    </div>
-  );
+      </div>
+    );
 }
 
 // Helper for screen height minus header (approximate)

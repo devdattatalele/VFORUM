@@ -13,7 +13,7 @@ export default function AskQuestionPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace('/qna?auth_required=true'); 
+      router.replace('/auth'); 
     }
   }, [user, loading, router]);
 

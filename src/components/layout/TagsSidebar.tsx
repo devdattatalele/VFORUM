@@ -75,13 +75,13 @@ export default function TagsSidebar({ className }: TagsSidebarProps) {
   if (isLoading) {
     return (
       <div className={cn("space-y-6", className)}>
-        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <Tag className="h-4 w-4 text-primary" />
+        <div className="flex items-center gap-2 text-base font-semibold text-foreground">
+          <Tag className="h-5 w-5 text-primary" />
           Search Forum by Category
         </div>
         <div className="flex justify-center items-center py-4">
-          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-          <span className="ml-2 text-xs text-muted-foreground">Loading categories...</span>
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span className="ml-2 text-sm text-muted-foreground">Loading categories...</span>
         </div>
       </div>
     );
@@ -92,8 +92,8 @@ export default function TagsSidebar({ className }: TagsSidebarProps) {
       {/* Category Tags */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <Tag className="h-4 w-4 text-primary" />
+          <div className="flex items-center gap-2 text-base font-semibold text-foreground">
+            <Tag className="h-5 w-5 text-primary" />
             Search Forum by Category
           </div>
           {tags.length > 8 && (
@@ -101,7 +101,7 @@ export default function TagsSidebar({ className }: TagsSidebarProps) {
               variant="ghost"
               size="sm"
               onClick={() => setShowAll(!showAll)}
-              className="text-xs h-6 px-2"
+              className="text-sm h-7 px-3"
             >
               {showAll ? 'Show Less' : 'Show All'}
             </Button>
@@ -115,19 +115,19 @@ export default function TagsSidebar({ className }: TagsSidebarProps) {
                 key={tag.name}
                 onClick={() => handleTagClick(tag.name)}
                 className={cn(
-                  "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border transition-colors",
+                  "inline-flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium border transition-colors",
                   getTagColor(tag.count)
                 )}
               >
                 {tag.name}
-                <span className="text-xs opacity-70">
+                <span className="text-sm opacity-70">
                   {tag.count}
                 </span>
               </button>
             ))}
           </div>
         ) : (
-          <div className="text-xs text-muted-foreground text-center py-4">
+          <div className="text-sm text-muted-foreground text-center py-4">
             No categories found. Start asking questions to build categories!
           </div>
         )}
@@ -137,15 +137,15 @@ export default function TagsSidebar({ className }: TagsSidebarProps) {
 
       {/* Browse All */}
       <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <Search className="h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center gap-2 text-base font-semibold text-foreground">
+          <Search className="h-5 w-5 text-muted-foreground" />
           Browse All Forums
         </div>
-        <p className="text-xs text-muted-foreground leading-relaxed">
+        <p className="text-sm text-muted-foreground leading-relaxed">
           Click on any category above to filter questions by topic, or browse all questions and discussions.
         </p>
         <Link href="/qna" className="block">
-          <Button variant="outline" size="sm" className="w-full text-sm">
+          <Button variant="outline" size="sm" className="w-full text-sm font-medium">
             View All Questions
           </Button>
         </Link>

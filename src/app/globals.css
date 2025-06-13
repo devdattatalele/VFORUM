@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,87 +8,87 @@ body {
 
 @layer base {
   :root {
-    /* Light Theme Colors */
-    --background: 0 0% 98%; /* Off-white */
-    --foreground: 220 15% 20%; /* Dark cool gray for text */
+    /* Light Theme Colors - Google Color Scheme */
+    --background: 0 0% 98%; /* Keep existing off-white background */
+    --foreground: 220 15% 20%; /* Keep existing dark cool gray for text */
 
-    --card: 0 0% 100%; /* White */
+    --card: 0 0% 100%; /* Keep existing white */
     --card-foreground: 220 15% 20%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 20%;
 
-    --primary: 170 65% 40%; /* Teal/Aqua */
+    --primary: 217 89% 61%; /* Google Blue #4285F4 */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 170 40% 90%; /* Very light teal */
-    --secondary-foreground: 170 50% 30%; /* Darker teal for text on light teal bg */
+    --secondary: 217 20% 90%; /* Very light Google blue */
+    --secondary-foreground: 217 89% 35%; /* Darker Google blue for text */
 
-    --muted: 220 15% 94%; /* Light cool gray */
-    --muted-foreground: 220 10% 50%; /* Medium cool gray for muted text */
+    --muted: 220 15% 94%; /* Keep existing light cool gray */
+    --muted-foreground: 220 10% 50%; /* Keep existing medium cool gray */
 
-    --accent: 15 85% 55%; /* Coral/Warm Orange */
+    --accent: 217 91% 60%; /* Blue accent instead of green */
     --accent-foreground: 0 0% 100%; /* White */
 
-    --destructive: 0 84.2% 60.2%; /* Red */
+    --destructive: 4 90% 58%; /* Google Red #EA4335 */
     --destructive-foreground: 0 0% 98%;
 
     --border: 220 15% 88%;
     --input: 220 15% 88%;
-    --ring: 170 65% 40%; /* Primary for rings */
+    --ring: 217 89% 61%; /* Google Blue for rings */
 
     --radius: 0.5rem;
 
-    /* Sidebar light theme */
-    --sidebar-background: 0 0% 96%;
+    /* Sidebar light theme - Blue colors */
+    --sidebar-background: 0 0% 96%; /* Keep existing light background */
     --sidebar-foreground: 220 15% 25%;
-    --sidebar-primary: 170 65% 40%;
+    --sidebar-primary: 217 89% 61%; /* Google Blue */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 15 85% 55%;
+    --sidebar-accent: 217 91% 60%; /* Blue accent instead of green */
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 220 15% 85%;
-    --sidebar-ring: 170 65% 40%;
+    --sidebar-ring: 217 89% 61%; /* Google Blue */
   }
 
   .dark {
-    /* Dark Theme Colors - Updated for forum design */
-    --background: 220 5% 13%; /* RGB(32,33,35) approx HSL(220, 5%, 13%) */
-    --foreground: 220 15% 92%; /* Light cool gray for text */
+    /* Dark Theme Colors - Google Color Scheme */
+    --background: 220 5% 13%; /* Keep existing dark background */
+    --foreground: 220 15% 92%; /* Keep existing light cool gray for text */
 
-    --card: 220 5% 18%; /* Slightly lighter dark grey for cards if needed elsewhere */
+    --card: 220 5% 18%; /* Keep existing dark grey for cards */
     --card-foreground: 220 15% 92%;
 
     --popover: 220 5% 18%;
     --popover-foreground: 220 15% 92%;
 
-    --primary: 170 70% 50%; /* Brighter Teal/Aqua for dark bg - can adjust if needed */
+    --primary: 217 89% 65%; /* Brighter Google Blue for dark mode */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 170 40% 25%; /* Dark muted teal - can adjust */
-    --secondary-foreground: 170 50% 80%; /* Lighter teal for text on dark teal bg */
+    --secondary: 217 40% 25%; /* Dark muted Google blue */
+    --secondary-foreground: 217 50% 80%; /* Lighter Google blue for text */
 
-    --muted: 220 10% 25%; /* Darker cool gray */
-    --muted-foreground: 220 10% 65%; /* Medium-light cool gray for muted text */
+    --muted: 220 10% 25%; /* Keep existing darker cool gray */
+    --muted-foreground: 220 10% 65%; /* Keep existing medium-light cool gray */
 
-    --accent: 15 90% 60%; /* Brighter Coral/Warm Orange for dark bg - can adjust */
+    --accent: 217 91% 65%; /* Blue accent for dark mode */
     --accent-foreground: 0 0% 100%; /* White */
 
-    --destructive: 0 72.2% 50.6%; /* Red */
+    --destructive: 4 90% 65%; /* Brighter Google Red for dark mode */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 5% 22%; /* Adjusted for new dark background */
-    --input: 220 5% 25%; /* Adjusted for new dark background */
-    --ring: 170 70% 50%; /* Primary for rings - can adjust */
+    --border: 220 5% 22%; /* Keep existing border color */
+    --input: 220 5% 25%; /* Keep existing input background */
+    --ring: 217 89% 65%; /* Brighter Google Blue for rings */
 
-    /* Sidebar dark theme */
-    --sidebar-background: 220 5% 16%;
+    /* Sidebar dark theme - Blue colors */
+    --sidebar-background: 220 5% 16%; /* Keep existing dark sidebar background */
     --sidebar-foreground: 220 15% 90%;
-    --sidebar-primary: 170 70% 50%;
+    --sidebar-primary: 217 89% 65%; /* Brighter Google Blue */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 15 90% 60%;
+    --sidebar-accent: 217 91% 65%; /* Blue accent for dark mode */
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 220 5% 20%;
-    --sidebar-ring: 170 70% 50%;
+    --sidebar-ring: 217 89% 65%; /* Brighter Google Blue */
   }
 }
 
@@ -103,6 +102,29 @@ body {
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline;
   }
+}
+
+/* Add Google color accent utilities */
+@layer utilities {
+  .text-google-blue { color: hsl(217 89% 61%); }
+  .text-google-red { color: hsl(4 90% 58%); }
+  .text-google-yellow { color: hsl(45 100% 50%); }
+  .text-google-green { color: hsl(142 76% 36%); }
+  
+  .bg-google-blue { background-color: hsl(217 89% 61%); }
+  .bg-google-red { background-color: hsl(4 90% 58%); }
+  .bg-google-yellow { background-color: hsl(45 100% 50%); }
+  .bg-google-green { background-color: hsl(142 76% 36%); }
+  
+  .border-google-blue { border-color: hsl(217 89% 61%); }
+  .border-google-red { border-color: hsl(4 90% 58%); }
+  .border-google-yellow { border-color: hsl(45 100% 50%); }
+  .border-google-green { border-color: hsl(142 76% 36%); }
+
+  /* Community tag utilities */
+  .bg-community-tag { background-color: hsl(142 76% 36%); }
+  .text-community-tag { color: hsl(142 76% 36%); }
+  .border-community-tag { border-color: hsl(142 76% 36%); }
 }
 
 /* Add a utility class for glassmorphism - still available if needed elsewhere */
