@@ -105,7 +105,7 @@ export default function AppSidebar() {
 
       <SidebarFooter className="p-2">
         <div className="text-sm text-center text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden font-medium">
-          Built by Devdatta Talele, Development stage
+          Built by Devdatta, Development stage
             </div>
       </SidebarFooter>
     </Sidebar>
