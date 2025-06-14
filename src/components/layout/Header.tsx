@@ -108,7 +108,7 @@ export default function Header() {
                   className="bg-black hover:bg-black/80 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <Link 
-                    href="https://github.com/devdattatalele/VFORUM/issues" 
+                    href="https://github.com/devdattatalele" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     aria-label="Visit GitHub Profile"
