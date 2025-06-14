@@ -2,6 +2,7 @@
 import type { Event, UserProfile } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, doc, getDoc, query, where, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { hasPermission } from '@/lib/utils/userUtils';
 
 // Type for event data going to Firestore, ensuring dateTime and createdAt are compatible
 interface EventDataForFirestore extends Omit<Event, 'id' | 'dateTime' | 'createdAt' | 'author'> {
@@ -16,6 +17,11 @@ export async function addEvent(
   author: UserProfile,
   dateTime: Date // Expecting Date object from form
 ): Promise<string> {
+  // Check if user has permission to create events
+  if (!hasPermission(author, 'create_events')) {
+    throw new Error('You do not have permission to create events. Only moderators and admins can create events.');
+  }
+
   try {
     const docRef = await addDoc(collection(db, 'events'), {
       ...eventData,

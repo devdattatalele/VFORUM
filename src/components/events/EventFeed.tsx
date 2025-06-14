@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Event } from '@/lib/types';
@@ -17,10 +16,13 @@ import {
 } from "@/components/ui/select"
 import React, { useEffect, useState } from 'react';
 import { getEvents } from '@/lib/services/eventService';
+import { useAuth } from '@/contexts/AuthContext';
+import { hasPermission } from '@/lib/utils/userUtils';
 
 
 export default function EventFeed() {
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const communityFilter = searchParams.get('community');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('date-desc'); // 'date-asc', 'date-desc', 'popularity'
@@ -113,11 +115,13 @@ export default function EventFeed() {
               <SelectItem value="popularity">Popularity</SelectItem>
             </SelectContent>
           </Select>
-          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
-            <Link href="/events/create">
-              <PlusCircle className="mr-2 h-4 w-4" /> Create Event
-            </Link>
-          </Button>
+          {user && hasPermission(user, 'create_events') && (
+            <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
+              <Link href="/events/create">
+                <PlusCircle className="mr-2 h-4 w-4" /> Create Event
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -136,7 +140,7 @@ export default function EventFeed() {
               ? "It seems there are no events matching your current search or filter criteria. Try broadening your search!" 
               : "There are currently no upcoming events. Why not be the first to create one?"}
           </p>
-          {!(searchTerm || communityFilter) && (
+          {!(searchTerm || communityFilter) && user && hasPermission(user, 'create_events') && (
             <Button asChild className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground">
               <Link href="/events/create">
                 <PlusCircle className="mr-2 h-4 w-4" /> Create New Event

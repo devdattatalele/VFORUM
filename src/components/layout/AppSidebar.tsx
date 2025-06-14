@@ -18,8 +18,9 @@ import {
   SidebarGroupLabel,
   SidebarSeparator
 } from '@/components/ui/sidebar';
-import { Zap } from 'lucide-react'; 
+import { Zap, Crown } from 'lucide-react'; 
 import { useAuth } from '@/contexts/AuthContext';
+import { isAdmin } from '@/lib/utils/userUtils';
 
 
 export default function AppSidebar() {
@@ -67,6 +68,22 @@ export default function AppSidebar() {
                 </Link>
               </SidebarMenuItem>
             ))}
+            
+            {/* Admin Link - Only show for admin users */}
+            {user && isAdmin(user) && (
+              <SidebarMenuItem>
+                <Link href="/admin" className="w-full">
+                  <SidebarMenuButton
+                    isActive={pathname === '/admin'}
+                    tooltip={{children: 'Admin Panel', side:'right'}}
+                    className="text-base font-medium h-12 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/20"
+                  >
+                    <Crown className="h-5 w-5" />
+                    <span>Admin Panel</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
           
           <SidebarSeparator />

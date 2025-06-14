@@ -3,8 +3,10 @@ export interface UserProfile {
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
-  // Add other profile fields like 'role' if needed for moderation
-  // role?: 'user' | 'moderator' | 'admin';
+  role?: 'user' | 'moderator' | 'admin';
+  permissions?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Community {

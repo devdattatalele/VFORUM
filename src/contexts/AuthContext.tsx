@@ -14,6 +14,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import type { UserProfile } from '@/lib/types';
+import { createUserProfile, getUserProfile } from '@/lib/services/userService';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -21,6 +22,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,16 +39,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const router = useRouter();
 
+  const loadUserProfile = async (firebaseUser: FirebaseUser) => {
+    try {
+      const userProfile = await getUserProfile(firebaseUser.uid);
+      if (userProfile) {
+        setUser(userProfile);
+      } else {
+        // Create user profile if it doesn't exist
+        const newUserProfile: UserProfile = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          photoURL: firebaseUser.photoURL,
+        };
+        await createUserProfile(newUserProfile);
+        const createdProfile = await getUserProfile(firebaseUser.uid);
+        setUser(createdProfile);
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      // Fallback to basic user data
+      setUser({
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName,
+        photoURL: firebaseUser.photoURL,
+        role: 'user',
+        permissions: ['read_forums', 'create_questions', 'vote'],
+      });
+    }
+  };
+
+  const refreshUserProfile = async () => {
+    if (user) {
+      try {
+        const updatedProfile = await getUserProfile(user.uid);
+        if (updatedProfile) {
+          setUser(updatedProfile);
+        }
+      } catch (error) {
+        console.error('Error refreshing user profile:', error);
+      }
+    }
+  };
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         if (firebaseUser.email && validateEmailDomain(firebaseUser.email)) {
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-          });
+          await loadUserProfile(firebaseUser);
         } else {
           // If email domain is not allowed, sign them out.
           firebaseSignOut(auth);
@@ -83,15 +124,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = result.user;
       
-        setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-          });
+      await loadUserProfile(firebaseUser);
       
-        toast({
-          title: "Signed In",
+      toast({
+        title: "Signed In",
         description: "Successfully signed in.",
       });
     } catch (error: any) {
@@ -121,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: errorMessage,
         variant: "destructive",
       });
-        setUser(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -150,12 +186,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Send email verification
       await sendEmailVerification(firebaseUser);
       
-      setUser({
+      // Create user profile in Firestore
+      const newUserProfile: UserProfile = {
         uid: firebaseUser.uid,
         email: firebaseUser.email,
         displayName: displayName,
         photoURL: firebaseUser.photoURL,
-      });
+      };
+      
+      await createUserProfile(newUserProfile);
+      await loadUserProfile(firebaseUser);
       
       toast({
         title: "Account Created",
@@ -212,7 +252,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, refreshUserProfile }}>
       {children}
     </AuthContext.Provider>
   );
