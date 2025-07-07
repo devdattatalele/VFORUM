@@ -25,15 +25,16 @@ const SIDEBAR_WIDTH = "20rem"
 const SIDEBAR_WIDTH_MOBILE = "22rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
-
 type SidebarContext = {
-  state: "expanded" | "collapsed"
+  state: "expanded" | "collapsed" | "hover:expanded"
   open: boolean
   setOpen: (open: boolean) => void
   openMobile: boolean
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  isHovering: boolean
+  setIsHovering: (hovering: boolean) => void
 }
 
 const SidebarContext = React.createContext<SidebarContext | null>(null)
@@ -114,10 +115,13 @@ const SidebarProvider = React.forwardRef<
 
     // We add a state so that we can do data-state="expanded" or "collapsed".
     // This makes it easier to style the sidebar with Tailwind classes.
-    const state = open ? "expanded" : "collapsed"
+    const [isHovering, setIsHovering] = React.useState(false)
+    const state = open ? "expanded" : isHovering && !isMobile ? "hover:expanded" : "collapsed"
 
     const contextValue = React.useMemo<SidebarContext>(
       () => ({
+        isHovering,
+        setIsHovering,
         state,
         open,
         setOpen,
@@ -175,7 +179,15 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, state, openMobile, setOpenMobile, isHovering, setIsHovering } = useSidebar()
+
+    function handleMouseEnter() {
+      setIsHovering(true)
+    }
+
+    function handleMouseLeave() {
+      setIsHovering(false)
+    }
 
     if (collapsible === "none") {
       return (
@@ -220,6 +232,8 @@ const Sidebar = React.forwardRef<
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-variant={variant}
         data-side={side}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {/* This is what handles the sidebar gap on desktop */}
         <div
