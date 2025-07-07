@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Calendar, MessageSquare, ArrowRight, Clock, Users, Eye, ArrowUp } from 'lucide-react';
+import { Loader2, Calendar, MessageSquare, ArrowRight, Clock, Users, Eye, ArrowUp, TrendingUp, Zap, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,52 +17,43 @@ import { COMMUNITIES } from '@/lib/constants';
 import type { Event, Question } from '@/lib/types';
 
 export default function HomePage() {
-  const router = useRouter();
   const { user, loading } = useAuth();
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [recentForums, setRecentForums] = useState<Question[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/qna');
-    }
-  }, [user, loading, router]);
-
-  useEffect(() => {
     async function fetchData() {
-      if (user) {
-        try {
-          setIsLoadingData(true);
-          const [events, questions] = await Promise.all([
-            getEvents(),
-            getQuestions()
-          ]);
-          
-          // Filter upcoming events and sort by date
-          const now = new Date();
-          const upcoming = events
-            .filter(event => new Date(event.dateTime) >= now)
-            .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
-            .slice(0, 4);
-          
-          // Get recent questions sorted by creation date
-          const recent = questions
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-            .slice(0, 3);
-          
-          setUpcomingEvents(upcoming);
-          setRecentForums(recent);
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        } finally {
-          setIsLoadingData(false);
-        }
+      try {
+        setIsLoadingData(true);
+        const [events, questions] = await Promise.all([
+          getEvents(),
+          getQuestions()
+        ]);
+        
+        // Filter upcoming events and sort by date
+        const now = new Date();
+        const upcoming = events
+          .filter(event => new Date(event.dateTime) >= now)
+          .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
+          .slice(0, 4);
+        
+        // Get recent questions sorted by creation date
+        const recent = questions
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 3);
+        
+        setUpcomingEvents(upcoming);
+        setRecentForums(recent);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoadingData(false);
       }
     }
 
     fetchData();
-  }, [user]);
+  }, []);
 
   if (loading) {
     return (
@@ -74,25 +64,16 @@ export default function HomePage() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <p className="text-lg text-foreground">Redirecting to Q&A forum...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8">
       {/* Welcome Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold font-headline text-foreground">
-            Welcome back, {user.displayName?.split(' ')[0] || 'VITian'}! 👋
+            {user ? `Welcome back, ${user.displayName?.split(' ')[0] || 'VITian'}! 👋` : 'Welcome to VForums And Events! 🚀'}
           </h1>
           <p className="text-xl text-muted-foreground mt-2">
-            Stay updated with the latest events and discussions
+            {user ? 'Stay updated with the latest events and discussions' : 'Discover events, join discussions, and connect with the VIT tech community'}
           </p>
         </div>
         <div className="text-right">
@@ -106,6 +87,41 @@ export default function HomePage() {
           </p>
         </div>
       </div>
+
+      {/* Feature highlights for non-authenticated users */}
+      {!user && (
+        <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-semibold text-foreground">Join the VIT Tech Community</h2>
+                <p className="text-muted-foreground">Sign in to participate in discussions, create events, and connect with fellow students.</p>
+                <div className="flex flex-wrap gap-2 mt-4">
+                  <Badge variant="secondary" className="px-3 py-1">
+                    <Users className="h-3 w-3 mr-1" />
+                    Connect with Students
+                  </Badge>
+                  <Badge variant="secondary" className="px-3 py-1">
+                    <MessageSquare className="h-3 w-3 mr-1" />
+                    Ask Questions
+                  </Badge>
+                  <Badge variant="secondary" className="px-3 py-1">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    Create Events
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button asChild>
+                  <Link href="/auth">
+                    Sign In / Sign Up
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Upcoming Events Section */}
       <Card>
@@ -167,6 +183,13 @@ export default function HomePage() {
             <div className="text-center py-8 text-muted-foreground">
               <Calendar className="mx-auto h-12 w-12 mb-4 opacity-50" />
               <p>No upcoming events at the moment</p>
+              {user && (
+                <Button asChild variant="outline" className="mt-4">
+                  <Link href="/events/create">
+                    Create Your First Event
+                  </Link>
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
@@ -267,6 +290,13 @@ export default function HomePage() {
             <div className="text-center py-8 text-muted-foreground">
               <MessageSquare className="mx-auto h-12 w-12 mb-4 opacity-50" />
               <p>No recent discussions found</p>
+              {user && (
+                <Button asChild variant="outline" className="mt-4">
+                  <Link href="/qna/ask">
+                    Ask Your First Question
+                  </Link>
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
@@ -274,8 +304,3 @@ export default function HomePage() {
       </div>
     );
 }
-
-// Helper for screen height minus header (approximate)
-// You might need to adjust this or use a more robust CSS solution
-// For tailwind.config.js:
-// theme: { extend: { minHeight: { 'screen_minus_header': 'calc

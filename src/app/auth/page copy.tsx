@@ -62,6 +62,8 @@ export default function AuthPage() {
                   </Badge>
                 </div>
               </div>
+
+              {/* Features List */}
               
               {/* Trust Indicators */}
               <div className="space-y-4">

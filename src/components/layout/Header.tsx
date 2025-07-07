@@ -42,27 +42,20 @@ export default function Header() {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
-  // Filter navigation links based on authentication status
-  const publicNavLinks = [
-    { href: '/qna', label: 'Q&A Forum', icon: MessageSquare },
-    { href: '/help', label: 'Help', icon: LifeBuoy },
-  ];
-
-  const navLinks = user ? NAV_LINKS : publicNavLinks;
+  // Use navigation links from constants (they are now accessible to everyone)
+  const navLinks = NAV_LINKS;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
-          {/* Only show SidebarTrigger for authenticated users */}
-          {user && (
+          {/* Show SidebarTrigger for everyone on mobile */}
           <div className="md:hidden">
             <SidebarTrigger />
           </div>
-          )}
-          {/* Show logo/brand text when sidebar is collapsed, on mobile, or when user is not authenticated */}
-          {(!user || isMobile || sidebarState === 'collapsed') && (
-            <Link href={user ? "/" : "/qna"} className="flex items-center gap-3">
+          {/* Show logo/brand text when sidebar is collapsed or on mobile */}
+          {(isMobile || sidebarState === 'collapsed') && (
+            <Link href="/" className="flex items-center gap-3">
               <div className="relative">
                 <Zap className="h-8 w-8 text-google-blue flex-shrink-0" />
                 <div className="absolute inset-0 h-8 w-8 flex-shrink-0">
