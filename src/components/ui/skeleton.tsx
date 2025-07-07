@@ -1,5 +1,3 @@
-"use client"
-
 import { cn } from "@/lib/utils"
 
 function Skeleton({
@@ -9,8 +7,7 @@ function Skeleton({
   return (
     <div
       className={cn(
-        "relative animate-pulse rounded-md bg-gray-800 overflow-hidden",
-        "before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-gray-700/50 before:to-transparent",
+        "relative overflow-hidden bg-gray-700 rounded-md before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-gray-600 before:to-transparent",
         className
       )}
       {...props}
@@ -21,15 +18,76 @@ function Skeleton({
 // Preset skeleton components for common use cases
 function SkeletonCard() {
   return (
-    <div className="rounded-lg border bg-card p-6 space-y-4">
+    <div className="p-6 space-y-4 border rounded-lg bg-card">
       <div className="space-y-2">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-4 w-[250px]" />
+        <Skeleton className="h-4 w-[200px]" />
       </div>
-      <Skeleton className="h-20 w-full" />
-      <div className="flex justify-between items-center">
-        <Skeleton className="h-4 w-1/4" />
-        <Skeleton className="h-8 w-20" />
+      <Skeleton className="h-[125px] w-full rounded-md" />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-[80%]" />
+      </div>
+      <div className="flex justify-between">
+        <Skeleton className="h-8 w-[80px] rounded-md" />
+        <Skeleton className="h-8 w-[100px] rounded-md" />
+      </div>
+    </div>
+  )
+}
+
+function SkeletonEventCard() {
+  return (
+    <div className="overflow-hidden border rounded-lg bg-card">
+      <Skeleton className="h-48 w-full" />
+      <div className="p-6 space-y-4">
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-[250px]" />
+          <Skeleton className="h-4 w-[150px]" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-[90%]" />
+          <Skeleton className="h-4 w-[70%]" />
+        </div>
+        <div className="flex justify-between items-center pt-2">
+          <Skeleton className="h-4 w-[80px]" />
+          <Skeleton className="h-8 w-[80px] rounded-md" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SkeletonQuestionCard() {
+  return (
+    <div className="p-6 space-y-4 border rounded-lg bg-card">
+      <div className="flex justify-between items-start">
+        <div className="space-y-2 flex-1">
+          <Skeleton className="h-6 w-[300px]" />
+          <div className="flex gap-2">
+            <Skeleton className="h-5 w-[60px] rounded-full" />
+            <Skeleton className="h-5 w-[80px] rounded-full" />
+            <Skeleton className="h-5 w-[70px] rounded-full" />
+          </div>
+        </div>
+        <Skeleton className="h-8 w-8 rounded-full" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-[85%]" />
+        <Skeleton className="h-4 w-[60%]" />
+      </div>
+      <div className="flex justify-between items-center pt-2 border-t">
+        <div className="flex gap-4">
+          <Skeleton className="h-4 w-[60px]" />
+          <Skeleton className="h-4 w-[70px]" />
+          <Skeleton className="h-4 w-[50px]" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-6 w-6 rounded-full" />
+          <Skeleton className="h-4 w-[80px]" />
+        </div>
       </div>
     </div>
   )
@@ -38,107 +96,9 @@ function SkeletonCard() {
 function SkeletonList({ count = 3 }: { count?: number }) {
   return (
     <div className="space-y-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center space-x-4">
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <div className="space-y-2 flex-1">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </div>
-        </div>
+      {Array.from({ length: count }, (_, i) => (
+        <SkeletonQuestionCard key={i} />
       ))}
-    </div>
-  )
-}
-
-function SkeletonText({ lines = 3 }: { lines?: number }) {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: lines }).map((_, i) => (
-        <Skeleton 
-          key={i} 
-          className={cn(
-            "h-4",
-            i === lines - 1 ? "w-2/3" : "w-full"
-          )} 
-        />
-      ))}
-    </div>
-  )
-}
-
-function SkeletonAvatar({ size = "default" }: { size?: "sm" | "default" | "lg" }) {
-  const sizeClasses = {
-    sm: "h-8 w-8",
-    default: "h-10 w-10", 
-    lg: "h-12 w-12"
-  }
-  
-  return <Skeleton className={cn("rounded-full", sizeClasses[size])} />
-}
-
-function SkeletonButton({ variant = "default" }: { variant?: "default" | "sm" | "lg" }) {
-  const variantClasses = {
-    default: "h-10 w-24",
-    sm: "h-9 w-20",
-    lg: "h-11 w-28"
-  }
-  
-  return <Skeleton className={cn("rounded-md", variantClasses[variant])} />
-}
-
-// Loading state for the main content area
-function SkeletonPage() {
-  return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Header */}
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-1/3" />
-        <SkeletonText lines={2} />
-      </div>
-      
-      {/* Content cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <SkeletonCard key={i} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// Loading state for sidebar
-function SkeletonSidebar() {
-  return (
-    <div className="space-y-6 p-4">
-      {/* Brand */}
-      <div className="flex items-center space-x-3">
-        <Skeleton className="h-8 w-8 rounded-lg" />
-        <Skeleton className="h-6 w-32" />
-      </div>
-      
-      {/* Navigation */}
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center space-x-3">
-            <Skeleton className="h-5 w-5" />
-            <Skeleton className="h-4 w-20" />
-          </div>
-        ))}
-      </div>
-      
-      {/* Communities */}
-      <div className="space-y-4">
-        <Skeleton className="h-4 w-24" />
-        <div className="space-y-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center space-x-3">
-              <Skeleton className="h-4 w-4" />
-              <Skeleton className="h-4 w-16" />
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }
@@ -146,10 +106,7 @@ function SkeletonSidebar() {
 export { 
   Skeleton, 
   SkeletonCard, 
-  SkeletonList, 
-  SkeletonText, 
-  SkeletonAvatar, 
-  SkeletonButton,
-  SkeletonPage,
-  SkeletonSidebar
+  SkeletonEventCard, 
+  SkeletonQuestionCard, 
+  SkeletonList 
 }
