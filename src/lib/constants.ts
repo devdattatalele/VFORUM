@@ -1,11 +1,12 @@
 
 import type { Community, Event, Question, UserProfile, Comment } from './types';
-import { Users, Cpu, Bot, ToyBrick, Code, CalendarDays, MessageSquareQuote, Home, Rss } from 'lucide-react';
+import { Users, Cpu, Bot, ToyBrick, Code, CalendarDays, MessageSquareQuote, Home, Rss, Info } from 'lucide-react';
 
 export const NAV_LINKS = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/events', label: 'Events', icon: CalendarDays },
   { href: '/qna', label: 'Q&A Forum', icon: MessageSquareQuote },
+  { href: '/about', label: 'About', icon: Info },
 ];
 
 export const COMMUNITIES: Community[] = [

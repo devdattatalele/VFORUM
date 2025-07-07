@@ -44,6 +44,7 @@ const eventFormSchema = z.object({
   dateTime: z.date({ required_error: "Event date and time are required." }),
   clubName: z.string().min(2, "Club name is required."),
   communityId: z.string({ required_error: "Please select a community." }),
+  rsvpLink: z.string().url("Please enter a valid RSVP URL.").optional().or(z.literal("")),
 });
 
 type EventFormValues = z.infer<typeof eventFormSchema>;
@@ -63,12 +64,14 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
     ? {
         ...event,
         dateTime: new Date(event.dateTime),
+        rsvpLink: event.rsvpLink || "",
       }
     : {
         title: "",
         description: "",
         posterImageUrl: "https://placehold.co/600x400.png", // Default placeholder
         clubName: "",
+        rsvpLink: "",
       };
 
   const form = useForm<EventFormValues>({
@@ -83,9 +86,9 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
     }
     setIsLoading(true);
     try {
-      const { title, description, posterImageUrl, clubName, communityId } = data;
+      const { title, description, posterImageUrl, clubName, communityId, rsvpLink } = data;
       // Pass data.dateTime (which is a Date object) directly to addEvent
-      await addEvent({ title, description, posterImageUrl, clubName, communityId }, user, data.dateTime);
+      await addEvent({ title, description, posterImageUrl, clubName, communityId, rsvpLink }, user, data.dateTime);
       toast({
         title: event ? "Event Updated!" : "Event Created!",
         description: `"${data.title}" has been successfully ${event ? 'updated' : 'created'}.`,
@@ -147,6 +150,20 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
                 <Input type="url" placeholder="https://example.com/poster.jpg" {...field} />
               </FormControl>
               <FormDescription>Link to the event's promotional image.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="rsvpLink"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>RSVP Link (Optional)</FormLabel>
+              <FormControl>
+                <Input type="url" placeholder="https://forms.google.com/your-rsvp-form" {...field} />
+              </FormControl>
+              <FormDescription>External link for event registration/RSVP (Google Forms, Eventbrite, etc.)</FormDescription>
               <FormMessage />
             </FormItem>
           )}

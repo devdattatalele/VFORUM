@@ -25,6 +25,7 @@ export interface Event {
   clubName: string; 
   communityId: string; // Link to Community
   rsvpCount?: number; // Optional
+  rsvpLink?: string; // Optional external RSVP link
   // location?: string;
 }
 

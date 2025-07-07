@@ -5,26 +5,18 @@ import Image from 'next/image';
 import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, Users, Info } from 'lucide-react'; // Removed TagIcon
+import { CalendarDays, Users, Info, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { COMMUNITIES } from '@/lib/constants';
-import React, { useState } from 'react'; 
+import React from 'react'; 
 
 interface EventCardProps {
   event: Event;
 }
 
 export default function EventCard({ event }: EventCardProps) {
-  const [isRsvpd, setIsRsvpd] = useState(false); 
-  const [rsvpCount, setRsvpCount] = useState(event.rsvpCount || 0); 
-
-  const handleRsvp = () => {
-    setIsRsvpd(!isRsvpd);
-    setRsvpCount(prev => isRsvpd ? prev - 1 : prev + 1);
-    // Here you would typically call an API to update RSVP status
-  };
   
   const community = COMMUNITIES.find(c => c.id === event.communityId);
 
@@ -65,16 +57,29 @@ export default function EventCard({ event }: EventCardProps) {
       <CardFooter className="p-4 flex justify-between items-center border-t">
         <div className="flex items-center text-sm text-muted-foreground">
           <Users className="mr-1 h-4 w-4" />
-          <span>{rsvpCount} Going</span>
+          <span>{event.rsvpCount || 0} Going</span>
         </div>
-        <Button 
-          onClick={handleRsvp} 
-          variant={isRsvpd ? "secondary" : "default"}
-          size="sm"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground"
-        >
-          {isRsvpd ? 'Cancel RSVP' : 'RSVP'}
-        </Button>
+        {event.rsvpLink ? (
+          <Button 
+            asChild
+            size="sm"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            <Link href={event.rsvpLink} target="_blank" rel="noopener noreferrer">
+              RSVP
+              <ExternalLink className="ml-1 h-3 w-3" />
+            </Link>
+          </Button>
+        ) : (
+          <Button 
+            variant="outline"
+            size="sm"
+            disabled
+            className="opacity-50"
+          >
+            RSVP Closed
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

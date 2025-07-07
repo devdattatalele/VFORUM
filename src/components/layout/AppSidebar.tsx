@@ -93,7 +93,7 @@ export default function AppSidebar() {
             <SidebarMenu className="px-0">
             {COMMUNITIES.map((community) => (
               <SidebarMenuItem key={community.id}>
-                <Link href={community.id === 'all' ? '/qna' : `/community/${community.id}`} className="w-full">
+<Link href={`/community/${community.id}`} className="w-full">
                    <SidebarMenuButton 
                     isActive={community.id !== 'all' && pathname === `/community/${community.id}`}
                     tooltip={{children: community.name, side:'right'}}
