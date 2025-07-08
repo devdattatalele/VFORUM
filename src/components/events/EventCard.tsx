@@ -32,7 +32,7 @@ export default function EventCard({ event }: EventCardProps) {
           data-ai-hint="event poster"
         />
         {community && (
-          <Badge variant="secondary" className="absolute top-2 right-2">
+          <Badge variant="community" className="absolute top-2 right-2">
             {community.icon && <community.icon className="mr-1 h-3 w-3" />}
             {community.name}
           </Badge>

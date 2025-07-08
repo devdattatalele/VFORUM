@@ -150,7 +150,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Community
 
-- **Built by VIT students, for VIT students**
+- **Built by Devdatta Talele, for VIT students**
 - **Tech Communities**: GDG, ACM, IEEE, AI Club, and more
 - **Purpose**: Foster learning, collaboration, and innovation
 

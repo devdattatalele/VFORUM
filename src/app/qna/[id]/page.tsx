@@ -317,7 +317,7 @@ export default function QuestionDetailPage() {
                   <span className="text-muted-foreground/50">&bull;</span>
                   <Eye className="h-5 w-5" />
                   <span>{question.views || 0} views</span>
-                  {community && <Badge variant="outline" className="ml-auto text-sm px-3 py-1">{community.name}</Badge>}
+                  {community && <Badge variant="community" className="ml-auto text-sm px-3 py-1">{community.name}</Badge>}
           </div>
            {question.tags && question.tags.length > 0 && (
                   <div className="flex flex-wrap gap-3 mt-4">

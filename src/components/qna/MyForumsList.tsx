@@ -154,7 +154,7 @@ export default function MyForumsList() {
                     </Link>
                     <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-1.5">
                         {community && (
-                             <Badge variant="outline" className="py-0.5 px-1.5 border-community-tag text-community-tag bg-google-green/10 dark:bg-google-green/20">
+                             <Badge variant="community" className="py-0.5 px-1.5">
                                 {community.icon && <community.icon className="mr-1 h-3 w-3"/>}
                                 {community.name}
                              </Badge>

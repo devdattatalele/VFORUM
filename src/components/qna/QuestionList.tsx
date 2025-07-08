@@ -167,7 +167,7 @@ export default function QuestionList() {
             </Badge>
           )}
           {communityFilter && communityFilter !== 'all' && (
-            <Badge variant="outline" className="bg-google-green/10 border-community-tag text-community-tag">
+            <Badge variant="community" className="py-0.5 px-1.5">
               Community: {COMMUNITIES.find(c => c.id === communityFilter)?.name || communityFilter}
               <Link href="/qna" className="ml-2 hover:text-destructive">×</Link>
             </Badge>
@@ -200,7 +200,7 @@ export default function QuestionList() {
                     </Link>
                     <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-1.5">
                         {community && (
-                             <Badge variant="outline" className="py-0.5 px-1.5 border-community-tag text-community-tag bg-google-green/10 dark:bg-google-green/20">
+                             <Badge variant="community" className="py-0.5 px-1.5">
                                 {community.icon && <community.icon className="mr-1 h-3 w-3"/>}
                                 {community.name}
                              </Badge>

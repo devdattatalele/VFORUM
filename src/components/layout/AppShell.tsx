@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { usePathname } from 'next/navigation';
 import Header from './Header';
 import AppSidebar from './AppSidebar';
@@ -21,39 +22,52 @@ export default function AppShell({ children }: AppShellProps) {
   if (isAuthPage) {
     // Clean layout for auth page
     return (
-      <div className="min-h-screen">
-        {children}
-      </div>
+      <ThemeProvider>
+        <div className="min-h-screen bg-background">
+          {children}
+        </div>
+      </ThemeProvider>
     );
   }
   
   if (loading) {
     // Show minimal layout while loading
     return (
-      <div className="min-h-screen">
-        {children}
-      </div>
+      <ThemeProvider>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+      </ThemeProvider>
     );
   }
   
   // Full app layout with sidebar for everyone (authenticated and non-authenticated)
   return (
-    <SidebarProvider defaultOpen={true}>
-      <AppSidebar />
-      <SidebarRail />
-      <SidebarInset className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-1 container mx-auto p-4 sm:p-6 lg:p-8">
-          {children}
-        </main>
-        <footer className="py-6 md:px-8 md:py-0 border-t">
-          <div className="container flex flex-col items-center justify-center gap-4 md:h-24 md:flex-row md:justify-start">
-            <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
-              Built by VIT students, for VIT students. Powered by VForums And Events.
-            </p>
-          </div>
-        </footer>
-      </SidebarInset>
-    </SidebarProvider>
+    <ThemeProvider>
+      <SidebarProvider defaultOpen={true}>
+        <AppSidebar />
+        <SidebarRail />
+        <SidebarInset className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-1 p-4 space-y-4 animate-fadeIn">
+            <div className="mx-auto max-w-7xl">
+              {children}
+            </div>
+          </main>
+          <footer className="border-t bg-muted/30 py-8">
+            <div className="container flex flex-col items-center justify-center gap-4 md:flex-row md:justify-between">
+              <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
+                Built by Devdatta Talele, for VIT students. Powered by VForums And Events.
+              </p>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span>© 2025 VForums</span>
+                <span>•</span>
+                <span>Open Source</span>
+              </div>
+            </div>
+          </footer>
+        </SidebarInset>
+      </SidebarProvider>
+    </ThemeProvider>
   );
 }
