@@ -2,47 +2,42 @@
 
 import Link from 'next/link';
 import type { Question } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Keep for potential other uses, but not for list item
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Tag as TagIcon, CalendarDays, UserCircle } from 'lucide-react';
+import { MessageSquare, Tag as TagIcon, CalendarDays, UserCircle, Eye, ArrowUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import VoteButtons from './VoteButtons';
 import { COMMUNITIES } from '@/lib/constants';
-import React, { useState, useEffect } from 'react'; 
-
-// This component is now less of a "Card" and more of a display item,
-// especially if QuestionList renders rows directly.
-// For now, keeping the structure but it will be styled differently or its logic moved.
+import React from 'react';
 
 interface QuestionCardProps {
   question: Question;
-  // commentCount is now part of Question type as replyCount
 }
 
 export default function QuestionCard({ question }: QuestionCardProps) {
   const community = COMMUNITIES.find(c => c.id === question.communityId);
 
   return (
-    <Card className="p-0 border-0 bg-transparent shadow-none">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <Avatar className="h-8 w-8">
+    <Card className="hover:shadow-md transition-all duration-200 border border-border">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground min-w-0 flex-1">
+            <Avatar className="h-8 w-8 flex-shrink-0">
               <AvatarImage src={question.author.photoURL || undefined} alt={question.author.displayName || 'User'} />
               <AvatarFallback>
                 {question.author.displayName ? question.author.displayName.charAt(0).toUpperCase() : <UserCircle size={16} />}
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col">
-              <span className="font-medium text-foreground">{question.author.displayName}</span>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="font-medium text-foreground truncate">{question.author.displayName}</span>
               <div className="flex items-center gap-2 text-xs">
-                <CalendarDays className="h-3 w-3" />
-                <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
+                <CalendarDays className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
                 {community && (
                   <>
                     <span>•</span>
-                    <Badge variant="community" className="px-1.5 py-0.5 text-xs">
+                    <Badge variant="community" className="px-1.5 py-0.5 text-xs flex-shrink-0">
                       {community.icon && <community.icon className="mr-1 h-3 w-3" />}
                       {community.name}
                     </Badge>
@@ -51,22 +46,23 @@ export default function QuestionCard({ question }: QuestionCardProps) {
               </div>
             </div>
           </div>
-          <div className="text-xs text-muted-foreground">
-            {question.views || 0} views
+          <div className="text-xs text-muted-foreground flex items-center gap-1 flex-shrink-0">
+            <Eye className="h-3 w-3" />
+            <span>{question.views || 0}</span>
           </div>
         </div>
         <Link href={`/qna/${question.id}`} className="block group">
-          <CardTitle className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors mt-3 line-clamp-2">
+          <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors mt-3 line-clamp-2 leading-tight">
             {question.title}
           </CardTitle>
         </Link>
       </CardHeader>
-      <CardContent className="py-0 pb-3">
-        <CardDescription className="text-sm text-foreground/80 line-clamp-2 mb-2">
+      <CardContent className="py-0 pb-4">
+        <CardDescription className="text-sm text-foreground/80 line-clamp-2 mb-3 leading-relaxed">
           {question.content}
         </CardDescription>
         {question.tags && question.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
+          <div className="flex flex-wrap gap-1.5">
             {question.tags.slice(0, 4).map(tag => ( 
               <Link key={tag} href={`/qna?tag=${encodeURIComponent(tag)}`}>
                 <Badge variant="secondary" className="text-xs hover:bg-primary/20 transition-colors cursor-pointer">
@@ -74,23 +70,24 @@ export default function QuestionCard({ question }: QuestionCardProps) {
                 </Badge>
               </Link>
             ))}
-            {question.tags.length > 4 && <Badge variant="secondary" className="text-xs">...</Badge>}
+            {question.tags.length > 4 && <Badge variant="secondary" className="text-xs">+{question.tags.length - 4} more</Badge>}
           </div>
         )}
       </CardContent>
-      <CardFooter className="text-xs text-muted-foreground flex justify-between items-center pt-3 border-t">
-        <VoteButtons 
-            initialUpvotes={question.upvotes} 
-            initialDownvotes={question.downvotes} 
-            id={question.id}
-            type="question"
-            orientation="horizontal"
-            size="sm"
-        />
-        <Link href={`/qna/${question.id}#comments`} className="flex items-center hover:text-primary transition-colors">
-          <MessageSquare className="mr-1 h-4 w-4" />
-          <span>{question.replyCount || 0} Answer{question.replyCount === 1 ? '' : 's'}</span>
-        </Link>
+      <CardFooter className="text-xs text-muted-foreground flex justify-between items-center pt-4 border-t">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1">
+            <ArrowUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <span className="font-medium tabular-nums">{question.upvotes || 0}</span>
+          </div>
+          <Link href={`/qna/${question.id}#comments`} className="flex items-center gap-1 hover:text-primary transition-colors">
+            <MessageSquare className="h-4 w-4" />
+            <span className="tabular-nums">{question.replyCount || 0}</span>
+          </Link>
+        </div>
+        <span className="text-xs text-muted-foreground">
+          Last activity {formatDistanceToNow(new Date(question.lastActivityAt || question.createdAt), { addSuffix: true })}
+        </span>
       </CardFooter>
     </Card>
   );

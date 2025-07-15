@@ -17,6 +17,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarSeparator,
+  SidebarTrigger,
   useSidebar
 } from '@/components/ui/sidebar';
 import { Zap, Crown } from 'lucide-react'; 
@@ -49,13 +50,16 @@ export default function AppSidebar() {
       className={cn(isHovered ? "hover:expanded" : "", "group")}
     >
       <SidebarHeader className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="relative w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-sm flex items-center justify-center">
-            <Zap className="h-4 w-4 text-white" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="relative w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-sm flex items-center justify-center">
+              <Zap className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-lg font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden whitespace-nowrap">
+              VForums And Events
+            </span>
           </div>
-          <span className="text-lg font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden whitespace-nowrap">
-            VForums And Events
-          </span>
+          <SidebarTrigger className="h-8 w-8 p-1.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors duration-200" />
         </div>
       </SidebarHeader>
       

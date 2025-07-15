@@ -30,8 +30,10 @@ export default function Header() {
   const navLinks = NAV_LINKS;
 
   const handleSearch = (query: string) => {
-    // TODO: Implement search functionality
-    console.log('Search query:', query);
+    if (query.trim()) {
+      // Navigate to search results page
+      window.location.href = `/search?q=${encodeURIComponent(query.trim())}`;
+    }
   };
 
   return (

@@ -54,15 +54,17 @@ export default function AppShell({ children }: AppShellProps) {
               {children}
             </div>
           </main>
-          <footer className="border-t bg-muted/30 py-8">
-            <div className="container flex flex-col items-center justify-center gap-4 md:flex-row md:justify-between">
+          <footer className="border-t bg-muted/30 py-12 px-4 mt-16">
+            <div className="container mx-auto max-w-7xl flex flex-col items-center justify-center gap-6 md:flex-row md:justify-between">
               <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
-                Built by Devdatta Talele, for VIT students. Powered by VForums And Events.
+                Built by <span className="font-medium text-foreground">Devdatta Talele</span>, for VIT students. Powered by <span className="font-medium text-primary">VForums And Events</span>.
               </p>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>© 2025 VForums</span>
-                <span>•</span>
+                <span className="text-muted-foreground/50">•</span>
                 <span>Open Source</span>
+                <span className="text-muted-foreground/50">•</span>
+                <span>Made with ❤️</span>
               </div>
             </div>
           </footer>

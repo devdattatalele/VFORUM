@@ -24,7 +24,8 @@ export default function EventFeed() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const communityFilter = searchParams.get('community');
-  const [searchTerm, setSearchTerm] = useState('');
+  const searchFromUrl = searchParams.get('search');
+  const [searchTerm, setSearchTerm] = useState(searchFromUrl || '');
   const [sortBy, setSortBy] = useState('date-desc'); // 'date-asc', 'date-desc', 'popularity'
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,6 +47,13 @@ export default function EventFeed() {
     }
     fetchEvents();
   }, []);
+
+  // Update search term when URL parameter changes
+  useEffect(() => {
+    if (searchFromUrl !== null) {
+      setSearchTerm(searchFromUrl);
+    }
+  }, [searchFromUrl]);
 
   const filteredEvents = React.useMemo(() => {
     let processedEvents = events;

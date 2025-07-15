@@ -28,7 +28,8 @@ export default function QuestionList() {
   const searchParams = useSearchParams();
   const communityFilter = searchParams.get('community');
   const tagFilter = searchParams.get('tag');
-  const [searchTerm, setSearchTerm] = useState('');
+  const searchFromUrl = searchParams.get('search');
+  const [searchTerm, setSearchTerm] = useState(searchFromUrl || '');
   const [sortBy, setSortBy] = useState('activity-desc'); // 'activity-desc', 'activity-asc', 'recent-desc', 'recent-asc', 'popular-desc', 'replies-desc', 'upvotes-desc'
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,6 +51,13 @@ export default function QuestionList() {
     }
     fetchQuestions();
   }, []);
+
+  // Update search term when URL parameter changes
+  useEffect(() => {
+    if (searchFromUrl !== null) {
+      setSearchTerm(searchFromUrl);
+    }
+  }, [searchFromUrl]);
 
   const filteredQuestions = React.useMemo(() => {
     let processedQuestions = questions;
