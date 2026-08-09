@@ -3,6 +3,7 @@ import type { UserProfile } from '@/lib/types';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getPermissionsForRole } from '@/lib/utils/userUtils';
+import { requireAdmin } from '@/lib/auth/session';
 
 export async function createUserProfile(user: UserProfile): Promise<void> {
   try {
@@ -109,15 +110,43 @@ export async function searchUser(searchTerm: string): Promise<UserProfile | null
   }
 }
 
+// Role ordering used to detect self-escalation below. Higher number = more
+// privileged.
+const ROLE_RANK: Record<'user' | 'moderator' | 'admin', number> = {
+  user: 0,
+  moderator: 1,
+  admin: 2,
+};
+
 export async function updateUserRole(uid: string, role: 'user' | 'moderator' | 'admin'): Promise<void> {
+  // Resolves the caller's identity from their session cookie and throws
+  // unless their Firestore-stored role is 'admin'. This is the only
+  // authorization check that matters: the admin panel's client-side isAdmin()
+  // check controls what renders, not what this action will accept.
+  const caller = await requireAdmin();
+
+  if (caller.uid === uid && ROLE_RANK[role] > ROLE_RANK[caller.role]) {
+    throw new Error('You cannot change your own role to a higher privilege level.');
+  }
+
   try {
     const userRef = adminDb.collection('users').doc(uid);
+    const targetDoc = await userRef.get();
+    const previousRole = targetDoc.exists ? (targetDoc.data()!.role || 'user') : 'user';
     const permissions = getPermissionsForRole(role);
 
     await userRef.update({
       role,
       permissions,
       updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    await adminDb.collection('roleChanges').add({
+      actorUid: caller.uid,
+      targetUid: uid,
+      previousRole,
+      newRole: role,
+      createdAt: FieldValue.serverTimestamp(),
     });
   } catch (error) {
     console.error('Error updating user role:', error);
