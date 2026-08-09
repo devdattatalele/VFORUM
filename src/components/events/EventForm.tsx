@@ -29,6 +29,7 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { COMMUNITIES } from "@/lib/constants";
+import { safeHttpUrl } from "@/lib/utils/urlUtils";
 import type { Event } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -40,11 +41,11 @@ import { addEvent } from "@/lib/services/eventService";
 const eventFormSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters long."),
   description: z.string().min(20, "Description must be at least 20 characters long.").max(1000, "Description too long."),
-  posterImageUrl: z.string().url("Please enter a valid image URL."),
+  posterImageUrl: safeHttpUrl("Please enter a valid image URL."),
   dateTime: z.date({ required_error: "Event date and time are required." }),
   clubName: z.string().min(2, "Club name is required."),
   communityId: z.string({ required_error: "Please select a community." }),
-  rsvpLink: z.string().url("Please enter a valid RSVP URL.").optional().or(z.literal("")),
+  rsvpLink: safeHttpUrl("Please enter a valid RSVP URL.").optional().or(z.literal("")),
 });
 
 type EventFormValues = z.infer<typeof eventFormSchema>;
