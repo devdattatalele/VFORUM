@@ -4,6 +4,7 @@
 // should import from here.
 import { cert, getApps, initializeApp, type App } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
+import { getAuth, type Auth } from 'firebase-admin/auth';
 
 function loadAdminCredential() {
   // Vercel (and any environment where shipping a key file isn't practical)
@@ -39,3 +40,4 @@ function getAdminApp(): App {
 }
 
 export const adminDb: Firestore = getFirestore(getAdminApp());
+export const adminAuth: Auth = getAuth(getAdminApp());

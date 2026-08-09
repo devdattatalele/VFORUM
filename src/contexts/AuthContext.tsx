@@ -33,6 +33,32 @@ const validateEmailDomain = (email: string): boolean => {
   return email.endsWith(`@${ALLOWED_EMAIL_DOMAIN}`);
 };
 
+// Mints the httpOnly session cookie that server-side auth guards (see
+// src/lib/auth/session.ts) read to authorize privileged Server Actions. The
+// browser only ever holds the short-lived Firebase ID token; exchanging it
+// for a session cookie here means server code never has to trust a caller-
+// supplied token or uid.
+const establishSessionCookie = async (firebaseUser: FirebaseUser): Promise<void> => {
+  try {
+    const idToken = await firebaseUser.getIdToken();
+    await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+  } catch (error) {
+    console.error('Error establishing session cookie:', error);
+  }
+};
+
+const clearSessionCookie = async (): Promise<void> => {
+  try {
+    await fetch('/api/auth/session', { method: 'DELETE' });
+  } catch (error) {
+    console.error('Error clearing session cookie:', error);
+  }
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,6 +113,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         if (firebaseUser.email && validateEmailDomain(firebaseUser.email)) {
+          // Covers browser sessions that predate this feature, or that
+          // otherwise still have a valid Firebase session but no cookie yet
+          // (e.g. cleared cookies without signing out).
+          await establishSessionCookie(firebaseUser);
           await loadUserProfile(firebaseUser);
         } else {
           // If email domain is not allowed, sign them out.
@@ -101,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       } else {
+        await clearSessionCookie();
         setUser(null);
       }
       setLoading(false);
@@ -123,7 +154,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = result.user;
-      
+
+      await establishSessionCookie(firebaseUser);
       await loadUserProfile(firebaseUser);
       
       toast({
@@ -195,8 +227,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       
       await createUserProfile(newUserProfile);
+      await establishSessionCookie(firebaseUser);
       await loadUserProfile(firebaseUser);
-      
+
       toast({
         title: "Account Created",
         description: "Account created successfully! Please check your email for verification.",
@@ -231,6 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     setLoading(true);
     try {
+      await clearSessionCookie();
       await firebaseSignOut(auth);
       setUser(null);
       toast({
