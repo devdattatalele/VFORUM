@@ -125,6 +125,11 @@ export async function updateUserRole(uid: string, role: 'user' | 'moderator' | '
   // check controls what renders, not what this action will accept.
   const caller = await requireAdmin();
 
+  // Defence in depth for a future in which requireAdmin() is relaxed — for
+  // example if moderators are ever allowed to manage users. Note this branch
+  // is currently UNREACHABLE: requireAdmin() above guarantees caller.role is
+  // 'admin', which is ROLE_RANK's maximum, so no target role can outrank it.
+  // Do not read it as active protection today; the real gate is requireAdmin().
   if (caller.uid === uid && ROLE_RANK[role] > ROLE_RANK[caller.role]) {
     throw new Error('You cannot change your own role to a higher privilege level.');
   }
