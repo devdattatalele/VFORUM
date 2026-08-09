@@ -22,42 +22,9 @@ import React, { useEffect, useState, useMemo } from "react";
 import { getQuestionById, updateQuestion } from "@/lib/services/questionService";
 import { getThreadedComments, addComment } from "@/lib/services/commentService";
 import { COMMUNITIES } from "@/lib/constants";
+import { buildCommentTree, type CommentWithReplies } from "@/lib/utils/commentUtils";
 
-// Helper function to build comment tree
-function buildCommentTree(comments: CommentType[]): CommentWithReplies[] {
-  const commentMap = new Map<string, CommentWithReplies>();
-  const topLevelComments: CommentWithReplies[] = [];
-  
-  // First pass: create all comment objects
-  comments.forEach(comment => {
-    commentMap.set(comment.id, { ...comment, replies: [] });
-  });
-  
-  // Second pass: build the tree structure
-  comments.forEach(comment => {
-    const commentWithReplies = commentMap.get(comment.id)!;
-    
-    if (comment.parentId) {
-      const parent = commentMap.get(comment.parentId);
-      if (parent) {
-        parent.replies.push(commentWithReplies);
-      } else {
-        // Parent not found, treat as top-level
-        topLevelComments.push(commentWithReplies);
-      }
-    } else {
-      topLevelComments.push(commentWithReplies);
-    }
-  });
-  
-  return topLevelComments;
-}
-
-interface CommentWithReplies extends CommentType {
-  replies: CommentWithReplies[];
-}
-
-function ThreadedCommentTree({ 
+function ThreadedCommentTree({
   comment, 
   questionId, 
   level = 0, 

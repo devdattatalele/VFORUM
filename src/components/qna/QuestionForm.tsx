@@ -26,6 +26,7 @@ import { autoTagQuestion, type AutoTagQuestionInput } from "@/ai/flows/auto-tag-
 import { COMMUNITIES, DEFAULT_COMMUNITY_ID } from "@/lib/constants";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { addQuestion } from "@/lib/services/questionService";
+import { addTagNormalized } from "@/lib/utils/tagUtils";
 
 
 const questionFormSchema = z.object({
@@ -57,8 +58,8 @@ export default function QuestionForm() {
   });
 
   const handleAddTag = () => {
-    if (tagInput.trim() !== "" && !currentTags.includes(tagInput.trim()) && currentTags.length < 5) {
-      const newTags = [...currentTags, tagInput.trim().toLowerCase()];
+    const newTags = addTagNormalized(currentTags, tagInput, 5);
+    if (newTags !== currentTags) {
       setCurrentTags(newTags);
       form.setValue("tags", newTags, { shouldValidate: true });
       setTagInput("");

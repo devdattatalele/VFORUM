@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Badge } from '@/components/ui/badge';
 import { X, Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { addTagNormalized } from '@/lib/utils/tagUtils';
 
 interface QuestionEditFormProps {
   initialData: {
@@ -50,9 +51,9 @@ export default function QuestionEditForm({
   });
 
   const handleAddTag = (tagToAdd: string) => {
-    const trimmedTag = tagToAdd.trim().toLowerCase();
-    if (trimmedTag && !tags.includes(trimmedTag) && tags.length < 5) {
-      setTags([...tags, trimmedTag]);
+    const newTags = addTagNormalized(tags, tagToAdd, 5);
+    if (newTags !== tags) {
+      setTags(newTags);
       form.setValue("tagInput", "");
     }
   };
