@@ -1,7 +1,7 @@
 'use server';
 import type { Event, UserProfile } from '@/lib/types';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, doc, getDoc, query, where, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { hasPermission } from '@/lib/utils/userUtils';
 
 // Type for event data going to Firestore, ensuring dateTime and createdAt are compatible
@@ -23,11 +23,11 @@ export async function addEvent(
   }
 
   try {
-    const docRef = await addDoc(collection(db, 'events'), {
+    const docRef = await adminDb.collection('events').add({
       ...eventData,
       author,
       dateTime: dateTime.toISOString(), // Store as ISO string
-      createdAt: serverTimestamp(), // Use Firestore server timestamp
+      createdAt: FieldValue.serverTimestamp(), // Use Firestore server timestamp
       rsvpCount: 0,
     });
     return docRef.id;
@@ -39,7 +39,7 @@ export async function addEvent(
 
 export async function getEvents(): Promise<Event[]> {
   try {
-    const querySnapshot = await getDocs(collection(db, 'events'));
+    const querySnapshot = await adminDb.collection('events').get();
     return querySnapshot.docs.map(docSnap => {
       const data = docSnap.data();
       return {
@@ -58,10 +58,10 @@ export async function getEvents(): Promise<Event[]> {
 
 export async function getEventById(eventId: string): Promise<Event | null> {
   try {
-    const docRef = doc(db, 'events', eventId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      const data = docSnap.data();
+    const docRef = adminDb.collection('events').doc(eventId);
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
+      const data = docSnap.data()!;
       return {
         ...data,
         id: docSnap.id,
@@ -78,8 +78,7 @@ export async function getEventById(eventId: string): Promise<Event | null> {
 
 export async function getEventsByCommunity(communityId: string): Promise<Event[]> {
   try {
-    const q = query(collection(db, 'events'), where('communityId', '==', communityId));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await adminDb.collection('events').where('communityId', '==', communityId).get();
     return querySnapshot.docs.map(docSnap => {
       const data = docSnap.data();
       return {
