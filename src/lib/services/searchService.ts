@@ -156,6 +156,7 @@ async function searchEvents(searchTerm: string, communityId?: string, maxResults
         description: data.description,
         clubName: data.clubName,
         communityId: data.communityId,
+        author: data.author,
         dateTime: data.dateTime?.toDate ? data.dateTime.toDate().toISOString() : data.dateTime,
         posterImageUrl: data.posterImageUrl,
         rsvpLink: data.rsvpLink,

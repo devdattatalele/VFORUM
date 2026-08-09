@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import React, { useEffect, useState } from 'react';
 import { getQuestions } from '@/lib/services/questionService';
+import { filterQuestions, sortQuestions } from '@/lib/utils/questionListUtils';
 import { COMMUNITIES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -60,45 +61,8 @@ export default function QuestionList() {
   }, [searchFromUrl]);
 
   const filteredQuestions = React.useMemo(() => {
-    let processedQuestions = questions;
-    if (communityFilter && communityFilter !== 'all') {
-      processedQuestions = processedQuestions.filter(q => q.communityId === communityFilter);
-    }
-    if (tagFilter) {
-      processedQuestions = processedQuestions.filter(q => q.tags.includes(tagFilter));
-    }
-    if (searchTerm) {
-      processedQuestions = processedQuestions.filter(q => 
-        q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        q.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        q.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-
-    return processedQuestions.sort((a, b) => {
-      const aActivity = a.lastActivityAt || a.createdAt;
-      const bActivity = b.lastActivityAt || b.createdAt;
-
-      switch (sortBy) {
-        case 'recent-desc':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case 'recent-asc':
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        case 'activity-desc':
-          return new Date(bActivity).getTime() - new Date(aActivity).getTime();
-        case 'activity-asc':
-          return new Date(aActivity).getTime() - new Date(bActivity).getTime();
-        case 'popular-desc': // by views
-          return (b.views || 0) - (a.views || 0);
-        case 'replies-desc':
-            return (b.replyCount || 0) - (a.replyCount || 0);
-        case 'upvotes-desc':
-            return (b.upvotes || 0) - (a.upvotes || 0);
-        default:
-          return new Date(bActivity).getTime() - new Date(aActivity).getTime();
-      }
-    });
-
+    const filtered = filterQuestions(questions, { communityFilter, tagFilter, searchTerm });
+    return sortQuestions(filtered, sortBy);
   }, [questions, communityFilter, tagFilter, searchTerm, sortBy]);
 
   if (isLoading) {

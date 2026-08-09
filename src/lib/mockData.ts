@@ -22,6 +22,7 @@ export const mockEvents: Event[] = [
     dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
     clubName: 'GDG VIT',
     communityId: 'gdg',
+    author: mockUser,
     rsvpCount: 120,
   },
   {
@@ -32,6 +33,7 @@ export const mockEvents: Event[] = [
     dateTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
     clubName: 'AI Club VIT',
     communityId: 'ai-club',
+    author: mockUser,
     rsvpCount: 75,
   },
   {
@@ -42,6 +44,7 @@ export const mockEvents: Event[] = [
     dateTime: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days from now
     clubName: 'ACM Chapter VIT',
     communityId: 'acm',
+    author: mockUser,
     rsvpCount: 200,
   },
   {
@@ -52,6 +55,7 @@ export const mockEvents: Event[] = [
     dateTime: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago (past event)
     clubName: 'Robotics Club VIT',
     communityId: 'robotics-club',
+    author: mockUser,
     rsvpCount: 90,
   },
 ];

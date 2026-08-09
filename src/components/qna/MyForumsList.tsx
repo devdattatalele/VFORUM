@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, HelpCircle, Loader2, ArrowUp, Trash2, Edit3, PlusCircle, AlertTriangle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { getQuestions, deleteQuestion } from '@/lib/services/questionService';
+import { filterQuestions, sortQuestions } from '@/lib/utils/questionListUtils';
 import { COMMUNITIES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -57,22 +58,9 @@ export default function MyForumsList() {
   }, [user]);
 
   const filteredQuestions = React.useMemo(() => {
-    let processedQuestions = questions;
-    
-    if (searchTerm) {
-      processedQuestions = processedQuestions.filter(q => 
-        q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        q.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        q.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-
+    const filtered = filterQuestions(questions, { searchTerm });
     // Sort by most recent activity first
-    return processedQuestions.sort((a, b) => {
-      const aActivity = a.lastActivityAt || a.createdAt;
-      const bActivity = b.lastActivityAt || b.createdAt;
-      return new Date(bActivity).getTime() - new Date(aActivity).getTime();
-    });
+    return sortQuestions(filtered, 'activity-desc');
   }, [questions, searchTerm]);
 
   const handleDeleteQuestion = async (questionId: string) => {
