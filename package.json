@@ -14,7 +14,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --project unit",
-    "test:watch": "vitest --project unit"
+    "test:watch": "vitest --project unit",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-vforum \"vitest run --project rules\"",
+    "test:integration": "firebase emulators:exec --only firestore,auth --project demo-vforum \"vitest run --project integration\""
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.8.0",
@@ -64,11 +66,13 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
+    "@firebase/rules-unit-testing": "^4.0.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^9.39.5",
     "eslint-config-next": "15.5.23",
+    "firebase-tools": "^15.26.0",
     "genkit-cli": "^1.8.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
