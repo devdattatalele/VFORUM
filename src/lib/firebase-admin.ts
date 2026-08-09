@@ -33,6 +33,18 @@ function getAdminApp(): App {
     return existingApps[0];
   }
 
+  // Emulator mode: when either emulator host is set, skip credential loading
+  // entirely and connect without one. This is verified-necessary rather than
+  // a nicety - cert() parses the PEM eagerly and throws
+  // `DECODER routines::unsupported` on a synthetic test key, so there is no
+  // way to satisfy the production credential path in a test. Side benefit:
+  // this also lets a contributor without production Firebase credentials
+  // run the app locally against emulators.
+  if (process.env.FIRESTORE_EMULATOR_HOST || process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+    const projectId = process.env.GCLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID;
+    return initializeApp({ projectId });
+  }
+
   return initializeApp({
     credential: loadAdminCredential(),
   });
