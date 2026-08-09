@@ -91,8 +91,8 @@ export default function SettingsContent() {
     );
   }
 
-  const accountAge = user.metadata?.creationTime 
-    ? formatDistanceToNow(new Date(user.metadata.creationTime), { addSuffix: true })
+  const accountAge = user.createdAt
+    ? formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })
     : 'N/A';
 
   return (
@@ -195,10 +195,6 @@ export default function SettingsContent() {
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
                     <span className="text-green-600">Verified</span>
                   </div>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Last Sign In:</span>
-                  <span>{user.metadata?.lastSignInTime ? formatDistanceToNow(new Date(user.metadata.lastSignInTime), { addSuffix: true }) : 'N/A'}</span>
                 </div>
               </div>
             </div>

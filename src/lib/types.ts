@@ -12,7 +12,7 @@ export interface UserProfile {
 export interface Community {
   id: string;
   name: string;
-  icon?: React.ElementType; // Lucide icon component
+  icon: React.ElementType; // Lucide icon component
   description?: string;
 }
 
@@ -22,8 +22,10 @@ export interface Event {
   description: string;
   posterImageUrl: string;
   dateTime: string; // Store as ISO string, format on display
-  clubName: string; 
+  clubName: string;
   communityId: string; // Link to Community
+  author: UserProfile; // User who created the event (moderator/admin)
+  createdAt?: string; // ISO string; written by addEvent via FieldValue.serverTimestamp()
   rsvpCount?: number; // Optional
   rsvpLink?: string; // Optional external RSVP link
   // location?: string;
