@@ -1,7 +1,7 @@
 'use server';
 import type { Comment, UserProfile } from '@/lib/types';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, Timestamp, where, doc, updateDoc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { updateQuestionOnNewComment } from './questionService';
 
 interface CommentDataForFirestore extends Omit<Comment, 'id' | 'createdAt' | 'author'> {
@@ -16,12 +16,12 @@ export async function addComment(
   parentId?: string | null
 ): Promise<string> {
   try {
-    const docRef = await addDoc(collection(db, `questions/${questionId}/comments`), {
+    const docRef = await adminDb.collection(`questions/${questionId}/comments`).add({
       ...commentData,
       questionId,
       author,
       parentId: parentId || null,
-      createdAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
       upvotes: 0,
       downvotes: 0,
     });
@@ -38,29 +38,29 @@ export async function addComment(
 
 export async function getCommentsForQuestion(questionId: string, sortBy: string = 'newest'): Promise<Comment[]> {
   try {
-    const commentsRef = collection(db, `questions/${questionId}/comments`);
+    const commentsRef = adminDb.collection(`questions/${questionId}/comments`);
     let q;
-    
+
     // Add sorting options
     switch (sortBy) {
       case 'oldest':
-        q = query(commentsRef, orderBy('createdAt', 'asc'));
+        q = commentsRef.orderBy('createdAt', 'asc');
         break;
       case 'top':
-        q = query(commentsRef, orderBy('upvotes', 'desc'));
+        q = commentsRef.orderBy('upvotes', 'desc');
         break;
       case 'controversial':
         // For controversial, we'll sort by most total votes (upvotes + downvotes)
         // Since Firestore doesn't support computed fields, we'll sort client-side
-        q = query(commentsRef, orderBy('createdAt', 'desc'));
+        q = commentsRef.orderBy('createdAt', 'desc');
         break;
       case 'newest':
       default:
-        q = query(commentsRef, orderBy('createdAt', 'desc'));
+        q = commentsRef.orderBy('createdAt', 'desc');
         break;
     }
-    
-    const querySnapshot = await getDocs(q);
+
+    const querySnapshot = await q.get();
     let comments = querySnapshot.docs.map(docSnap => {
       const data = docSnap.data();
       return {
@@ -106,10 +106,10 @@ export async function updateComment(
   userId: string
 ): Promise<void> {
   try {
-    const commentRef = doc(db, `questions/${questionId}/comments`, commentId);
-    await updateDoc(commentRef, {
+    const commentRef = adminDb.collection(`questions/${questionId}/comments`).doc(commentId);
+    await commentRef.update({
       content,
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
   } catch (error) {
     console.error('Error updating comment: ', error);

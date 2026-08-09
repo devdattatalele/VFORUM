@@ -1,5 +1,5 @@
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+'use server';
+import { adminDb } from '@/lib/firebase-admin';
 import type { Question, Event } from '@/lib/types';
 import { COMMUNITIES } from '@/lib/constants';
 
@@ -76,14 +76,14 @@ export async function searchAll(
 
 async function searchQuestions(searchTerm: string, communityId?: string, maxResults: number = 12): Promise<SearchResult[]> {
   try {
-    const questionsRef = collection(db, 'questions');
-    let q = query(questionsRef, orderBy('createdAt', 'desc'), limit(50)); // Get more to filter locally
-    
+    const questionsRef = adminDb.collection('questions');
+    let q = questionsRef.orderBy('createdAt', 'desc').limit(50); // Get more to filter locally
+
     if (communityId) {
-      q = query(questionsRef, where('communityId', '==', communityId), orderBy('createdAt', 'desc'), limit(50));
+      q = questionsRef.where('communityId', '==', communityId).orderBy('createdAt', 'desc').limit(50);
     }
 
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await q.get();
     const questions: Question[] = [];
     
     querySnapshot.forEach((doc) => {
@@ -138,14 +138,14 @@ async function searchQuestions(searchTerm: string, communityId?: string, maxResu
 
 async function searchEvents(searchTerm: string, communityId?: string, maxResults: number = 6): Promise<SearchResult[]> {
   try {
-    const eventsRef = collection(db, 'events');
-    let q = query(eventsRef, orderBy('dateTime', 'desc'), limit(30));
-    
+    const eventsRef = adminDb.collection('events');
+    let q = eventsRef.orderBy('dateTime', 'desc').limit(30);
+
     if (communityId) {
-      q = query(eventsRef, where('communityId', '==', communityId), orderBy('dateTime', 'desc'), limit(30));
+      q = eventsRef.where('communityId', '==', communityId).orderBy('dateTime', 'desc').limit(30);
     }
 
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await q.get();
     const events: Event[] = [];
     
     querySnapshot.forEach((doc) => {

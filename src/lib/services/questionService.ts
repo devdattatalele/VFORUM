@@ -1,7 +1,7 @@
 'use server';
 import type { Question, UserProfile } from '@/lib/types';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, doc, getDoc, query, where, serverTimestamp, Timestamp, updateDoc, increment, deleteDoc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 interface QuestionDataForFirestore extends Omit<Question, 'id' | 'createdAt' | 'author' | 'lastActivityAt'> {
   createdAt: Timestamp;
@@ -14,11 +14,11 @@ export async function addQuestion(
   author: UserProfile
 ): Promise<string> {
   try {
-    const docRef = await addDoc(collection(db, 'questions'), {
+    const docRef = await adminDb.collection('questions').add({
       ...questionData,
       author,
-      createdAt: serverTimestamp(),
-      lastActivityAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+      lastActivityAt: FieldValue.serverTimestamp(),
       upvotes: 0,
       downvotes: 0,
       views: 0,
@@ -33,7 +33,7 @@ export async function addQuestion(
 
 export async function getQuestions(): Promise<Question[]> {
   try {
-    const querySnapshot = await getDocs(collection(db, 'questions'));
+    const querySnapshot = await adminDb.collection('questions').get();
     return querySnapshot.docs.map(docSnap => {
       const data = docSnap.data();
       return {
@@ -51,14 +51,14 @@ export async function getQuestions(): Promise<Question[]> {
 
 export async function getQuestionById(questionId: string): Promise<Question | null> {
   try {
-    const docRef = doc(db, 'questions', questionId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
+    const docRef = adminDb.collection('questions').doc(questionId);
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
       // Increment views in database
-      await updateDoc(docRef, {
-          views: increment(1)
+      await docRef.update({
+          views: FieldValue.increment(1)
       });
-      const data = docSnap.data();
+      const data = docSnap.data()!;
       return {
         id: docSnap.id,
         ...data,
@@ -76,8 +76,7 @@ export async function getQuestionById(questionId: string): Promise<Question | nu
 
 export async function getQuestionsByCommunity(communityId: string): Promise<Question[]> {
   try {
-    const q = query(collection(db, 'questions'), where('communityId', '==', communityId));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await adminDb.collection('questions').where('communityId', '==', communityId).get();
      return querySnapshot.docs.map(docSnap => {
       const data = docSnap.data();
       return {
@@ -103,10 +102,10 @@ export async function updateQuestion(
   userId: string
 ): Promise<void> {
   try {
-    const questionRef = doc(db, 'questions', questionId);
-    await updateDoc(questionRef, {
+    const questionRef = adminDb.collection('questions').doc(questionId);
+    await questionRef.update({
       ...updates,
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
   } catch (error) {
     console.error('Error updating question: ', error);
@@ -117,10 +116,10 @@ export async function updateQuestion(
 // Function to update reply count and last activity
 export async function updateQuestionOnNewComment(questionId: string): Promise<void> {
   try {
-    const questionRef = doc(db, 'questions', questionId);
-    await updateDoc(questionRef, {
-      replyCount: increment(1),
-      lastActivityAt: serverTimestamp(),
+    const questionRef = adminDb.collection('questions').doc(questionId);
+    await questionRef.update({
+      replyCount: FieldValue.increment(1),
+      lastActivityAt: FieldValue.serverTimestamp(),
     });
   } catch (error) {
     console.error('Error updating question on new comment: ', error);
@@ -130,8 +129,8 @@ export async function updateQuestionOnNewComment(questionId: string): Promise<vo
 
 export async function deleteQuestion(questionId: string): Promise<void> {
   try {
-    const questionRef = doc(db, 'questions', questionId);
-    await deleteDoc(questionRef);
+    const questionRef = adminDb.collection('questions').doc(questionId);
+    await questionRef.delete();
   } catch (error) {
     console.error('Error deleting question: ', error);
     throw new Error('Failed to delete question.');

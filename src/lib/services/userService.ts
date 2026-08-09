@@ -1,24 +1,24 @@
 'use server';
 import type { UserProfile } from '@/lib/types';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getPermissionsForRole } from '@/lib/utils/userUtils';
 
 export async function createUserProfile(user: UserProfile): Promise<void> {
   try {
-    const userRef = doc(db, 'users', user.uid);
-    const userDoc = await getDoc(userRef);
-    
-    if (!userDoc.exists()) {
-      await setDoc(userRef, {
+    const userRef = adminDb.collection('users').doc(user.uid);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      await userRef.set({
         uid: user.uid,
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
         role: 'user', // Default role
         permissions: ['read_forums', 'create_questions', 'vote'], // Default permissions
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       });
     }
   } catch (error) {
@@ -29,11 +29,11 @@ export async function createUserProfile(user: UserProfile): Promise<void> {
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   try {
-    const userRef = doc(db, 'users', uid);
-    const userDoc = await getDoc(userRef);
-    
-    if (userDoc.exists()) {
-      const data = userDoc.data();
+    const userRef = adminDb.collection('users').doc(uid);
+    const userDoc = await userRef.get();
+
+    if (userDoc.exists) {
+      const data = userDoc.data()!;
       return {
         uid: data.uid,
         email: data.email,
@@ -54,10 +54,8 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 
 export async function searchUserByEmail(email: string): Promise<UserProfile | null> {
   try {
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('email', '==', email));
-    const querySnapshot = await getDocs(q);
-    
+    const querySnapshot = await adminDb.collection('users').where('email', '==', email).get();
+
     if (!querySnapshot.empty) {
       const docSnap = querySnapshot.docs[0];
       const data = docSnap.data();
@@ -113,13 +111,13 @@ export async function searchUser(searchTerm: string): Promise<UserProfile | null
 
 export async function updateUserRole(uid: string, role: 'user' | 'moderator' | 'admin'): Promise<void> {
   try {
-    const userRef = doc(db, 'users', uid);
+    const userRef = adminDb.collection('users').doc(uid);
     const permissions = getPermissionsForRole(role);
-    
-    await updateDoc(userRef, {
+
+    await userRef.update({
       role,
       permissions,
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
   } catch (error) {
     console.error('Error updating user role:', error);
@@ -130,9 +128,8 @@ export async function updateUserRole(uid: string, role: 'user' | 'moderator' | '
 // Debug function to list all users
 export async function getAllUsers(): Promise<UserProfile[]> {
   try {
-    const usersRef = collection(db, 'users');
-    const querySnapshot = await getDocs(usersRef);
-    
+    const querySnapshot = await adminDb.collection('users').get();
+
     const users = querySnapshot.docs.map(docSnap => {
       const data = docSnap.data();
       return {
