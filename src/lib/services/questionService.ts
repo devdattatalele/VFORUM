@@ -1,6 +1,7 @@
 'use server';
 import type { Question, UserProfile } from '@/lib/types';
 import { adminDb } from '@/lib/firebase-admin';
+import { serialize } from '@/lib/serialize';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 interface QuestionDataForFirestore extends Omit<Question, 'id' | 'createdAt' | 'author' | 'lastActivityAt'> {
@@ -38,7 +39,7 @@ export async function getQuestions(): Promise<Question[]> {
       const data = docSnap.data();
       return {
         id: docSnap.id,
-        ...data,
+        ...serialize(data),
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
         lastActivityAt: data.lastActivityAt?.toDate ? data.lastActivityAt.toDate().toISOString() : (data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString()),
       } as Question;
@@ -61,7 +62,7 @@ export async function getQuestionById(questionId: string): Promise<Question | nu
       const data = docSnap.data()!;
       return {
         id: docSnap.id,
-        ...data,
+        ...serialize(data),
         // Don't increment views locally since it's already done in database
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
         lastActivityAt: data.lastActivityAt?.toDate ? data.lastActivityAt.toDate().toISOString() : (data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString()),
@@ -81,7 +82,7 @@ export async function getQuestionsByCommunity(communityId: string): Promise<Ques
       const data = docSnap.data();
       return {
         id: docSnap.id,
-        ...data,
+        ...serialize(data),
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
         lastActivityAt: data.lastActivityAt?.toDate ? data.lastActivityAt.toDate().toISOString() : (data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString()),
       } as Question;

@@ -1,6 +1,7 @@
 'use server';
 import type { Event, UserProfile } from '@/lib/types';
 import { adminDb } from '@/lib/firebase-admin';
+import { serialize } from '@/lib/serialize';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { hasPermission } from '@/lib/utils/userUtils';
 
@@ -43,7 +44,7 @@ export async function getEvents(): Promise<Event[]> {
     return querySnapshot.docs.map(docSnap => {
       const data = docSnap.data();
       return {
-        ...data,
+        ...serialize(data),
         id: docSnap.id,
         // Ensure createdAt and dateTime are strings if they come from Firestore as Timestamps
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
@@ -63,7 +64,7 @@ export async function getEventById(eventId: string): Promise<Event | null> {
     if (docSnap.exists) {
       const data = docSnap.data()!;
       return {
-        ...data,
+        ...serialize(data),
         id: docSnap.id,
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
         dateTime: typeof data.dateTime === 'string' ? data.dateTime : (data.dateTime?.toDate ? data.dateTime.toDate().toISOString() : new Date().toISOString()),
@@ -82,7 +83,7 @@ export async function getEventsByCommunity(communityId: string): Promise<Event[]
     return querySnapshot.docs.map(docSnap => {
       const data = docSnap.data();
       return {
-        ...data,
+        ...serialize(data),
         id: docSnap.id,
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
         dateTime: typeof data.dateTime === 'string' ? data.dateTime : (data.dateTime?.toDate ? data.dateTime.toDate().toISOString() : new Date().toISOString()),
