@@ -12,6 +12,12 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
+# Firebase Admin (REQUIRED - every Firestore read/write goes through the Admin SDK)
+# Firebase Console > Project Settings > Service accounts > Generate new private key
+# Local: path to the downloaded file. Vercel: paste the whole JSON as FIREBASE_SERVICE_ACCOUNT_JSON.
+FIREBASE_SERVICE_ACCOUNT_PATH=./serviceAccountKey.json
+# FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
+
 # Google AI (for the AI features)
 # Get this from Google AI Studio: https://aistudio.google.com/app/apikey
 GOOGLE_GENAI_API_KEY=your_google_ai_api_key
@@ -32,4 +38,6 @@ GOOGLE_GENAI_API_KEY=your_google_ai_api_key
 - Go to Authentication > Sign-in method > Email/Password and enable it
 - Disable Google sign-in method if you don't want it
 - All `NEXT_PUBLIC_` variables are exposed to the client side
-- Keep `GOOGLE_GENAI_API_KEY` private (no NEXT_PUBLIC prefix) 
+- Keep `GOOGLE_GENAI_API_KEY` private (no NEXT_PUBLIC prefix)
+- `FIREBASE_SERVICE_ACCOUNT_*` is a privileged credential. Never commit the file, never prefix it with `NEXT_PUBLIC_`.
+- Missing Admin credential = every server action returns HTTP 500 (empty feeds, posting fails, profile falls back to a basic user). Check `GET /api/health` on the deployment. 
