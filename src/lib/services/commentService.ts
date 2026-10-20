@@ -1,6 +1,7 @@
 'use server';
 import type { Comment, UserProfile } from '@/lib/types';
 import { adminDb } from '@/lib/firebase-admin';
+import { serialize } from '@/lib/serialize';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { updateQuestionOnNewComment } from './questionService';
 
@@ -65,7 +66,7 @@ export async function getCommentsForQuestion(questionId: string, sortBy: string 
       const data = docSnap.data();
       return {
         id: docSnap.id,
-        ...data,
+        ...serialize(data),
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
       } as Comment;
     });
