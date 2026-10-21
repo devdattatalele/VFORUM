@@ -1,106 +1,131 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Calendar, MessageSquare, ArrowRight, Clock, Users, Eye, ArrowUp, TrendingUp, Zap, CheckCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { SkeletonCard } from '@/components/ui/skeleton';
-import Link from 'next/link';
-import { formatDistanceToNow } from 'date-fns';
-import { getEvents } from '@/lib/services/eventService';
-import { getQuestions } from '@/lib/services/questionService';
-import { COMMUNITIES } from '@/lib/constants';
-import type { Event, Question } from '@/lib/types';
+import { useEffect, useState } from "react"
+import { useAuth } from "@/contexts/AuthContext"
+import {
+  Loader2,
+  Calendar,
+  MessageSquare,
+  ArrowRight,
+  Clock,
+  Users,
+  Eye,
+  ArrowUp,
+  TrendingUp,
+  Zap,
+  CheckCircle,
+} from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { SkeletonCard } from "@/components/ui/skeleton"
+import Link from "next/link"
+import { formatDistanceToNow } from "date-fns"
+import { getEvents } from "@/lib/services/eventService"
+import { getQuestions } from "@/lib/services/questionService"
+import { COMMUNITIES } from "@/lib/constants"
+import type { Event, Question } from "@/lib/types"
 
 export default function HomePage() {
-  const { user, loading } = useAuth();
-  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
-  const [recentForums, setRecentForums] = useState<Question[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(true);
+  const { user, loading } = useAuth()
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
+  const [recentForums, setRecentForums] = useState<Question[]>([])
+  const [isLoadingData, setIsLoadingData] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        setIsLoadingData(true);
+        setIsLoadingData(true)
         const [events, questions] = await Promise.all([
           getEvents(),
-          getQuestions()
-        ]);
-        
+          getQuestions(),
+        ])
+
         // Filter upcoming events and sort by date
-        const now = new Date();
+        const now = new Date()
         const upcoming = events
-          .filter(event => new Date(event.dateTime) >= now)
-          .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
-          .slice(0, 4);
-        
+          .filter((event) => new Date(event.dateTime) >= now)
+          .sort(
+            (a, b) =>
+              new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()
+          )
+          .slice(0, 4)
+
         // Get recent questions sorted by creation date
         const recent = questions
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 3);
-        
-        setUpcomingEvents(upcoming);
-        setRecentForums(recent);
+          .sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
+          .slice(0, 3)
+
+        setUpcomingEvents(upcoming)
+        setRecentForums(recent)
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error)
       } finally {
-        setIsLoadingData(false);
+        setIsLoadingData(false)
       }
     }
 
-    fetchData();
-  }, []);
+    fetchData()
+  }, [])
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-blue-500 mb-4" />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background p-8">
+        <Loader2 className="mb-4 h-12 w-12 animate-spin text-blue-500" />
         <p className="text-lg text-foreground">Loading VForums And Events...</p>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="animate-fadeIn space-y-8">
       {/* Welcome Hero Section */}
-      <Card variant="outlined" className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
+      <Card
+        variant="outlined"
+        className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:border-blue-800 dark:from-blue-950/20 dark:to-indigo-950/20"
+      >
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500 rounded-lg">
+                <div className="rounded-lg bg-blue-500 p-2">
                   <Zap className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <CardTitle size="lg" className="text-blue-900 dark:text-blue-100">
+                  <CardTitle
+                    size="lg"
+                    className="text-blue-900 dark:text-blue-100"
+                  >
                     Welcome to VForums And Events
                   </CardTitle>
-                  <p className="text-blue-700 dark:text-blue-300 mt-1">
+                  <p className="mt-1 text-blue-700 dark:text-blue-300">
                     Your unified platform for campus tech communities
                   </p>
                 </div>
               </div>
-              
+
               {user ? (
-                <div className="bg-white/50 dark:bg-white/10 rounded-lg p-4 border border-blue-200/50 dark:border-blue-700/50">
-                  <p className="text-blue-800 dark:text-blue-200 font-medium">
-                    Welcome back, {user.displayName || 'Tech Enthusiast'}! 👋
+                <div className="rounded-lg border border-blue-200/50 bg-white/50 p-4 dark:border-blue-700/50 dark:bg-white/10">
+                  <p className="font-medium text-blue-800 dark:text-blue-200">
+                    Welcome back, {user.displayName || "Tech Enthusiast"}! 👋
                   </p>
-                  <p className="text-blue-600 dark:text-blue-400 text-sm mt-1">
+                  <p className="mt-1 text-sm text-blue-600 dark:text-blue-400">
                     Ready to dive into today's discussions and upcoming events?
                   </p>
                 </div>
               ) : (
-                <div className="bg-white/50 dark:bg-white/10 rounded-lg p-4 border border-blue-200/50 dark:border-blue-700/50">
-                  <p className="text-blue-800 dark:text-blue-200 font-medium">
+                <div className="rounded-lg border border-blue-200/50 bg-white/50 p-4 dark:border-blue-700/50 dark:bg-white/10">
+                  <p className="font-medium text-blue-800 dark:text-blue-200">
                     Join the community! 🚀
                   </p>
-                  <p className="text-blue-600 dark:text-blue-400 text-sm mt-1">
-                    Connect with fellow tech enthusiasts and stay updated on events.
+                  <p className="mt-1 text-sm text-blue-600 dark:text-blue-400">
+                    Connect with fellow tech enthusiasts and stay updated on
+                    events.
                   </p>
                   <Button variant="primary" size="sm" asChild className="mt-3">
                     <Link href="/auth">Get Started</Link>
@@ -108,16 +133,14 @@ export default function HomePage() {
                 </div>
               )}
             </div>
-            
-
           </div>
         </CardHeader>
       </Card>
 
       {/* Main Content Grid */}
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid gap-8 lg:grid-cols-3">
         {/* Left Columns - Events & Forums */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="space-y-8 lg:col-span-2">
           {/* Upcoming Events */}
           <Card>
             <CardHeader>
@@ -128,7 +151,7 @@ export default function HomePage() {
                 </CardTitle>
                 <Link href="/events">
                   <Button variant="outline" size="sm">
-                    View All <ArrowRight className="h-4 w-4 ml-1" />
+                    View All <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </Link>
               </div>
@@ -142,20 +165,27 @@ export default function HomePage() {
               ) : upcomingEvents.length > 0 ? (
                 <div className="space-y-4">
                   {upcomingEvents.map((event) => {
-                    const community = COMMUNITIES.find(c => c.id === event.communityId);
+                    const community = COMMUNITIES.find(
+                      (c) => c.id === event.communityId
+                    )
                     return (
-                      <div key={event.id} className="border border-border rounded-lg p-4 hover:shadow-md hover:border-border/80 transition-all duration-200">
+                      <div
+                        key={event.id}
+                        className="rounded-lg border border-border p-4 transition-all duration-200 hover:border-border/80 hover:shadow-md"
+                      >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <Link href={`/events/${event.id}`}>
-                              <h3 className="font-semibold text-foreground hover:text-blue-500 transition-colors line-clamp-2">
+                              <h3 className="line-clamp-2 font-semibold text-foreground transition-colors hover:text-blue-500">
                                 {event.title}
                               </h3>
                             </Link>
-                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                            <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
-                                {formatDistanceToNow(new Date(event.dateTime), { addSuffix: true })}
+                                {formatDistanceToNow(new Date(event.dateTime), {
+                                  addSuffix: true,
+                                })}
                               </div>
                               <div className="flex items-center gap-1">
                                 <Users className="h-4 w-4" />
@@ -164,25 +194,28 @@ export default function HomePage() {
                             </div>
                           </div>
                           {community && (
-                            <Badge variant="community" className="flex-shrink-0">
-                              {community.icon && <community.icon className="h-3 w-3 mr-1" />}
+                            <Badge
+                              variant="community"
+                              className="flex-shrink-0"
+                            >
+                              {community.icon && (
+                                <community.icon className="mr-1 h-3 w-3" />
+                              )}
                               {community.name}
                             </Badge>
                           )}
                         </div>
                       </div>
-                    );
+                    )
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calendar className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                <div className="py-8 text-center text-muted-foreground">
+                  <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
                   <p>No upcoming events at the moment</p>
                   {user && (
                     <Button asChild variant="outline" className="mt-4">
-                      <Link href="/events/create">
-                        Create Your First Event
-                      </Link>
+                      <Link href="/events/create">Create Your First Event</Link>
                     </Button>
                   )}
                 </div>
@@ -200,7 +233,7 @@ export default function HomePage() {
                 </CardTitle>
                 <Link href="/qna">
                   <Button variant="outline" size="sm">
-                    Browse Forums <ArrowRight className="h-4 w-4 ml-1" />
+                    Browse Forums <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </Link>
               </div>
@@ -214,43 +247,63 @@ export default function HomePage() {
               ) : recentForums.length > 0 ? (
                 <div className="space-y-4">
                   {recentForums.map((question) => {
-                    const community = COMMUNITIES.find(c => c.id === question.communityId);
+                    const community = COMMUNITIES.find(
+                      (c) => c.id === question.communityId
+                    )
                     return (
-                      <div key={question.id} className="border border-border rounded-lg p-4 hover:shadow-md hover:border-border/80 transition-all duration-200">
+                      <div
+                        key={question.id}
+                        className="rounded-lg border border-border p-4 transition-all duration-200 hover:border-border/80 hover:shadow-md"
+                      >
                         <div className="space-y-3">
                           <div className="flex items-start justify-between gap-4">
-                            <Link href={`/qna/${question.id}`} className="flex-1">
-                              <h3 className="font-semibold text-foreground hover:text-blue-500 transition-colors line-clamp-2">
+                            <Link
+                              href={`/qna/${question.id}`}
+                              className="flex-1"
+                            >
+                              <h3 className="line-clamp-2 font-semibold text-foreground transition-colors hover:text-blue-500">
                                 {question.title}
                               </h3>
                             </Link>
                             {community && (
-                              <Badge variant="community" className="flex-shrink-0">
-                                {community.icon && <community.icon className="h-3 w-3 mr-1" />}
+                              <Badge
+                                variant="community"
+                                className="flex-shrink-0"
+                              >
+                                {community.icon && (
+                                  <community.icon className="mr-1 h-3 w-3" />
+                                )}
                                 {community.name}
                               </Badge>
                             )}
                           </div>
-                          
-                          <p className="text-muted-foreground text-sm line-clamp-2">
+
+                          <p className="line-clamp-2 text-sm text-muted-foreground">
                             {question.content}
                           </p>
-                          
+
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <Avatar className="h-4 w-4">
-                                  <AvatarImage src={question.author.photoURL || undefined} />
+                                  <AvatarImage
+                                    src={question.author.photoURL || undefined}
+                                  />
                                   <AvatarFallback className="text-xs">
-                                    {question.author.displayName?.[0] || '?'}
+                                    {question.author.displayName?.[0] || "?"}
                                   </AvatarFallback>
                                 </Avatar>
-                                {question.author.displayName || 'Anonymous'}
+                                {question.author.displayName || "Anonymous"}
                               </div>
                               <span>•</span>
-                              <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
+                              <span>
+                                {formatDistanceToNow(
+                                  new Date(question.createdAt),
+                                  { addSuffix: true }
+                                )}
+                              </span>
                             </div>
-                            
+
                             <div className="flex items-center gap-3 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <ArrowUp className="h-4 w-4" />
@@ -262,11 +315,15 @@ export default function HomePage() {
                               </div>
                             </div>
                           </div>
-                          
+
                           {question.tags && question.tags.length > 0 && (
                             <div className="flex flex-wrap gap-2">
                               {question.tags.slice(0, 3).map((tag) => (
-                                <Badge key={tag} variant="secondary" className="text-xs">
+                                <Badge
+                                  key={tag}
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
                                   {tag}
                                 </Badge>
                               ))}
@@ -279,18 +336,16 @@ export default function HomePage() {
                           )}
                         </div>
                       </div>
-                    );
+                    )
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <MessageSquare className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                <div className="py-8 text-center text-muted-foreground">
+                  <MessageSquare className="mx-auto mb-4 h-12 w-12 opacity-50" />
                   <p>No recent discussions</p>
                   {user && (
                     <Button asChild variant="outline" className="mt-4">
-                      <Link href="/qna/ask">
-                        Start a Discussion
-                      </Link>
+                      <Link href="/qna/ask">Start a Discussion</Link>
                     </Button>
                   )}
                 </div>
@@ -300,7 +355,7 @@ export default function HomePage() {
         </div>
 
         {/* Right Column - Quick Stats & Actions */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="space-y-6 lg:col-span-1">
           <Card>
             <CardHeader>
               <CardTitle size="md" className="flex items-center gap-2">
@@ -309,21 +364,36 @@ export default function HomePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" size="sm" asChild className="w-full justify-start border border-border">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="w-full justify-start border border-border"
+              >
                 <Link href="/qna/ask">
-                  <MessageSquare className="h-4 w-4 mr-2" />
+                  <MessageSquare className="mr-2 h-4 w-4" />
                   Ask a Question
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" asChild className="w-full justify-start border border-border">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="w-full justify-start border border-border"
+              >
                 <Link href="/events/create">
-                  <Calendar className="h-4 w-4 mr-2" />
+                  <Calendar className="mr-2 h-4 w-4" />
                   Create Event
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" asChild className="w-full justify-start border border-border">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="w-full justify-start border border-border"
+              >
                 <Link href="/community/all">
-                  <Users className="h-4 w-4 mr-2" />
+                  <Users className="mr-2 h-4 w-4" />
                   Browse Communities
                 </Link>
               </Button>
@@ -337,15 +407,21 @@ export default function HomePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Active Discussions</span>
+                <span className="text-sm text-muted-foreground">
+                  Active Discussions
+                </span>
                 <Badge variant="secondary">{recentForums.length}+</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Upcoming Events</span>
+                <span className="text-sm text-muted-foreground">
+                  Upcoming Events
+                </span>
                 <Badge variant="secondary">{upcomingEvents.length}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Communities</span>
+                <span className="text-sm text-muted-foreground">
+                  Communities
+                </span>
                 <Badge variant="secondary">5</Badge>
               </div>
             </CardContent>
@@ -353,5 +429,5 @@ export default function HomePage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

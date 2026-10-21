@@ -1,39 +1,39 @@
-"use client";
+"use client"
 
-import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Search, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState } from "react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Search, X } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface CommentSearchProps {
-  onSearch: (query: string) => void;
-  placeholder?: string;
-  className?: string;
+  onSearch: (query: string) => void
+  placeholder?: string
+  className?: string
 }
 
-export default function CommentSearch({ 
-  onSearch, 
+export default function CommentSearch({
+  onSearch,
   placeholder = "Search comments...",
-  className 
+  className,
 }: CommentSearchProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    onSearch(query);
-  };
+    setSearchQuery(query)
+    onSearch(query)
+  }
 
   const handleClear = () => {
-    setSearchQuery('');
-    onSearch('');
-    setIsExpanded(false);
-  };
+    setSearchQuery("")
+    onSearch("")
+    setIsExpanded(false)
+  }
 
   const handleExpand = () => {
-    setIsExpanded(true);
-  };
+    setIsExpanded(true)
+  }
 
   return (
     <div className={cn("relative", className)}>
@@ -41,21 +41,21 @@ export default function CommentSearch({
         <Button
           variant="outline"
           size="sm"
-          className="h-9 px-3 gap-2"
+          className="h-9 gap-2 px-3"
           onClick={handleExpand}
         >
           <Search className="h-4 w-4" />
           <span className="hidden sm:inline">Search</span>
         </Button>
       ) : (
-        <div className="flex items-center gap-2 bg-background border rounded-lg px-3 py-1">
-          <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <div className="flex items-center gap-2 rounded-lg border bg-background px-3 py-1">
+          <Search className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
           <Input
             type="text"
             placeholder={placeholder}
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            className="border-0 p-0 h-7 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="h-7 border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
             autoFocus
           />
           {searchQuery && (
@@ -79,5 +79,5 @@ export default function CommentSearch({
         </div>
       )}
     </div>
-  );
-} 
+  )
+}

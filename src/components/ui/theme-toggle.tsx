@@ -1,17 +1,17 @@
-"use client";
+"use client"
 
-import { Moon, Sun, Monitor } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Moon, Sun, Monitor } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useTheme } from '@/contexts/ThemeContext';
+} from "@/components/ui/dropdown-menu"
+import { useTheme } from "@/contexts/ThemeContext"
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme()
 
   return (
     <DropdownMenu>
@@ -19,7 +19,7 @@ export function ThemeToggle() {
         <Button
           variant="ghost"
           size="icon-sm"
-          className="h-8 w-8 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:text-neutral-50 dark:hover:bg-neutral-800"
+          className="h-8 w-8 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-50"
           aria-label="Toggle theme"
         >
           <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -28,28 +28,34 @@ export function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[140px]">
-        <DropdownMenuItem 
-          onClick={() => setTheme('light')}
-          className={theme === 'light' ? 'bg-neutral-100 dark:bg-neutral-800' : ''}
+        <DropdownMenuItem
+          onClick={() => setTheme("light")}
+          className={
+            theme === "light" ? "bg-neutral-100 dark:bg-neutral-800" : ""
+          }
         >
           <Sun className="mr-2 h-4 w-4" />
           <span>Light</span>
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => setTheme('dark')}
-          className={theme === 'dark' ? 'bg-neutral-100 dark:bg-neutral-800' : ''}
+        <DropdownMenuItem
+          onClick={() => setTheme("dark")}
+          className={
+            theme === "dark" ? "bg-neutral-100 dark:bg-neutral-800" : ""
+          }
         >
           <Moon className="mr-2 h-4 w-4" />
           <span>Dark</span>
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => setTheme('system')}
-          className={theme === 'system' ? 'bg-neutral-100 dark:bg-neutral-800' : ''}
+        <DropdownMenuItem
+          onClick={() => setTheme("system")}
+          className={
+            theme === "system" ? "bg-neutral-100 dark:bg-neutral-800" : ""
+          }
         >
           <Monitor className="mr-2 h-4 w-4" />
           <span>System</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-} 
+  )
+}

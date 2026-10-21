@@ -1,69 +1,98 @@
+"use client"
 
-"use client";
-
-import React, { useState } from 'react';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useAuth } from '@/contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { useAuth } from "@/contexts/AuthContext"
+import { Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface CommentFormProps {
-  questionId: string;
-  parentId?: string | null;
-  onSubmit: (content: string, parentId?: string | null) => Promise<void>; // Updated to include parentId
-  onCancel?: () => void; 
-  placeholder?: string;
+  questionId: string
+  parentId?: string | null
+  onSubmit: (content: string, parentId?: string | null) => Promise<void> // Updated to include parentId
+  onCancel?: () => void
+  placeholder?: string
 }
 
 const commentFormSchema = z.object({
-  content: z.string().min(5, "Comment must be at least 5 characters.").max(2000, "Comment is too long."),
-});
+  content: z
+    .string()
+    .min(5, "Comment must be at least 5 characters.")
+    .max(2000, "Comment is too long."),
+})
 
-type CommentFormValues = z.infer<typeof commentFormSchema>;
+type CommentFormValues = z.infer<typeof commentFormSchema>
 
-export default function CommentForm({ questionId, parentId, onSubmit, onCancel, placeholder = "Write your answer..." }: CommentFormProps) {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function CommentForm({
+  questionId,
+  parentId,
+  onSubmit,
+  onCancel,
+  placeholder = "Write your answer...",
+}: CommentFormProps) {
+  const { user } = useAuth()
+  const { toast } = useToast()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<CommentFormValues>({
     resolver: zodResolver(commentFormSchema),
     defaultValues: {
       content: "",
     },
-  });
+  })
 
   async function handleSubmit(data: CommentFormValues) {
     if (!user) {
-      toast({ title: "Not Signed In", description: "Please sign in to post an answer.", variant: "destructive" });
-      return;
+      toast({
+        title: "Not Signed In",
+        description: "Please sign in to post an answer.",
+        variant: "destructive",
+      })
+      return
     }
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      await onSubmit(data.content, parentId); // Pass parentId to the onSubmit prop
-      form.reset(); 
-      toast({ title: "Answer Posted!", description: "Your answer has been added."});
+      await onSubmit(data.content, parentId) // Pass parentId to the onSubmit prop
+      form.reset()
+      toast({
+        title: "Answer Posted!",
+        description: "Your answer has been added.",
+      })
     } catch (error) {
-      console.error("Error submitting comment:", error);
-      toast({ title: "Error", description: "Could not post your answer.", variant: "destructive" });
+      console.error("Error submitting comment:", error)
+      toast({
+        title: "Error",
+        description: "Could not post your answer.",
+        variant: "destructive",
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
   }
 
   if (!user) {
     // The parent component (QuestionDetailPage) already handles showing a sign-in prompt
-    return null; 
+    return null
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-4 border-t border-b glass-card p-4 rounded-md">
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="glass-card space-y-4 rounded-md border-b border-t p-4 py-4"
+      >
         <FormField
           control={form.control}
           name="content"
@@ -73,7 +102,7 @@ export default function CommentForm({ questionId, parentId, onSubmit, onCancel, 
               <FormControl>
                 <Textarea
                   placeholder={placeholder}
-                  className="resize-y min-h-[100px] bg-background/70 focus:bg-background"
+                  className="min-h-[100px] resize-y bg-background/70 focus:bg-background"
                   {...field}
                 />
               </FormControl>
@@ -82,17 +111,32 @@ export default function CommentForm({ questionId, parentId, onSubmit, onCancel, 
           )}
         />
         <div className="flex items-center gap-2">
-          <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isSubmitting ? 'Posting...' : (parentId ? 'Post Reply' : 'Post Your Answer')}
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {isSubmitting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            {isSubmitting
+              ? "Posting..."
+              : parentId
+                ? "Post Reply"
+                : "Post Your Answer"}
           </Button>
           {onCancel && (
-            <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
           )}
         </div>
       </form>
     </Form>
-  );
+  )
 }

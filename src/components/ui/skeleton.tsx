@@ -20,7 +20,7 @@ function Skeleton({
 
 // Skeleton variants for common use cases
 const SkeletonCard = () => (
-  <div className="space-y-4 p-6 bg-card rounded-lg border">
+  <div className="space-y-4 rounded-lg border bg-card p-6">
     <div className="space-y-2">
       <Skeleton className="h-6 w-3/4" />
       <Skeleton className="h-4 w-1/2" />
@@ -40,7 +40,10 @@ const SkeletonCard = () => (
 const SkeletonList = ({ count = 3 }: { count?: number }) => (
   <div className="space-y-4">
     {Array.from({ length: count }).map((_, i) => (
-      <div key={i} className="flex items-center space-x-4 p-4 bg-card rounded-lg border">
+      <div
+        key={i}
+        className="flex items-center space-x-4 rounded-lg border bg-card p-4"
+      >
         <Skeleton className="h-12 w-12 rounded-full" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-4 w-1/4" />
@@ -56,10 +59,7 @@ const SkeletonText = ({ lines = 3 }: { lines?: number }) => (
     {Array.from({ length: lines }).map((_, i) => (
       <Skeleton
         key={i}
-        className={cn(
-          "h-4",
-          i === lines - 1 ? "w-2/3" : "w-full"
-        )}
+        className={cn("h-4", i === lines - 1 ? "w-2/3" : "w-full")}
       />
     ))}
   </div>

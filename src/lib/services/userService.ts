@@ -1,13 +1,13 @@
-'use server';
-import type { UserProfile } from '@/lib/types';
-import { adminDb } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getPermissionsForRole } from '@/lib/utils/userUtils';
+"use server"
+import type { UserProfile } from "@/lib/types"
+import { adminDb } from "@/lib/firebase-admin"
+import { FieldValue } from "firebase-admin/firestore"
+import { getPermissionsForRole } from "@/lib/utils/userUtils"
 
 export async function createUserProfile(user: UserProfile): Promise<void> {
   try {
-    const userRef = adminDb.collection('users').doc(user.uid);
-    const userDoc = await userRef.get();
+    const userRef = adminDb.collection("users").doc(user.uid)
+    const userDoc = await userRef.get()
 
     if (!userDoc.exists) {
       await userRef.set({
@@ -15,139 +15,173 @@ export async function createUserProfile(user: UserProfile): Promise<void> {
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
-        role: 'user', // Default role
-        permissions: ['read_forums', 'create_questions', 'vote'], // Default permissions
+        role: "user", // Default role
+        permissions: ["read_forums", "create_questions", "vote"], // Default permissions
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
-      });
+      })
     }
   } catch (error) {
-    console.error('Error creating user profile:', error);
-    throw new Error('Failed to create user profile.');
+    console.error("Error creating user profile:", error)
+    throw new Error("Failed to create user profile.")
   }
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   try {
-    const userRef = adminDb.collection('users').doc(uid);
-    const userDoc = await userRef.get();
+    const userRef = adminDb.collection("users").doc(uid)
+    const userDoc = await userRef.get()
 
     if (userDoc.exists) {
-      const data = userDoc.data()!;
+      const data = userDoc.data()!
       return {
         uid: data.uid,
         email: data.email,
         displayName: data.displayName,
         photoURL: data.photoURL,
-        role: data.role || 'user',
-        permissions: data.permissions || ['read_forums', 'create_questions', 'vote'],
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
-        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
-      };
+        role: data.role || "user",
+        permissions: data.permissions || [
+          "read_forums",
+          "create_questions",
+          "vote",
+        ],
+        createdAt: data.createdAt?.toDate
+          ? data.createdAt.toDate().toISOString()
+          : data.createdAt,
+        updatedAt: data.updatedAt?.toDate
+          ? data.updatedAt.toDate().toISOString()
+          : data.updatedAt,
+      }
     }
-    return null;
+    return null
   } catch (error) {
-    console.error('Error getting user profile:', error);
-    return null;
+    console.error("Error getting user profile:", error)
+    return null
   }
 }
 
-export async function searchUserByEmail(email: string): Promise<UserProfile | null> {
+export async function searchUserByEmail(
+  email: string
+): Promise<UserProfile | null> {
   try {
-    const querySnapshot = await adminDb.collection('users').where('email', '==', email).get();
+    const querySnapshot = await adminDb
+      .collection("users")
+      .where("email", "==", email)
+      .get()
 
     if (!querySnapshot.empty) {
-      const docSnap = querySnapshot.docs[0];
-      const data = docSnap.data();
+      const docSnap = querySnapshot.docs[0]
+      const data = docSnap.data()
       return {
         uid: data.uid,
         email: data.email,
         displayName: data.displayName,
         photoURL: data.photoURL,
-        role: data.role || 'user',
-        permissions: data.permissions || ['read_forums', 'create_questions', 'vote'],
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
-        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
-      };
+        role: data.role || "user",
+        permissions: data.permissions || [
+          "read_forums",
+          "create_questions",
+          "vote",
+        ],
+        createdAt: data.createdAt?.toDate
+          ? data.createdAt.toDate().toISOString()
+          : data.createdAt,
+        updatedAt: data.updatedAt?.toDate
+          ? data.updatedAt.toDate().toISOString()
+          : data.updatedAt,
+      }
     }
-    return null;
+    return null
   } catch (error) {
-    console.error('Error searching user by email:', error);
-    return null;
+    console.error("Error searching user by email:", error)
+    return null
   }
 }
 
-export async function searchUser(searchTerm: string): Promise<UserProfile | null> {
+export async function searchUser(
+  searchTerm: string
+): Promise<UserProfile | null> {
   try {
-    console.log('Searching for user with term:', searchTerm);
-    
+    console.log("Searching for user with term:", searchTerm)
+
     // First try to get by UID (UIDs are typically longer than 20 characters)
     if (searchTerm.length > 15) {
-      console.log('Trying UID search...');
-      const userByUid = await getUserProfile(searchTerm);
+      console.log("Trying UID search...")
+      const userByUid = await getUserProfile(searchTerm)
       if (userByUid) {
-        console.log('Found user by UID:', userByUid.email);
-        return userByUid;
+        console.log("Found user by UID:", userByUid.email)
+        return userByUid
       }
     }
-    
+
     // Then try to search by email
-    if (searchTerm.includes('@')) {
-      console.log('Trying email search...');
-      const userByEmail = await searchUserByEmail(searchTerm);
+    if (searchTerm.includes("@")) {
+      console.log("Trying email search...")
+      const userByEmail = await searchUserByEmail(searchTerm)
       if (userByEmail) {
-        console.log('Found user by email:', userByEmail.email);
-        return userByEmail;
+        console.log("Found user by email:", userByEmail.email)
+        return userByEmail
       }
     }
-    
-    console.log('No user found with search term:', searchTerm);
-    return null;
+
+    console.log("No user found with search term:", searchTerm)
+    return null
   } catch (error) {
-    console.error('Error in searchUser:', error);
-    return null;
+    console.error("Error in searchUser:", error)
+    return null
   }
 }
 
-export async function updateUserRole(uid: string, role: 'user' | 'moderator' | 'admin'): Promise<void> {
+export async function updateUserRole(
+  uid: string,
+  role: "user" | "moderator" | "admin"
+): Promise<void> {
   try {
-    const userRef = adminDb.collection('users').doc(uid);
-    const permissions = getPermissionsForRole(role);
+    const userRef = adminDb.collection("users").doc(uid)
+    const permissions = getPermissionsForRole(role)
 
     await userRef.update({
       role,
       permissions,
       updatedAt: FieldValue.serverTimestamp(),
-    });
+    })
   } catch (error) {
-    console.error('Error updating user role:', error);
-    throw new Error('Failed to update user role.');
+    console.error("Error updating user role:", error)
+    throw new Error("Failed to update user role.")
   }
 }
 
 // Debug function to list all users
 export async function getAllUsers(): Promise<UserProfile[]> {
   try {
-    const querySnapshot = await adminDb.collection('users').get();
+    const querySnapshot = await adminDb.collection("users").get()
 
-    const users = querySnapshot.docs.map(docSnap => {
-      const data = docSnap.data();
+    const users = querySnapshot.docs.map((docSnap) => {
+      const data = docSnap.data()
       return {
         uid: data.uid,
         email: data.email,
         displayName: data.displayName,
         photoURL: data.photoURL,
-        role: data.role || 'user',
-        permissions: data.permissions || ['read_forums', 'create_questions', 'vote'],
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
-        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
-      };
-    });
-    
-    console.log('All users in database:', users);
-    return users;
+        role: data.role || "user",
+        permissions: data.permissions || [
+          "read_forums",
+          "create_questions",
+          "vote",
+        ],
+        createdAt: data.createdAt?.toDate
+          ? data.createdAt.toDate().toISOString()
+          : data.createdAt,
+        updatedAt: data.updatedAt?.toDate
+          ? data.updatedAt.toDate().toISOString()
+          : data.updatedAt,
+      }
+    })
+
+    console.log("All users in database:", users)
+    return users
   } catch (error) {
-    console.error('Error getting all users:', error);
-    return [];
+    console.error("Error getting all users:", error)
+    return []
   }
-} 
+}

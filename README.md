@@ -8,16 +8,16 @@ Live: https://vforum-devdattataleles-projects.vercel.app
 
 ## Stack
 
-| Layer     | Choice                                                    |
-| --------- | --------------------------------------------------------- |
-| Framework | Next.js 15 App Router, React 18                           |
-| Language  | TypeScript (strict)                                       |
-| Styling   | Tailwind CSS 3, shadcn, lucide-react                      |
-| Data      | Firestore through the Admin SDK (rules are default-deny)  |
+| Layer     | Choice                                                     |
+| --------- | ---------------------------------------------------------- |
+| Framework | Next.js 15 App Router, React 18                            |
+| Language  | TypeScript (strict)                                        |
+| Styling   | Tailwind CSS 3, shadcn, lucide-react                       |
+| Data      | Firestore through the Admin SDK (rules are default-deny)   |
 | Auth      | Firebase Auth, `@vit.edu.in` only, httpOnly session cookie |
-| AI        | Genkit + Gemini for tag suggestions                       |
-| Quality   | ESLint, Prettier, Vitest                                  |
-| Deploy    | Vercel, CI on GitHub Actions                              |
+| AI        | Genkit + Gemini for tag suggestions                        |
+| Quality   | ESLint, Prettier, Vitest                                   |
+| Deploy    | Vercel, CI on GitHub Actions                               |
 
 ## Getting started
 
@@ -31,14 +31,14 @@ Open http://localhost:9002. `GET /api/health` returns `{"ok":true}` when the Adm
 
 ## Scripts
 
-| Script                 | What it does                                   |
-| ---------------------- | ---------------------------------------------- |
-| `npm run dev`          | Dev server with Turbopack on port 9002         |
-| `npm run build`        | Production build                               |
-| `npm run check`        | Typecheck, lint, format check, and tests       |
-| `npm run fix`          | Autofix lint and formatting                    |
-| `npm test`             | Vitest                                         |
-| `npm run genkit:dev`   | Genkit dev UI for the AI flows                 |
+| Script               | What it does                             |
+| -------------------- | ---------------------------------------- |
+| `npm run dev`        | Dev server with Turbopack on port 9002   |
+| `npm run build`      | Production build                         |
+| `npm run check`      | Typecheck, lint, format check, and tests |
+| `npm run fix`        | Autofix lint and formatting              |
+| `npm test`           | Vitest                                   |
+| `npm run genkit:dev` | Genkit dev UI for the AI flows           |
 
 ## Documentation
 

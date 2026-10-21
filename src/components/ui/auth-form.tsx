@@ -1,16 +1,22 @@
-"use client";
+"use client"
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { useAuth } from "@/contexts/AuthContext"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Loader2, Eye, EyeOff, Mail, Lock, User } from "lucide-react"
 import {
   Form,
   FormControl,
@@ -18,71 +24,79 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form"
 
 const signInSchema = z.object({
-  email: z.string().email('Please enter a valid email address').refine(
-    (email) => email.endsWith('@vit.edu.in'),
-    'Email must be from @vit.edu.in domain'
-  ),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .refine(
+      (email) => email.endsWith("@vit.edu.in"),
+      "Email must be from @vit.edu.in domain"
+    ),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+})
 
-const signUpSchema = z.object({
-  email: z.string().email('Please enter a valid email address').refine(
-    (email) => email.endsWith('@vit.edu.in'),
-    'Email must be from @vit.edu.in domain'
-  ),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
-  displayName: z.string().min(2, 'Name must be at least 2 characters'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const signUpSchema = z
+  .object({
+    email: z
+      .string()
+      .email("Please enter a valid email address")
+      .refine(
+        (email) => email.endsWith("@vit.edu.in"),
+        "Email must be from @vit.edu.in domain"
+      ),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z
+      .string()
+      .min(6, "Password must be at least 6 characters"),
+    displayName: z.string().min(2, "Name must be at least 2 characters"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  })
 
-type SignInFormValues = z.infer<typeof signInSchema>;
-type SignUpFormValues = z.infer<typeof signUpSchema>;
+type SignInFormValues = z.infer<typeof signInSchema>
+type SignUpFormValues = z.infer<typeof signUpSchema>
 
 export default function AuthForm() {
-  const [activeTab, setActiveTab] = useState('signin');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { signIn, signUp, loading } = useAuth();
+  const [activeTab, setActiveTab] = useState("signin")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const { signIn, signUp, loading } = useAuth()
 
   const signInForm = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
-  });
+  })
 
   const signUpForm = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      email: '',
-      password: '',
-      confirmPassword: '',
-      displayName: '',
+      email: "",
+      password: "",
+      confirmPassword: "",
+      displayName: "",
     },
-  });
+  })
 
   const onSignIn = async (data: SignInFormValues) => {
-    await signIn(data.email, data.password);
-  };
+    await signIn(data.email, data.password)
+  }
 
   const onSignUp = async (data: SignUpFormValues) => {
-    await signUp(data.email, data.password, data.displayName);
-  };
+    await signUp(data.email, data.password, data.displayName)
+  }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="mx-auto w-full max-w-md">
       <CardHeader className="text-center">
         <CardTitle>Welcome to VForums And Events</CardTitle>
-        <CardDescription>
-          Connect with VIT's tech community
-        </CardDescription>
+        <CardDescription>Connect with VIT's tech community</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -90,10 +104,13 @@ export default function AuthForm() {
             <TabsTrigger value="signin">Sign In</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="signin" className="space-y-4">
             <Form {...signInForm}>
-              <form onSubmit={signInForm.handleSubmit(onSignIn)} className="space-y-4">
+              <form
+                onSubmit={signInForm.handleSubmit(onSignIn)}
+                className="space-y-4"
+              >
                 <FormField
                   control={signInForm.control}
                   name="email"
@@ -116,7 +133,7 @@ export default function AuthForm() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={signInForm.control}
                   name="password"
@@ -153,7 +170,7 @@ export default function AuthForm() {
                     </FormItem>
                   )}
                 />
-                
+
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sign In
@@ -161,10 +178,13 @@ export default function AuthForm() {
               </form>
             </Form>
           </TabsContent>
-          
+
           <TabsContent value="signup" className="space-y-4">
             <Form {...signUpForm}>
-              <form onSubmit={signUpForm.handleSubmit(onSignUp)} className="space-y-4">
+              <form
+                onSubmit={signUpForm.handleSubmit(onSignUp)}
+                className="space-y-4"
+              >
                 <FormField
                   control={signUpForm.control}
                   name="displayName"
@@ -187,7 +207,7 @@ export default function AuthForm() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={signUpForm.control}
                   name="email"
@@ -210,7 +230,7 @@ export default function AuthForm() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={signUpForm.control}
                   name="password"
@@ -247,7 +267,7 @@ export default function AuthForm() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={signUpForm.control}
                   name="confirmPassword"
@@ -269,7 +289,9 @@ export default function AuthForm() {
                             variant="ghost"
                             size="sm"
                             className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
                             disabled={loading}
                           >
                             {showConfirmPassword ? (
@@ -284,7 +306,7 @@ export default function AuthForm() {
                     </FormItem>
                   )}
                 />
-                
+
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Create Account
@@ -293,11 +315,11 @@ export default function AuthForm() {
             </Form>
           </TabsContent>
         </Tabs>
-        
-        <p className="mt-4 text-xs text-center text-muted-foreground">
+
+        <p className="mt-4 text-center text-xs text-muted-foreground">
           Only @vit.edu.in email addresses are allowed
         </p>
       </CardContent>
     </Card>
-  );
-} 
+  )
+}

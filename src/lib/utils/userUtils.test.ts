@@ -8,7 +8,10 @@ import {
 } from "@/lib/utils/userUtils"
 import type { UserProfile } from "@/lib/types"
 
-const profile = (uid: string, role: "user" | "moderator" | "admin"): UserProfile => ({
+const profile = (
+  uid: string,
+  role: "user" | "moderator" | "admin"
+): UserProfile => ({
   uid,
   email: `${uid}@vit.edu.in`,
   displayName: uid,

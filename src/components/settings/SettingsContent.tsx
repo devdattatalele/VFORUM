@@ -1,24 +1,40 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { auth } from '@/lib/firebase';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { 
-  User, 
-  Mail, 
-  Bell, 
-  Shield, 
-  Palette, 
+import { useState, useEffect } from "react"
+import { useAuth } from "@/contexts/AuthContext"
+import { auth } from "@/lib/firebase"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import {
+  User,
+  Mail,
+  Bell,
+  Shield,
+  Palette,
   HelpCircle,
   LogOut,
   Camera,
@@ -29,72 +45,74 @@ import {
   Globe,
   Lock,
   Eye,
-  EyeOff
-} from "lucide-react";
-import { toast } from "sonner";
-import { useTheme } from "next-themes";
-import { formatDistanceToNow } from 'date-fns';
+  EyeOff,
+} from "lucide-react"
+import { toast } from "sonner"
+import { useTheme } from "next-themes"
+import { formatDistanceToNow } from "date-fns"
 
 export default function SettingsContent() {
-  const { user, signOut } = useAuth();
-  const { theme, setTheme } = useTheme();
-  const [isLoading, setIsLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  
+  const { user, signOut } = useAuth()
+  const { theme, setTheme } = useTheme()
+  const [isLoading, setIsLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
   // Profile settings
-  const [displayName, setDisplayName] = useState(user?.displayName || '');
-  const [email, setEmail] = useState(user?.email || '');
-  
+  const [displayName, setDisplayName] = useState(user?.displayName || "")
+  const [email, setEmail] = useState(user?.email || "")
+
   // Notification settings
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [eventReminders, setEventReminders] = useState(true);
-  const [forumUpdates, setForumUpdates] = useState(true);
-  const [weeklyDigest, setWeeklyDigest] = useState(false);
-  
+  const [emailNotifications, setEmailNotifications] = useState(true)
+  const [pushNotifications, setPushNotifications] = useState(true)
+  const [eventReminders, setEventReminders] = useState(true)
+  const [forumUpdates, setForumUpdates] = useState(true)
+  const [weeklyDigest, setWeeklyDigest] = useState(false)
+
   // Privacy settings
-  const [profileVisibility, setProfileVisibility] = useState(true);
-  const [showEmail, setShowEmail] = useState(false);
-  const [allowDirectMessages, setAllowDirectMessages] = useState(true);
+  const [profileVisibility, setProfileVisibility] = useState(true)
+  const [showEmail, setShowEmail] = useState(false)
+  const [allowDirectMessages, setAllowDirectMessages] = useState(true)
 
   useEffect(() => {
-    setMounted(true);
+    setMounted(true)
     if (user) {
-      setDisplayName(user.displayName || '');
-      setEmail(user.email || '');
+      setDisplayName(user.displayName || "")
+      setEmail(user.email || "")
     }
-  }, [user]);
+  }, [user])
 
   const handleSaveProfile = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       // Simulate API call to update profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Profile updated successfully!");
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      toast.success("Profile updated successfully!")
     } catch (error) {
-      toast.error("Failed to update profile. Please try again.");
+      toast.error("Failed to update profile. Please try again.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleSignOut = () => {
-    signOut();
-    toast.info("Signed out successfully");
-  };
+    signOut()
+    toast.info("Signed out successfully")
+  }
 
   if (!user) {
     return (
-      <div className="text-center py-10">
-        <User className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">Please sign in to access settings.</p>
+      <div className="py-10 text-center">
+        <User className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+        <p className="text-muted-foreground">
+          Please sign in to access settings.
+        </p>
       </div>
-    );
+    )
   }
 
   const accountAge = user.createdAt
     ? formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })
-    : 'N/A';
+    : "N/A"
 
   return (
     <Tabs defaultValue="profile" className="space-y-6">
@@ -133,18 +151,24 @@ export default function SettingsContent() {
             {/* Profile Photo */}
             <div className="flex items-center space-x-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+                <AvatarImage
+                  src={user.photoURL || undefined}
+                  alt={user.displayName || "User"}
+                />
                 <AvatarFallback className="text-lg">
-                  {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+                  {user.displayName
+                    ? user.displayName.charAt(0).toUpperCase()
+                    : "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">Profile Photo</h4>
                 <p className="text-xs text-muted-foreground">
-                  Your profile photo is automatically synced from your Google account.
+                  Your profile photo is automatically synced from your Google
+                  account.
                 </p>
                 <Button variant="outline" size="sm" disabled>
-                  <Camera className="h-4 w-4 mr-2" />
+                  <Camera className="mr-2 h-4 w-4" />
                   Upload New Photo (Coming Soon)
                 </Button>
               </div>
@@ -153,7 +177,7 @@ export default function SettingsContent() {
             <Separator />
 
             {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="displayName">Display Name</Label>
                 <Input
@@ -181,7 +205,7 @@ export default function SettingsContent() {
             {/* Account Details */}
             <div className="space-y-4">
               <h4 className="text-sm font-medium">Account Details</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Account Type:</span>
                   <Badge variant="secondary">VIT Student</Badge>
@@ -191,7 +215,9 @@ export default function SettingsContent() {
                   <span>{accountAge}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Verification Status:</span>
+                  <span className="text-muted-foreground">
+                    Verification Status:
+                  </span>
                   <div className="flex items-center gap-1">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
                     <span className="text-green-600">Verified</span>
@@ -199,7 +225,14 @@ export default function SettingsContent() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Last Sign In:</span>
-                  <span>{auth.currentUser?.metadata.lastSignInTime ? formatDistanceToNow(new Date(auth.currentUser.metadata.lastSignInTime), { addSuffix: true }) : 'N/A'}</span>
+                  <span>
+                    {auth.currentUser?.metadata.lastSignInTime
+                      ? formatDistanceToNow(
+                          new Date(auth.currentUser.metadata.lastSignInTime),
+                          { addSuffix: true }
+                        )
+                      : "N/A"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -207,12 +240,12 @@ export default function SettingsContent() {
             <Button onClick={handleSaveProfile} disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-background border-t-foreground" />
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-foreground" />
                   Saving...
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="mr-2 h-4 w-4" />
                   Save Changes
                 </>
               )}
@@ -338,10 +371,7 @@ export default function SettingsContent() {
                     Display your email on your public profile
                   </p>
                 </div>
-                <Switch
-                  checked={showEmail}
-                  onCheckedChange={setShowEmail}
-                />
+                <Switch checked={showEmail} onCheckedChange={setShowEmail} />
               </div>
 
               <div className="flex items-center justify-between">
@@ -364,11 +394,12 @@ export default function SettingsContent() {
               <h4 className="text-sm font-medium">Data & Privacy</h4>
               <div className="space-y-2">
                 <Button variant="outline" size="sm" disabled>
-                  <Globe className="h-4 w-4 mr-2" />
+                  <Globe className="mr-2 h-4 w-4" />
                   Download My Data (Coming Soon)
                 </Button>
                 <p className="text-xs text-muted-foreground">
-                  Download a copy of your data including posts, comments, and activity.
+                  Download a copy of your data including posts, comments, and
+                  activity.
                 </p>
               </div>
             </div>
@@ -399,25 +430,25 @@ export default function SettingsContent() {
               </div>
               <div className="flex items-center space-x-2">
                 <Button
-                  variant={theme === 'light' ? 'default' : 'outline'}
+                  variant={theme === "light" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setTheme('light')}
+                  onClick={() => setTheme("light")}
                   disabled={!mounted}
                 >
                   Light
                 </Button>
                 <Button
-                  variant={theme === 'dark' ? 'default' : 'outline'}
+                  variant={theme === "dark" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setTheme('dark')}
+                  onClick={() => setTheme("dark")}
                   disabled={!mounted}
                 >
                   Dark
                 </Button>
                 <Button
-                  variant={theme === 'system' ? 'default' : 'outline'}
+                  variant={theme === "system" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setTheme('system')}
+                  onClick={() => setTheme("system")}
                   disabled={!mounted}
                 >
                   System
@@ -430,10 +461,10 @@ export default function SettingsContent() {
             {/* Account Actions */}
             <div className="space-y-4">
               <h4 className="text-sm font-medium">Account Actions</h4>
-              
+
               <div className="space-y-2">
                 <Button variant="outline" size="sm" onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4 mr-2" />
+                  <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
                 </Button>
                 <p className="text-xs text-muted-foreground">
@@ -445,7 +476,7 @@ export default function SettingsContent() {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" size="sm" disabled>
-                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      <AlertTriangle className="mr-2 h-4 w-4" />
                       Delete Account (Coming Soon)
                     </Button>
                   </AlertDialogTrigger>
@@ -453,7 +484,8 @@ export default function SettingsContent() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Account</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your account and remove all associated data.
+                        This action cannot be undone. This will permanently
+                        delete your account and remove all associated data.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -478,7 +510,7 @@ export default function SettingsContent() {
               <div className="space-y-2">
                 <Button variant="outline" size="sm" asChild>
                   <a href="/help">
-                    <HelpCircle className="h-4 w-4 mr-2" />
+                    <HelpCircle className="mr-2 h-4 w-4" />
                     Visit Help Center
                   </a>
                 </Button>
@@ -491,5 +523,5 @@ export default function SettingsContent() {
         </Card>
       </TabsContent>
     </Tabs>
-  );
-} 
+  )
+}

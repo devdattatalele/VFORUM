@@ -1,10 +1,9 @@
+"use client"
 
-"use client";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -13,38 +12,55 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { X, Tag as TagIcon, Wand2, Loader2 } from "lucide-react";
-import React, { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
-import { autoTagQuestion, type AutoTagQuestionInput } from "@/ai/flows/auto-tag-question";
-import { COMMUNITIES, DEFAULT_COMMUNITY_ID } from "@/lib/constants";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { addQuestion } from "@/lib/services/questionService";
-
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { X, Tag as TagIcon, Wand2, Loader2 } from "lucide-react"
+import React, { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
+import {
+  autoTagQuestion,
+  type AutoTagQuestionInput,
+} from "@/ai/flows/auto-tag-question"
+import { COMMUNITIES, DEFAULT_COMMUNITY_ID } from "@/lib/constants"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { addQuestion } from "@/lib/services/questionService"
 
 const questionFormSchema = z.object({
-  title: z.string().min(10, "Title must be at least 10 characters.").max(150, "Title too long."),
-  content: z.string().min(20, "Question content must be at least 20 characters.").max(5000, "Content too long."),
-  tags: z.array(z.string()).min(1, "Please add at least one tag.").max(5, "Maximum 5 tags allowed."),
+  title: z
+    .string()
+    .min(10, "Title must be at least 10 characters.")
+    .max(150, "Title too long."),
+  content: z
+    .string()
+    .min(20, "Question content must be at least 20 characters.")
+    .max(5000, "Content too long."),
+  tags: z
+    .array(z.string())
+    .min(1, "Please add at least one tag.")
+    .max(5, "Maximum 5 tags allowed."),
   communityId: z.string({ required_error: "Please select a community." }),
-});
+})
 
-type QuestionFormValues = z.infer<typeof questionFormSchema>;
+type QuestionFormValues = z.infer<typeof questionFormSchema>
 
 export default function QuestionForm() {
-  const { toast } = useToast();
-  const router = useRouter();
-  const { user } = useAuth();
-  const [currentTags, setCurrentTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
-  const [isTaggingAi, setIsTaggingAi] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast()
+  const router = useRouter()
+  const { user } = useAuth()
+  const [currentTags, setCurrentTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState("")
+  const [isTaggingAi, setIsTaggingAi] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<QuestionFormValues>({
     resolver: zodResolver(questionFormSchema),
@@ -52,70 +68,97 @@ export default function QuestionForm() {
       title: "",
       content: "",
       tags: [],
-      communityId: DEFAULT_COMMUNITY_ID === 'all' ? COMMUNITIES.find(c => c.id !== 'all')?.id || '' : DEFAULT_COMMUNITY_ID, // Ensure a valid default if 'all'
+      communityId:
+        DEFAULT_COMMUNITY_ID === "all"
+          ? COMMUNITIES.find((c) => c.id !== "all")?.id || ""
+          : DEFAULT_COMMUNITY_ID, // Ensure a valid default if 'all'
     },
-  });
+  })
 
   const handleAddTag = () => {
-    if (tagInput.trim() !== "" && !currentTags.includes(tagInput.trim()) && currentTags.length < 5) {
-      const newTags = [...currentTags, tagInput.trim().toLowerCase()];
-      setCurrentTags(newTags);
-      form.setValue("tags", newTags, { shouldValidate: true });
-      setTagInput("");
+    if (
+      tagInput.trim() !== "" &&
+      !currentTags.includes(tagInput.trim()) &&
+      currentTags.length < 5
+    ) {
+      const newTags = [...currentTags, tagInput.trim().toLowerCase()]
+      setCurrentTags(newTags)
+      form.setValue("tags", newTags, { shouldValidate: true })
+      setTagInput("")
     }
-  };
+  }
 
   const handleRemoveTag = (tagToRemove: string) => {
-    const newTags = currentTags.filter(tag => tag !== tagToRemove);
-    setCurrentTags(newTags);
-    form.setValue("tags", newTags, { shouldValidate: true });
-  };
+    const newTags = currentTags.filter((tag) => tag !== tagToRemove)
+    setCurrentTags(newTags)
+    form.setValue("tags", newTags, { shouldValidate: true })
+  }
 
   const handleAutoTag = async () => {
-    const questionContent = form.getValues("content");
+    const questionContent = form.getValues("content")
     if (!questionContent || questionContent.trim().length < 20) {
-      toast({ title: "Content too short", description: "Please write more content before auto-tagging.", variant: "destructive" });
-      return;
+      toast({
+        title: "Content too short",
+        description: "Please write more content before auto-tagging.",
+        variant: "destructive",
+      })
+      return
     }
-    setIsTaggingAi(true);
+    setIsTaggingAi(true)
     try {
-      const input: AutoTagQuestionInput = { question: questionContent };
-      const result = await autoTagQuestion(input);
+      const input: AutoTagQuestionInput = { question: questionContent }
+      const result = await autoTagQuestion(input)
       if (result && result.tags) {
-        const suggestedAITags = result.tags.map(tag => tag.toLowerCase());
-        const mergedTags = Array.from(new Set([...currentTags, ...suggestedAITags])).slice(0, 5);
-        setCurrentTags(mergedTags);
-        form.setValue("tags", mergedTags, { shouldValidate: true });
-        toast({ title: "Tags Suggested!", description: "AI has suggested tags based on your content." });
+        const suggestedAITags = result.tags.map((tag) => tag.toLowerCase())
+        const mergedTags = Array.from(
+          new Set([...currentTags, ...suggestedAITags])
+        ).slice(0, 5)
+        setCurrentTags(mergedTags)
+        form.setValue("tags", mergedTags, { shouldValidate: true })
+        toast({
+          title: "Tags Suggested!",
+          description: "AI has suggested tags based on your content.",
+        })
       }
     } catch (error) {
-      console.error("Error auto-tagging:", error);
-      toast({ title: "Auto-tagging failed", description: "Could not suggest tags at this time.", variant: "destructive" });
+      console.error("Error auto-tagging:", error)
+      toast({
+        title: "Auto-tagging failed",
+        description: "Could not suggest tags at this time.",
+        variant: "destructive",
+      })
     } finally {
-      setIsTaggingAi(false);
+      setIsTaggingAi(false)
     }
-  };
-
+  }
 
   async function onSubmit(data: QuestionFormValues) {
     if (!user) {
-      toast({ title: "Authentication Error", description: "You must be signed in to ask a question.", variant: "destructive" });
-      return;
+      toast({
+        title: "Authentication Error",
+        description: "You must be signed in to ask a question.",
+        variant: "destructive",
+      })
+      return
     }
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      await addQuestion(data, user);
+      await addQuestion(data, user)
       toast({
         title: "Question Posted!",
         description: "Your question has been successfully posted to the forum.",
-      });
-      router.push('/qna');
-      router.refresh();
+      })
+      router.push("/qna")
+      router.refresh()
     } catch (error) {
-      console.error("Error submitting question:", error);
-      toast({ title: "Error", description: "Could not post your question. Please try again.", variant: "destructive" });
+      console.error("Error submitting question:", error)
+      toast({
+        title: "Error",
+        description: "Could not post your question. Please try again.",
+        variant: "destructive",
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
   }
 
@@ -129,9 +172,15 @@ export default function QuestionForm() {
             <FormItem>
               <FormLabel>Question Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., How to set up a Python virtual environment on Windows?" {...field} />
+                <Input
+                  placeholder="e.g., How to set up a Python virtual environment on Windows?"
+                  {...field}
+                />
               </FormControl>
-              <FormDescription>Be specific and imagine you're asking a question to another person.</FormDescription>
+              <FormDescription>
+                Be specific and imagine you're asking a question to another
+                person.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -145,7 +194,7 @@ export default function QuestionForm() {
               <FormControl>
                 <Textarea
                   placeholder="Elaborate on your question. Include any code snippets, error messages, or context that might help others understand and answer."
-                  className="resize-y min-h-[150px]"
+                  className="min-h-[150px] resize-y"
                   {...field}
                 />
               </FormControl>
@@ -166,11 +215,13 @@ export default function QuestionForm() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {COMMUNITIES.filter(c => c.id !== 'all').map((community) => (
-                    <SelectItem key={community.id} value={community.id}>
-                      {community.name}
-                    </SelectItem>
-                  ))}
+                  {COMMUNITIES.filter((c) => c.id !== "all").map(
+                    (community) => (
+                      <SelectItem key={community.id} value={community.id}>
+                        {community.name}
+                      </SelectItem>
+                    )
+                  )}
                 </SelectContent>
               </Select>
               <FormDescription>
@@ -182,44 +233,84 @@ export default function QuestionForm() {
         />
         <FormItem>
           <FormLabel>Tags</FormLabel>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="mb-2 flex items-center gap-2">
             <Input
               type="text"
               placeholder="Add a tag (e.g., python, react)"
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); }}}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  handleAddTag()
+                }
+              }}
               className="flex-grow"
             />
-            <Button type="button" variant="outline" onClick={handleAddTag} disabled={currentTags.length >= 5 || tagInput.trim() === ""}>Add Tag</Button>
-            <Button type="button" variant="outline" onClick={handleAutoTag} disabled={isTaggingAi}>
-              {isTaggingAi ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddTag}
+              disabled={currentTags.length >= 5 || tagInput.trim() === ""}
+            >
+              Add Tag
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAutoTag}
+              disabled={isTaggingAi}
+            >
+              {isTaggingAi ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="mr-2 h-4 w-4" />
+              )}
               AI Suggest
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {currentTags.map(tag => (
-              <Badge key={tag} variant="secondary" className="py-1 px-2 text-sm">
+            {currentTags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="px-2 py-1 text-sm"
+              >
                 {tag}
-                <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1.5 p-0.5 rounded-full hover:bg-muted-foreground/20">
+                <button
+                  type="button"
+                  onClick={() => handleRemoveTag(tag)}
+                  className="ml-1.5 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                >
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
             ))}
           </div>
-           <FormField
+          <FormField
             control={form.control}
             name="tags"
-            render={() => ( <FormMessage className="mt-1"/>)}
-            />
-          <FormDescription>Add up to 5 tags to describe what your question is about. Press Enter or click "Add Tag".</FormDescription>
+            render={() => <FormMessage className="mt-1" />}
+          />
+          <FormDescription>
+            Add up to 5 tags to describe what your question is about. Press
+            Enter or click "Add Tag".
+          </FormDescription>
         </FormItem>
 
-        <Button type="submit" disabled={isSubmitting || !user} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+        <Button
+          type="submit"
+          disabled={isSubmitting || !user}
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
+        >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {user ? (isSubmitting ? 'Posting...' : 'Post Your Question') : 'Sign in to Post'}
+          {user
+            ? isSubmitting
+              ? "Posting..."
+              : "Post Your Question"
+            : "Sign in to Post"}
         </Button>
       </form>
     </Form>
-  );
+  )
 }

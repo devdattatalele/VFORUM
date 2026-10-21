@@ -12,16 +12,18 @@ const Card = React.forwardRef<
     default: "bg-card text-card-foreground border border-border shadow-card",
     elevated: "bg-card text-card-foreground border border-border shadow-lg",
     outlined: "bg-card text-card-foreground border-2 border-border",
-    ghost: "bg-transparent text-card-foreground border border-border/50"
+    ghost: "bg-transparent text-card-foreground border border-border/50",
   }
 
   return (
     <div
       ref={ref}
       className={cn(
-        "rounded-lg p-6 space-y-4 transition-all duration-200 ease-out",
+        "space-y-4 rounded-lg p-6 transition-all duration-200 ease-out",
         variants[variant],
-        hover && variant !== "ghost" && "hover:shadow-card-hover hover:-translate-y-0.5 hover:border-border/80",
+        hover &&
+          variant !== "ghost" &&
+          "hover:-translate-y-0.5 hover:border-border/80 hover:shadow-card-hover",
         className
       )}
       {...props}
@@ -50,18 +52,14 @@ const CardTitle = React.forwardRef<
 >(({ className, size = "md", ...props }, ref) => {
   const sizes = {
     sm: "text-lg font-semibold leading-snug",
-    md: "text-xl font-semibold leading-snug", 
-    lg: "text-2xl font-semibold leading-tight"
+    md: "text-xl font-semibold leading-snug",
+    lg: "text-2xl font-semibold leading-tight",
   }
 
   return (
     <h3
       ref={ref}
-      className={cn(
-        "tracking-tight",
-        sizes[size],
-        className
-      )}
+      className={cn("tracking-tight", sizes[size], className)}
       {...props}
     />
   )

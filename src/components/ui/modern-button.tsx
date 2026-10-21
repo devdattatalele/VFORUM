@@ -8,11 +8,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-blue-500 text-white hover:bg-blue-600 shadow-sm hover:shadow-md active:scale-95",
-        secondary: "bg-neutral-700 text-neutral-200 hover:bg-neutral-600 shadow-sm hover:shadow-md active:scale-95 dark:bg-neutral-800 dark:hover:bg-neutral-700",
-        outline: "border border-neutral-300 bg-background hover:bg-neutral-50 hover:border-neutral-400 active:scale-95 dark:border-neutral-700 dark:hover:bg-neutral-800",
-        ghost: "hover:bg-neutral-100 hover:text-neutral-900 active:scale-95 dark:hover:bg-neutral-800 dark:hover:text-neutral-50",
-        destructive: "bg-red-500 text-white hover:bg-red-600 shadow-sm hover:shadow-md active:scale-95",
+        primary:
+          "bg-blue-500 text-white hover:bg-blue-600 shadow-sm hover:shadow-md active:scale-95",
+        secondary:
+          "bg-neutral-700 text-neutral-200 hover:bg-neutral-600 shadow-sm hover:shadow-md active:scale-95 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+        outline:
+          "border border-neutral-300 bg-background hover:bg-neutral-50 hover:border-neutral-400 active:scale-95 dark:border-neutral-700 dark:hover:bg-neutral-800",
+        ghost:
+          "hover:bg-neutral-100 hover:text-neutral-900 active:scale-95 dark:hover:bg-neutral-800 dark:hover:text-neutral-50",
+        destructive:
+          "bg-red-500 text-white hover:bg-red-600 shadow-sm hover:shadow-md active:scale-95",
         link: "text-blue-500 underline-offset-4 hover:underline hover:text-blue-600",
       },
       size: {
@@ -32,16 +37,29 @@ const buttonVariants = cva(
 )
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
   loading?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, loading = false, disabled, children, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      loading = false,
+      disabled,
+      children,
+      ...props
+    },
+    ref
+  ) => {
     const Comp = asChild ? Slot : "button"
-    
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
@@ -51,7 +69,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading ? (
           <>
-            <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+            <svg
+              className="-ml-1 mr-2 h-4 w-4 animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
               <circle
                 className="opacity-25"
                 cx="12"
@@ -77,4 +99,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 )
 Button.displayName = "Button"
 
-export { Button, buttonVariants } 
+export { Button, buttonVariants }

@@ -97,40 +97,75 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background font-body text-foreground;
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-headline;
   }
 }
 
 /* Add Google color accent utilities */
 @layer utilities {
-  .text-google-blue { color: hsl(217 89% 61%); }
-  .text-google-red { color: hsl(4 90% 58%); }
-  .text-google-yellow { color: hsl(45 100% 50%); }
-  .text-google-green { color: hsl(142 76% 36%); }
-  
-  .bg-google-blue { background-color: hsl(217 89% 61%); }
-  .bg-google-red { background-color: hsl(4 90% 58%); }
-  .bg-google-yellow { background-color: hsl(45 100% 50%); }
-  .bg-google-green { background-color: hsl(142 76% 36%); }
-  
-  .border-google-blue { border-color: hsl(217 89% 61%); }
-  .border-google-red { border-color: hsl(4 90% 58%); }
-  .border-google-yellow { border-color: hsl(45 100% 50%); }
-  .border-google-green { border-color: hsl(142 76% 36%); }
+  .text-google-blue {
+    color: hsl(217 89% 61%);
+  }
+  .text-google-red {
+    color: hsl(4 90% 58%);
+  }
+  .text-google-yellow {
+    color: hsl(45 100% 50%);
+  }
+  .text-google-green {
+    color: hsl(142 76% 36%);
+  }
+
+  .bg-google-blue {
+    background-color: hsl(217 89% 61%);
+  }
+  .bg-google-red {
+    background-color: hsl(4 90% 58%);
+  }
+  .bg-google-yellow {
+    background-color: hsl(45 100% 50%);
+  }
+  .bg-google-green {
+    background-color: hsl(142 76% 36%);
+  }
+
+  .border-google-blue {
+    border-color: hsl(217 89% 61%);
+  }
+  .border-google-red {
+    border-color: hsl(4 90% 58%);
+  }
+  .border-google-yellow {
+    border-color: hsl(45 100% 50%);
+  }
+  .border-google-green {
+    border-color: hsl(142 76% 36%);
+  }
 
   /* Community tag utilities */
-  .bg-community-tag { background-color: hsl(142 76% 36%); }
-  .text-community-tag { color: hsl(142 76% 36%); }
-  .border-community-tag { border-color: hsl(142 76% 36%); }
+  .bg-community-tag {
+    background-color: hsl(142 76% 36%);
+  }
+  .text-community-tag {
+    color: hsl(142 76% 36%);
+  }
+  .border-community-tag {
+    border-color: hsl(142 76% 36%);
+  }
 }
 
 /* Add a utility class for glassmorphism - still available if needed elsewhere */
 .glass-card {
-  @apply bg-card/80 backdrop-blur-lg border border-white/10;
+  @apply border border-white/10 bg-card/80 backdrop-blur-lg;
 }
 .dark .glass-card {
-   @apply bg-card/70 backdrop-blur-lg border-white/5;
+  @apply border-white/5 bg-card/70 backdrop-blur-lg;
 }
