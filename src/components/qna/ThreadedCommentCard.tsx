@@ -5,7 +5,6 @@ import type { Comment as CommentType } from "@/lib/types"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import VoteButtons from "./VoteButtons"
-import CommentForm from "./CommentForm"
 import CompactCommentForm from "./CompactCommentForm"
 import {
   UserCircle,
@@ -21,6 +20,7 @@ import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/hooks/use-toast"
 import { updateComment } from "@/lib/services/commentService"
+import { idToken } from "@/lib/client-auth"
 
 interface ThreadedCommentCardProps {
   comment: CommentType
@@ -84,7 +84,7 @@ export default function ThreadedCommentCard({
     if (!user) return
 
     try {
-      await updateComment(questionId, comment.id, content, user.uid)
+      await updateComment(await idToken(), questionId, comment.id, content)
       setShowEditForm(false)
       toast({
         title: "Comment updated",

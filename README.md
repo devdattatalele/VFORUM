@@ -8,16 +8,16 @@ Live: https://vforum-devdattataleles-projects.vercel.app
 
 ## Stack
 
-| Layer     | Choice                                                     |
-| --------- | ---------------------------------------------------------- |
-| Framework | Next.js 15 App Router, React 18                            |
-| Language  | TypeScript (strict)                                        |
-| Styling   | Tailwind CSS 3, shadcn, lucide-react                       |
-| Data      | Firestore through the Admin SDK (rules are default-deny)   |
-| Auth      | Firebase Auth, `@vit.edu.in` only, httpOnly session cookie |
-| AI        | Genkit + Gemini for tag suggestions                        |
-| Quality   | ESLint, Prettier, Vitest                                   |
-| Deploy    | Vercel, CI on GitHub Actions                               |
+| Layer     | Choice                                                                      |
+| --------- | --------------------------------------------------------------------------- |
+| Framework | Next.js 15 App Router, React 18                                             |
+| Language  | TypeScript (strict)                                                         |
+| Styling   | Tailwind CSS 3, shadcn, lucide-react                                        |
+| Data      | Firestore through the Admin SDK (rules are default-deny)                    |
+| Auth      | Firebase Auth, `@vit.edu.in` only, ID token verified on every server action |
+| AI        | Genkit + Gemini for tag suggestions                                         |
+| Quality   | ESLint, Prettier, Vitest                                                    |
+| Deploy    | Vercel, CI on GitHub Actions                                                |
 
 ## Getting started
 

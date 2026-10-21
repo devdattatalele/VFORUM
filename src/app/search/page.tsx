@@ -22,6 +22,7 @@ import {
   SearchX,
 } from "lucide-react"
 import Link from "next/link"
+import { COMMUNITIES } from "@/lib/constants"
 import { formatDistanceToNow } from "date-fns"
 
 function SearchResults() {
@@ -299,26 +300,27 @@ function SearchResults() {
             </h2>
           </div>
           <div className="grid gap-4">
-            {groupedResults.community.map((result) => (
-              <Card
-                key={result.id}
-                className="transition-shadow hover:shadow-md"
-              >
-                <CardHeader>
-                  <Link href={result.url}>
-                    <CardTitle className="flex items-center gap-2 text-lg transition-colors hover:text-primary">
-                      {result.metadata?.icon && (
-                        <result.metadata.icon className="h-5 w-5" />
-                      )}
-                      {result.title}
-                    </CardTitle>
-                  </Link>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>{result.content}</CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+            {groupedResults.community.map((result) => {
+              const Icon = COMMUNITIES.find((c) => c.id === result.id)?.icon
+              return (
+                <Card
+                  key={result.id}
+                  className="transition-shadow hover:shadow-md"
+                >
+                  <CardHeader>
+                    <Link href={result.url}>
+                      <CardTitle className="flex items-center gap-2 text-lg transition-colors hover:text-primary">
+                        {Icon && <Icon className="h-5 w-5" />}
+                        {result.title}
+                      </CardTitle>
+                    </Link>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription>{result.content}</CardDescription>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         </section>
       )}

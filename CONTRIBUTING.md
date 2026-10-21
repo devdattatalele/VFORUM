@@ -26,6 +26,6 @@ npm run check
 - Read `research/plan.md` first. Features not in the plan go in `research/future.md`.
 - Keep files under 400 lines; split when they grow.
 - Validate with Zod at every server boundary.
-- Never read identity (uid, email, role, author) from a server-action argument. Use `requireProfile()`.
+- Never read identity (uid, email, role, author) from a server-action argument. Take an `IdToken` first and use `requireProfile(idToken)`.
 - Import with the `@/` alias, never relative paths.
 - No emojis in code, commits, or docs.

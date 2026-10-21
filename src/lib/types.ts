@@ -1,3 +1,7 @@
+// A Firebase ID token, the first argument of every server action that needs to
+// know its caller. Branded so a uid or any other string cannot be passed by mistake.
+export type IdToken = string & { readonly __brand: "IdToken" }
+
 export interface UserProfile {
   uid: string
   email: string | null
@@ -8,6 +12,9 @@ export interface UserProfile {
   createdAt?: string
   updatedAt?: string
 }
+
+// The author fields stored on content and sent to every visitor.
+export type PublicAuthor = Pick<UserProfile, "uid" | "displayName" | "photoURL">
 
 export interface Community {
   id: string
@@ -26,7 +33,7 @@ export interface Event {
   communityId: string // Link to Community
   rsvpCount?: number // Optional
   rsvpLink?: string // Optional external RSVP link
-  author?: UserProfile
+  author?: PublicAuthor
   createdAt?: string // ISO string
   // location?: string;
 }
@@ -36,7 +43,7 @@ export interface Question {
   title: string
   content: string
   tags: string[]
-  author: UserProfile
+  author: PublicAuthor
   createdAt: string // Store as ISO string
   updatedAt?: string // ISO string, for tracking edits
   upvotes: number
@@ -52,7 +59,7 @@ export interface Comment {
   questionId: string
   parentId?: string | null // For threaded comments
   content: string
-  author: UserProfile
+  author: PublicAuthor
   createdAt: string // Store as ISO string
   updatedAt?: string // ISO string, for tracking edits
   upvotes: number

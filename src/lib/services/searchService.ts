@@ -1,7 +1,9 @@
 "use server"
+
 import { adminDb } from "@/lib/firebase-admin"
-import type { Question, Event } from "@/lib/types"
+import { toEvent, toQuestion } from "@/lib/server/docs"
 import { COMMUNITIES } from "@/lib/constants"
+import { searchTerm as searchTermSchema } from "@/lib/schemas"
 
 export interface SearchResult {
   type: "question" | "event" | "community"
@@ -11,7 +13,15 @@ export interface SearchResult {
   url: string
   community?: string
   tags?: string[]
-  metadata?: any
+  metadata?: {
+    author?: string | null
+    upvotes?: number
+    replyCount?: number
+    createdAt?: string
+    clubName?: string
+    dateTime?: string
+    rsvpCount?: number
+  }
 }
 
 export interface SearchOptions {
@@ -22,6 +32,9 @@ export interface SearchOptions {
   communityId?: string
 }
 
+const excerpt = (text: string) =>
+  text.substring(0, 150) + (text.length > 150 ? "..." : "")
+
 export async function searchAll(
   searchTerm: string,
   options: SearchOptions = {}
@@ -30,54 +43,44 @@ export async function searchAll(
     includeQuestions = true,
     includeEvents = true,
     includeCommunities = true,
-    maxResults = 20,
     communityId,
   } = options
+  const maxResults = Math.min(Math.max(Number(options.maxResults) || 20, 1), 50)
 
-  if (!searchTerm || searchTerm.trim().length < 2) {
-    return []
-  }
-
-  const results: SearchResult[] = []
-  const searchQuery = searchTerm.toLowerCase().trim()
+  const parsed = searchTermSchema.safeParse(searchTerm)
+  if (!parsed.success || parsed.data.length < 2) return []
+  const query = parsed.data.toLowerCase()
+  const community =
+    typeof communityId === "string" && communityId.length <= 64
+      ? communityId
+      : undefined
 
   try {
-    // Search Questions
+    const results: SearchResult[] = []
     if (includeQuestions) {
-      const questionsResults = await searchQuestions(
-        searchQuery,
-        communityId,
-        Math.ceil(maxResults * 0.6)
+      results.push(
+        ...(await searchQuestions(
+          query,
+          community,
+          Math.ceil(maxResults * 0.6)
+        ))
       )
-      results.push(...questionsResults)
     }
-
-    // Search Events
     if (includeEvents) {
-      const eventsResults = await searchEvents(
-        searchQuery,
-        communityId,
-        Math.ceil(maxResults * 0.3)
+      results.push(
+        ...(await searchEvents(query, community, Math.ceil(maxResults * 0.3)))
       )
-      results.push(...eventsResults)
     }
-
-    // Search Communities
-    if (includeCommunities && !communityId) {
-      const communitiesResults = searchCommunities(
-        searchQuery,
-        Math.ceil(maxResults * 0.1)
-      )
-      results.push(...communitiesResults)
+    if (includeCommunities && !community) {
+      results.push(...searchCommunities(query, Math.ceil(maxResults * 0.1)))
     }
-
-    // Sort by relevance (exact matches first, then partial matches)
+    // Title matches first.
     return results
-      .sort((a, b) => {
-        const aExactMatch = a.title.toLowerCase().includes(searchQuery) ? 1 : 0
-        const bExactMatch = b.title.toLowerCase().includes(searchQuery) ? 1 : 0
-        return bExactMatch - aExactMatch
-      })
+      .sort(
+        (a, b) =>
+          Number(b.title.toLowerCase().includes(query)) -
+          Number(a.title.toLowerCase().includes(query))
+      )
       .slice(0, maxResults)
   } catch (error) {
     console.error("Error during search:", error)
@@ -85,195 +88,105 @@ export async function searchAll(
   }
 }
 
+// ponytail: substring match over the latest 50 questions; move to a real
+// search index when the forum outgrows it (see research/future.md).
 async function searchQuestions(
-  searchTerm: string,
-  communityId?: string,
-  maxResults: number = 12
+  query: string,
+  communityId: string | undefined,
+  limit: number
 ): Promise<SearchResult[]> {
-  try {
-    const questionsRef = adminDb.collection("questions")
-    let q = questionsRef.orderBy("createdAt", "desc").limit(50) // Get more to filter locally
+  const base = adminDb.collection("questions")
+  const snap = await (
+    communityId ? base.where("communityId", "==", communityId) : base
+  )
+    .orderBy("createdAt", "desc")
+    .limit(50)
+    .get()
 
-    if (communityId) {
-      q = questionsRef
-        .where("communityId", "==", communityId)
-        .orderBy("createdAt", "desc")
-        .limit(50)
-    }
-
-    const querySnapshot = await q.get()
-    const questions: Question[] = []
-
-    querySnapshot.forEach((doc) => {
-      const data = doc.data()
-      questions.push({
-        id: doc.id,
-        title: data.title,
-        content: data.content,
-        tags: data.tags || [],
-        communityId: data.communityId,
-        author: data.author,
-        createdAt: data.createdAt?.toDate
-          ? data.createdAt.toDate().toISOString()
-          : data.createdAt,
-        lastActivityAt: data.lastActivityAt?.toDate
-          ? data.lastActivityAt.toDate().toISOString()
-          : data.lastActivityAt,
-        upvotes: data.upvotes || 0,
-        downvotes: data.downvotes || 0,
-        views: data.views || 0,
-        replyCount: data.replyCount || 0,
-      })
-    })
-
-    // Filter questions that match the search term
-    const filteredQuestions = questions.filter((question) => {
-      const titleMatch = question.title.toLowerCase().includes(searchTerm)
-      const contentMatch = question.content.toLowerCase().includes(searchTerm)
-      const tagMatch = question.tags.some((tag) =>
-        tag.toLowerCase().includes(searchTerm)
-      )
-      return titleMatch || contentMatch || tagMatch
-    })
-
-    return filteredQuestions.slice(0, maxResults).map((question) => {
-      const community = COMMUNITIES.find((c) => c.id === question.communityId)
-      return {
-        type: "question" as const,
-        id: question.id,
-        title: question.title,
-        content:
-          question.content.substring(0, 150) +
-          (question.content.length > 150 ? "..." : ""),
-        url: `/qna/${question.id}`,
-        community: community?.name,
-        tags: question.tags,
-        metadata: {
-          author: question.author.displayName,
-          upvotes: question.upvotes,
-          replyCount: question.replyCount,
-          createdAt: question.createdAt,
-        },
-      }
-    })
-  } catch (error) {
-    console.error("Error searching questions:", error)
-    return []
-  }
+  return snap.docs
+    .map((doc) => toQuestion(doc.id, doc.data()))
+    .filter(
+      (q) =>
+        q.title.toLowerCase().includes(query) ||
+        q.content.toLowerCase().includes(query) ||
+        q.tags.some((tag) => tag.toLowerCase().includes(query))
+    )
+    .slice(0, limit)
+    .map((q) => ({
+      type: "question" as const,
+      id: q.id,
+      title: q.title,
+      content: excerpt(q.content),
+      url: `/qna/${q.id}`,
+      community: COMMUNITIES.find((c) => c.id === q.communityId)?.name,
+      tags: q.tags,
+      metadata: {
+        author: q.author.displayName,
+        upvotes: q.upvotes,
+        replyCount: q.replyCount,
+        createdAt: q.createdAt,
+      },
+    }))
 }
 
 async function searchEvents(
-  searchTerm: string,
-  communityId?: string,
-  maxResults: number = 6
+  query: string,
+  communityId: string | undefined,
+  limit: number
 ): Promise<SearchResult[]> {
-  try {
-    const eventsRef = adminDb.collection("events")
-    let q = eventsRef.orderBy("dateTime", "desc").limit(30)
+  const base = adminDb.collection("events")
+  const snap = await (
+    communityId ? base.where("communityId", "==", communityId) : base
+  )
+    .orderBy("dateTime", "desc")
+    .limit(30)
+    .get()
 
-    if (communityId) {
-      q = eventsRef
-        .where("communityId", "==", communityId)
-        .orderBy("dateTime", "desc")
-        .limit(30)
-    }
-
-    const querySnapshot = await q.get()
-    const events: Event[] = []
-
-    querySnapshot.forEach((doc) => {
-      const data = doc.data()
-      events.push({
-        id: doc.id,
-        title: data.title,
-        description: data.description,
-        clubName: data.clubName,
-        communityId: data.communityId,
-        dateTime: data.dateTime?.toDate
-          ? data.dateTime.toDate().toISOString()
-          : data.dateTime,
-        posterImageUrl: data.posterImageUrl,
-        rsvpLink: data.rsvpLink,
-        rsvpCount: data.rsvpCount || 0,
-        createdAt: data.createdAt?.toDate
-          ? data.createdAt.toDate().toISOString()
-          : data.createdAt,
-      })
-    })
-
-    // Filter events that match the search term
-    const filteredEvents = events.filter((event) => {
-      const titleMatch = event.title.toLowerCase().includes(searchTerm)
-      const descriptionMatch = event.description
-        .toLowerCase()
-        .includes(searchTerm)
-      const clubMatch = event.clubName.toLowerCase().includes(searchTerm)
-      return titleMatch || descriptionMatch || clubMatch
-    })
-
-    return filteredEvents.slice(0, maxResults).map((event) => {
-      const community = COMMUNITIES.find((c) => c.id === event.communityId)
-      return {
-        type: "event" as const,
-        id: event.id,
-        title: event.title,
-        content:
-          event.description.substring(0, 150) +
-          (event.description.length > 150 ? "..." : ""),
-        url: `/events/${event.id}`,
-        community: community?.name,
-        metadata: {
-          clubName: event.clubName,
-          dateTime: event.dateTime,
-          rsvpCount: event.rsvpCount,
-        },
-      }
-    })
-  } catch (error) {
-    console.error("Error searching events:", error)
-    return []
-  }
-}
-
-function searchCommunities(
-  searchTerm: string,
-  maxResults: number = 2
-): SearchResult[] {
-  try {
-    const filteredCommunities = COMMUNITIES.filter((community) => {
-      if (community.id === "all") return false
-      const nameMatch = community.name.toLowerCase().includes(searchTerm)
-      const descriptionMatch = community.description
-        ?.toLowerCase()
-        .includes(searchTerm)
-      return nameMatch || descriptionMatch
-    })
-
-    return filteredCommunities.slice(0, maxResults).map((community) => ({
-      type: "community" as const,
-      id: community.id,
-      title: community.name,
-      content: community.description || `Explore ${community.name} community`,
-      url: `/community/${community.id}`,
+  return snap.docs
+    .map((doc) => toEvent(doc.id, doc.data()))
+    .filter(
+      (e) =>
+        e.title.toLowerCase().includes(query) ||
+        e.description.toLowerCase().includes(query) ||
+        e.clubName.toLowerCase().includes(query)
+    )
+    .slice(0, limit)
+    .map((e) => ({
+      type: "event" as const,
+      id: e.id,
+      title: e.title,
+      content: excerpt(e.description),
+      url: `/events/${e.id}`,
+      community: COMMUNITIES.find((c) => c.id === e.communityId)?.name,
       metadata: {
-        icon: community.icon,
+        clubName: e.clubName,
+        dateTime: e.dateTime,
+        rsvpCount: e.rsvpCount,
       },
     }))
-  } catch (error) {
-    console.error("Error searching communities:", error)
-    return []
-  }
 }
 
-// Quick search for autocomplete/suggestions
+function searchCommunities(query: string, limit: number): SearchResult[] {
+  return COMMUNITIES.filter(
+    (c) =>
+      c.id !== "all" &&
+      (c.name.toLowerCase().includes(query) ||
+        c.description?.toLowerCase().includes(query))
+  )
+    .slice(0, limit)
+    .map((c) => ({
+      type: "community" as const,
+      id: c.id,
+      title: c.name,
+      content: c.description || `Explore ${c.name} community`,
+      url: `/community/${c.id}`,
+    }))
+}
+
+// Autocomplete in the header search bar.
 export async function quickSearch(
   searchTerm: string,
   maxResults: number = 8
 ): Promise<SearchResult[]> {
-  return searchAll(searchTerm, {
-    includeQuestions: true,
-    includeEvents: true,
-    includeCommunities: true,
-    maxResults,
-  })
+  return searchAll(searchTerm, { maxResults })
 }

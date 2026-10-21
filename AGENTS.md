@@ -34,7 +34,9 @@ CLAUDE.md is symlinked to this file — same content applies to all coding agent
 - `src/components/` — app components; `src/components/ui/` — vendored shadcn primitives
 - `src/lib/services/<domain>.ts` — `'use server'` actions, the only code that touches Firestore
 - `src/lib/firebase-admin.ts` — server-only Admin SDK singleton; `src/lib/firebase.ts` — client Auth only
-- `src/lib/auth-server.ts` — `requireUser()` / `requireProfile()`, the identity of the caller of a server action
+- `src/lib/server/auth.ts` — `requireUser()` / `requireProfile()` / `requirePermission()`, the verified caller of a server action
+- `src/lib/server/docs.ts` — Firestore document to plain JSON mappers, audit log entries
+- `src/lib/client-auth.ts` — `idToken()`, the token the browser passes to server actions
 - `src/lib/schemas.ts` — Zod schemas for every server-action input
 - `src/lib/` — pure helpers (`*.test.ts` beside them)
 - `src/ai/` — Genkit flows
@@ -43,7 +45,8 @@ CLAUDE.md is symlinked to this file — same content applies to all coding agent
 ## Conventions
 
 - Validation: Zod at every server boundary
-- Identity: never trust a uid, email, role or author object sent by the browser. Server actions get the actor from `requireProfile()` and nothing else
+- Identity: never trust a uid, email, role or author object sent by the browser. Server actions take an `IdToken` first and get the actor from `requireProfile(idToken)`, nothing else
+- Exports: every export of a `'use server'` file is a public endpoint. Internal helpers live in `src/lib/server/` (marked `server-only`), never in a service file
 - Firestore: every read path returns through `serialize()`; server actions may only return plain JSON
 - Imports: `@/` alias (mapped to `src/`), never relative
 - Formatting: Prettier (2 spaces, double quotes, no semicolons)
@@ -53,7 +56,8 @@ CLAUDE.md is symlinked to this file — same content applies to all coding agent
 ## Identity & RBAC
 
 - Firebase Auth verifies the mailbox. `@vit.edu.in` is enforced on sign-in in the browser and again in `requireUser()` on the server. Moving sign-in to VOSS (accounts.vosslabs.org) is phase 2 of the plan
-- After sign-in the browser posts its ID token to `/api/session`; the server mints a 7-day httpOnly session cookie. Every mutating action verifies that cookie
+- Every server action that needs its caller takes a Firebase ID token (`IdToken`, branded so a uid cannot be passed by mistake) as its first argument. The client gets it from `idToken()`; the server verifies it with the Admin SDK in `requireUser()`
+- Ownership: authors edit and delete their own content; `moderate_forums` edits and deletes anyone's, and that leaves an `audit_log` entry
 - Three roles: `user`, `moderator`, `admin`, stored on `users/{uid}`. Addresses in `ADMIN_EMAILS` are admin regardless of the stored role; that is how the first admin is bootstrapped
 - Capabilities live in `src/lib/utils/userUtils.ts`; check them with `hasPermission` / `canModerate`, never by comparing role strings in pages
 - Firestore rules are default-deny; only the Admin SDK reads or writes

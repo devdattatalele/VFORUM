@@ -34,12 +34,12 @@ import Link from "next/link"
 import { isAdmin } from "@/lib/utils/userUtils"
 import {
   updateUserRole,
-  getUserProfile,
   searchUser,
   getAllUsers,
 } from "@/lib/services/userService"
 import { useToast } from "@/hooks/use-toast"
 import type { UserProfile } from "@/lib/types"
+import { idToken } from "@/lib/client-auth"
 
 export default function AdminPage() {
   const { user, loading, refreshUserProfile } = useAuth()
@@ -138,7 +138,7 @@ export default function AdminPage() {
     setIsSearching(true)
     try {
       console.log("Admin search - searching for:", searchEmail.trim())
-      const searchResult = await searchUser(searchEmail.trim())
+      const searchResult = await searchUser(await idToken(), searchEmail.trim())
       console.log("Admin search - result:", searchResult)
 
       if (searchResult) {
@@ -181,10 +181,10 @@ export default function AdminPage() {
 
     setIsUpdating(true)
     try {
-      await updateUserRole(searchedUser.uid, selectedRole)
+      await updateUserRole(await idToken(), searchedUser.uid, selectedRole)
 
       // Refresh the searched user data
-      const updatedUser = await getUserProfile(searchedUser.uid)
+      const updatedUser = await searchUser(await idToken(), searchedUser.uid)
       setSearchedUser(updatedUser)
 
       // If updating own role, refresh current user
@@ -225,7 +225,7 @@ export default function AdminPage() {
 
   const handleDebugUsers = async () => {
     try {
-      const users = await getAllUsers()
+      const users = await getAllUsers(await idToken())
       setDebugUsers(users)
       setShowDebug(true)
       toast({

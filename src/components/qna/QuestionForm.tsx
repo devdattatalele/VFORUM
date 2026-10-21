@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { addQuestion } from "@/lib/services/questionService"
+import { idToken } from "@/lib/client-auth"
 
 const questionFormSchema = z.object({
   title: z
@@ -107,7 +108,7 @@ export default function QuestionForm() {
     setIsTaggingAi(true)
     try {
       const input: AutoTagQuestionInput = { question: questionContent }
-      const result = await autoTagQuestion(input)
+      const result = await autoTagQuestion(await idToken(), input)
       if (result && result.tags) {
         const suggestedAITags = result.tags.map((tag) => tag.toLowerCase())
         const mergedTags = Array.from(
@@ -143,7 +144,7 @@ export default function QuestionForm() {
     }
     setIsSubmitting(true)
     try {
-      await addQuestion(data, user)
+      await addQuestion(await idToken(), data)
       toast({
         title: "Question Posted!",
         description: "Your question has been successfully posted to the forum.",

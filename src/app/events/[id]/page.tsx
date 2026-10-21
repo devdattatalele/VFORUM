@@ -24,6 +24,7 @@ import {
 } from "lucide-react"
 import { format } from "date-fns"
 import { COMMUNITIES } from "@/lib/constants"
+import { safeHttpUrl } from "@/lib/urls"
 import React, { useEffect, useState } from "react"
 import { getEventById } from "@/lib/services/eventService" // Import the service
 
@@ -122,9 +123,10 @@ export default function EventDetailPage() {
         <CardHeader className="relative p-0">
           <Image
             src={
-              event.posterImageUrl ||
+              safeHttpUrl(event.posterImageUrl) ??
               `https://placehold.co/800x400.png?text=${encodeURIComponent(event.title)}`
             }
+            unoptimized
             alt={event.title}
             width={800}
             height={400}

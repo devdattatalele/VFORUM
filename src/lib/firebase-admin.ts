@@ -1,8 +1,10 @@
 // Server-only Firebase Admin singleton. Never import this from client code —
 // it reads a privileged service-account credential and bypasses Firestore
-// security rules entirely. Only 'use server' modules under src/lib/services
-// should import from here.
+// security rules entirely. Only server modules (src/lib/services, src/lib/server)
+// import from here; the "server-only" import makes a client import a build error.
+import "server-only"
 import { cert, getApps, initializeApp, type App } from "firebase-admin/app"
+import { getAuth, type Auth } from "firebase-admin/auth"
 import { getFirestore, type Firestore } from "firebase-admin/firestore"
 
 function loadAdminCredential() {
@@ -38,4 +40,6 @@ function getAdminApp(): App {
   })
 }
 
-export const adminDb: Firestore = getFirestore(getAdminApp())
+const app = getAdminApp()
+export const adminDb: Firestore = getFirestore(app)
+export const adminAuth: Auth = getAuth(app)

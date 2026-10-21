@@ -38,6 +38,7 @@ import { useRouter } from "next/navigation"
 import React from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { addEvent } from "@/lib/services/eventService"
+import { idToken } from "@/lib/client-auth"
 
 const eventFormSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters long."),
@@ -107,12 +108,15 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
         communityId,
         rsvpLink,
       } = data
-      // Pass data.dateTime (which is a Date object) directly to addEvent
-      await addEvent(
-        { title, description, posterImageUrl, clubName, communityId, rsvpLink },
-        user,
-        data.dateTime
-      )
+      await addEvent(await idToken(), {
+        title,
+        description,
+        posterImageUrl,
+        clubName,
+        communityId,
+        rsvpLink,
+        dateTime: data.dateTime,
+      })
       toast({
         title: event ? "Event Updated!" : "Event Created!",
         description: `"${data.title}" has been successfully ${event ? "updated" : "created"}.`,

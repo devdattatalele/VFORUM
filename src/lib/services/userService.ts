@@ -1,187 +1,69 @@
 "use server"
-import type { UserProfile } from "@/lib/types"
-import { adminDb } from "@/lib/firebase-admin"
+
 import { FieldValue } from "firebase-admin/firestore"
+import { adminDb } from "@/lib/firebase-admin"
+import { requirePermission, requireProfile } from "@/lib/server/auth"
+import { auditEntry, auditLog, toProfile } from "@/lib/server/docs"
+import { docId, role as roleSchema } from "@/lib/schemas"
+import type { IdToken, UserProfile } from "@/lib/types"
 import { getPermissionsForRole } from "@/lib/utils/userUtils"
 
-export async function createUserProfile(user: UserProfile): Promise<void> {
-  try {
-    const userRef = adminDb.collection("users").doc(user.uid)
-    const userDoc = await userRef.get()
+const users = () => adminDb.collection("users")
 
-    if (!userDoc.exists) {
-      await userRef.set({
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        role: "user", // Default role
-        permissions: ["read_forums", "create_questions", "vote"], // Default permissions
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      })
-    }
-  } catch (error) {
-    console.error("Error creating user profile:", error)
-    throw new Error("Failed to create user profile.")
-  }
+// The signed-in user's own profile, created on first sign-in.
+export async function getMyProfile(idToken: IdToken): Promise<UserProfile> {
+  return requireProfile(idToken)
 }
 
-export async function getUserProfile(uid: string): Promise<UserProfile | null> {
-  try {
-    const userRef = adminDb.collection("users").doc(uid)
-    const userDoc = await userRef.get()
-
-    if (userDoc.exists) {
-      const data = userDoc.data()!
-      return {
-        uid: data.uid,
-        email: data.email,
-        displayName: data.displayName,
-        photoURL: data.photoURL,
-        role: data.role || "user",
-        permissions: data.permissions || [
-          "read_forums",
-          "create_questions",
-          "vote",
-        ],
-        createdAt: data.createdAt?.toDate
-          ? data.createdAt.toDate().toISOString()
-          : data.createdAt,
-        updatedAt: data.updatedAt?.toDate
-          ? data.updatedAt.toDate().toISOString()
-          : data.updatedAt,
-      }
-    }
-    return null
-  } catch (error) {
-    console.error("Error getting user profile:", error)
-    return null
-  }
-}
-
-export async function searchUserByEmail(
-  email: string
-): Promise<UserProfile | null> {
-  try {
-    const querySnapshot = await adminDb
-      .collection("users")
-      .where("email", "==", email)
-      .get()
-
-    if (!querySnapshot.empty) {
-      const docSnap = querySnapshot.docs[0]
-      const data = docSnap.data()
-      return {
-        uid: data.uid,
-        email: data.email,
-        displayName: data.displayName,
-        photoURL: data.photoURL,
-        role: data.role || "user",
-        permissions: data.permissions || [
-          "read_forums",
-          "create_questions",
-          "vote",
-        ],
-        createdAt: data.createdAt?.toDate
-          ? data.createdAt.toDate().toISOString()
-          : data.createdAt,
-        updatedAt: data.updatedAt?.toDate
-          ? data.updatedAt.toDate().toISOString()
-          : data.updatedAt,
-      }
-    }
-    return null
-  } catch (error) {
-    console.error("Error searching user by email:", error)
-    return null
-  }
-}
-
+// Admin lookup by uid or email.
 export async function searchUser(
-  searchTerm: string
+  idToken: IdToken,
+  term: string
 ): Promise<UserProfile | null> {
-  try {
-    console.log("Searching for user with term:", searchTerm)
+  await requirePermission(idToken, "manage_users")
+  const query = typeof term === "string" ? term.trim() : ""
+  if (!query || query.length > 254) return null
 
-    // First try to get by UID (UIDs are typically longer than 20 characters)
-    if (searchTerm.length > 15) {
-      console.log("Trying UID search...")
-      const userByUid = await getUserProfile(searchTerm)
-      if (userByUid) {
-        console.log("Found user by UID:", userByUid.email)
-        return userByUid
-      }
-    }
-
-    // Then try to search by email
-    if (searchTerm.includes("@")) {
-      console.log("Trying email search...")
-      const userByEmail = await searchUserByEmail(searchTerm)
-      if (userByEmail) {
-        console.log("Found user by email:", userByEmail.email)
-        return userByEmail
-      }
-    }
-
-    console.log("No user found with search term:", searchTerm)
-    return null
-  } catch (error) {
-    console.error("Error in searchUser:", error)
-    return null
+  if (docId.safeParse(query).success) {
+    const byUid = await users().doc(query).get()
+    if (byUid.exists) return toProfile(byUid.data())
   }
+  if (query.includes("@")) {
+    const byEmail = await users()
+      .where("email", "in", Array.from(new Set([query, query.toLowerCase()])))
+      .limit(1)
+      .get()
+    if (!byEmail.empty) return toProfile(byEmail.docs[0].data())
+  }
+  return null
 }
 
 export async function updateUserRole(
+  idToken: IdToken,
   uid: string,
-  role: "user" | "moderator" | "admin"
+  role: string
 ): Promise<void> {
-  try {
-    const userRef = adminDb.collection("users").doc(uid)
-    const permissions = getPermissionsForRole(role)
-
-    await userRef.update({
-      role,
-      permissions,
+  const actor = await requirePermission(idToken, "manage_users")
+  const ref = users().doc(docId.parse(uid))
+  const next = roleSchema.parse(role)
+  await adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref)
+    if (!snap.exists) throw new Error("User not found.")
+    const previous = snap.data()?.role ?? "user"
+    tx.update(ref, {
+      role: next,
+      permissions: getPermissionsForRole(next),
       updatedAt: FieldValue.serverTimestamp(),
     })
-  } catch (error) {
-    console.error("Error updating user role:", error)
-    throw new Error("Failed to update user role.")
-  }
+    tx.set(
+      auditLog().doc(),
+      auditEntry(actor, "user.role", ref.path, { from: previous, to: next })
+    )
+  })
 }
 
-// Debug function to list all users
-export async function getAllUsers(): Promise<UserProfile[]> {
-  try {
-    const querySnapshot = await adminDb.collection("users").get()
-
-    const users = querySnapshot.docs.map((docSnap) => {
-      const data = docSnap.data()
-      return {
-        uid: data.uid,
-        email: data.email,
-        displayName: data.displayName,
-        photoURL: data.photoURL,
-        role: data.role || "user",
-        permissions: data.permissions || [
-          "read_forums",
-          "create_questions",
-          "vote",
-        ],
-        createdAt: data.createdAt?.toDate
-          ? data.createdAt.toDate().toISOString()
-          : data.createdAt,
-        updatedAt: data.updatedAt?.toDate
-          ? data.updatedAt.toDate().toISOString()
-          : data.updatedAt,
-      }
-    })
-
-    console.log("All users in database:", users)
-    return users
-  } catch (error) {
-    console.error("Error getting all users:", error)
-    return []
-  }
+export async function getAllUsers(idToken: IdToken): Promise<UserProfile[]> {
+  await requirePermission(idToken, "manage_users")
+  const snap = await users().get()
+  return snap.docs.map((doc) => toProfile(doc.data()))
 }

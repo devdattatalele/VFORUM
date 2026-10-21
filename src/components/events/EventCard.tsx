@@ -17,6 +17,7 @@ import { format } from "date-fns"
 import Link from "next/link"
 import { COMMUNITIES } from "@/lib/constants"
 import React from "react"
+import { safeHttpUrl } from "@/lib/urls"
 
 interface EventCardProps {
   event: Event
@@ -24,12 +25,19 @@ interface EventCardProps {
 
 export default function EventCard({ event }: EventCardProps) {
   const community = COMMUNITIES.find((c) => c.id === event.communityId)
+  const rsvpLink = safeHttpUrl(event.rsvpLink)
 
   return (
     <Card className="glass-card flex h-full flex-col overflow-hidden shadow-lg transition-shadow duration-300 hover:shadow-xl">
       <CardHeader className="relative p-0">
+        {/* Posters are any https image an organizer links, so they skip the
+            optimizer, which only accepts the hosts listed in next.config. */}
         <Image
-          src={event.posterImageUrl}
+          src={
+            safeHttpUrl(event.posterImageUrl) ??
+            "https://placehold.co/600x400.png"
+          }
+          unoptimized
           alt={event.title}
           width={600}
           height={300}
@@ -66,17 +74,13 @@ export default function EventCard({ event }: EventCardProps) {
           <Users className="mr-1 h-4 w-4" />
           <span>{event.rsvpCount || 0} Going</span>
         </div>
-        {event.rsvpLink ? (
+        {rsvpLink ? (
           <Button
             asChild
             size="sm"
             className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            <Link
-              href={event.rsvpLink}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <Link href={rsvpLink} target="_blank" rel="noopener noreferrer">
               RSVP
               <ExternalLink className="ml-1 h-3 w-3" />
             </Link>

@@ -1,5 +1,6 @@
 "use server"
 
+import type { IdToken } from "@/lib/types"
 /**
  * @fileOverview A flow that automatically suggests relevant tags for a question based on its content.
  *
@@ -9,6 +10,7 @@
  */
 
 import { ai } from "@/ai/genkit"
+import { requireUser } from "@/lib/server/auth"
 import { z } from "genkit"
 
 const AutoTagQuestionInputSchema = z.object({
@@ -23,10 +25,14 @@ const AutoTagQuestionOutputSchema = z.object({
 })
 export type AutoTagQuestionOutput = z.infer<typeof AutoTagQuestionOutputSchema>
 
+// Calls Gemini, which costs money, so only signed-in students may use it.
 export async function autoTagQuestion(
+  idToken: IdToken,
   input: AutoTagQuestionInput
 ): Promise<AutoTagQuestionOutput> {
-  return autoTagQuestionFlow(input)
+  await requireUser(idToken)
+  const question = String(input?.question ?? "").slice(0, 5000)
+  return autoTagQuestionFlow({ question })
 }
 
 const prompt = ai.definePrompt({

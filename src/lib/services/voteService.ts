@@ -1,136 +1,72 @@
 "use server"
-import { adminDb } from "@/lib/firebase-admin"
-import { FieldValue } from "firebase-admin/firestore"
 
-export interface VoteData {
-  questionId?: string
-  commentId?: string
-  userId: string
-  voteType: "up" | "down" | "none"
+import type { IdToken } from "@/lib/types"
+import { FieldValue, type DocumentReference } from "firebase-admin/firestore"
+import { adminDb } from "@/lib/firebase-admin"
+import { requireUser } from "@/lib/server/auth"
+import { docId, voteType } from "@/lib/schemas"
+import { voteDelta, type VoteType } from "@/lib/votes"
+
+// One vote per user per item, stored at votes/{questions|comments}/{itemId}/{uid}.
+// The vote and the item's counters change in one transaction, so double clicks
+// and concurrent votes cannot skew the counts.
+async function castVote(
+  item: DocumentReference,
+  vote: DocumentReference,
+  next: VoteType
+) {
+  await adminDb.runTransaction(async (tx) => {
+    const [itemSnap, voteSnap] = await Promise.all([tx.get(item), tx.get(vote)])
+    if (!itemSnap.exists) throw new Error("Not found.")
+    const current: VoteType = voteSnap.data()?.voteType ?? "none"
+    if (current === next) return
+    tx.set(vote, { voteType: next, updatedAt: FieldValue.serverTimestamp() })
+    const { up, down } = voteDelta(current, next)
+    const counters: Record<string, FieldValue> = {}
+    if (up) counters.upvotes = FieldValue.increment(up)
+    if (down) counters.downvotes = FieldValue.increment(down)
+    if (Object.keys(counters).length > 0) tx.update(item, counters)
+  })
 }
 
 export async function voteOnQuestion(
+  idToken: IdToken,
   questionId: string,
-  userId: string,
-  voteType: "up" | "down" | "none"
+  next: VoteType
 ): Promise<void> {
-  try {
-    const voteRef = adminDb.doc(`votes/questions/${questionId}/${userId}`)
-    const questionRef = adminDb.collection("questions").doc(questionId)
-
-    // Get existing vote
-    const existingVote = await voteRef.get()
-    const currentVote = existingVote.exists
-      ? existingVote.data()?.voteType
-      : "none"
-
-    if (currentVote === voteType) {
-      return // No change needed
-    }
-
-    // Update vote record
-    if (voteType === "none") {
-      await voteRef.set({ voteType: "none", updatedAt: new Date() })
-    } else {
-      await voteRef.set({ voteType, updatedAt: new Date() })
-    }
-
-    // Calculate vote changes
-    let upvoteChange = 0
-    let downvoteChange = 0
-
-    if (currentVote === "up") upvoteChange = -1
-    if (currentVote === "down") downvoteChange = -1
-
-    if (voteType === "up") upvoteChange += 1
-    if (voteType === "down") downvoteChange += 1
-
-    // Update question vote counts
-    const updateData: any = {}
-    if (upvoteChange !== 0)
-      updateData.upvotes = FieldValue.increment(upvoteChange)
-    if (downvoteChange !== 0)
-      updateData.downvotes = FieldValue.increment(downvoteChange)
-
-    if (Object.keys(updateData).length > 0) {
-      await questionRef.update(updateData)
-    }
-  } catch (error) {
-    console.error("Error voting on question:", error)
-    throw new Error("Failed to vote on question")
-  }
+  const { uid } = await requireUser(idToken)
+  const id = docId.parse(questionId)
+  await castVote(
+    adminDb.collection("questions").doc(id),
+    adminDb.doc(`votes/questions/${id}/${uid}`),
+    voteType.parse(next)
+  )
 }
 
 export async function voteOnComment(
+  idToken: IdToken,
   questionId: string,
   commentId: string,
-  userId: string,
-  voteType: "up" | "down" | "none"
+  next: VoteType
 ): Promise<void> {
-  try {
-    const voteRef = adminDb.doc(`votes/comments/${commentId}/${userId}`)
-    const commentRef = adminDb
-      .collection(`questions/${questionId}/comments`)
-      .doc(commentId)
-
-    // Get existing vote
-    const existingVote = await voteRef.get()
-    const currentVote = existingVote.exists
-      ? existingVote.data()?.voteType
-      : "none"
-
-    if (currentVote === voteType) {
-      return // No change needed
-    }
-
-    // Update vote record
-    if (voteType === "none") {
-      await voteRef.set({ voteType: "none", updatedAt: new Date() })
-    } else {
-      await voteRef.set({ voteType, updatedAt: new Date() })
-    }
-
-    // Calculate vote changes
-    let upvoteChange = 0
-    let downvoteChange = 0
-
-    if (currentVote === "up") upvoteChange = -1
-    if (currentVote === "down") downvoteChange = -1
-
-    if (voteType === "up") upvoteChange += 1
-    if (voteType === "down") downvoteChange += 1
-
-    // Update comment vote counts
-    const updateData: any = {}
-    if (upvoteChange !== 0)
-      updateData.upvotes = FieldValue.increment(upvoteChange)
-    if (downvoteChange !== 0)
-      updateData.downvotes = FieldValue.increment(downvoteChange)
-
-    if (Object.keys(updateData).length > 0) {
-      await commentRef.update(updateData)
-    }
-  } catch (error) {
-    console.error("Error voting on comment:", error)
-    throw new Error("Failed to vote on comment")
-  }
+  const { uid } = await requireUser(idToken)
+  const qid = docId.parse(questionId)
+  const cid = docId.parse(commentId)
+  await castVote(
+    adminDb.doc(`questions/${qid}/comments/${cid}`),
+    adminDb.doc(`votes/comments/${cid}/${uid}`),
+    voteType.parse(next)
+  )
 }
 
 export async function getUserVote(
+  idToken: IdToken,
   itemId: string,
-  userId: string,
   itemType: "question" | "comment"
-): Promise<"up" | "down" | "none"> {
-  try {
-    const voteRef = adminDb.doc(`votes/${itemType}s/${itemId}/${userId}`)
-    const voteDoc = await voteRef.get()
-
-    if (voteDoc.exists) {
-      return voteDoc.data()?.voteType || "none"
-    }
-    return "none"
-  } catch (error) {
-    console.error("Error getting user vote:", error)
-    return "none"
-  }
+): Promise<VoteType> {
+  const { uid } = await requireUser(idToken)
+  const id = docId.parse(itemId)
+  const kind = itemType === "comment" ? "comments" : "questions"
+  const snap = await adminDb.doc(`votes/${kind}/${id}/${uid}`).get()
+  return snap.data()?.voteType ?? "none"
 }

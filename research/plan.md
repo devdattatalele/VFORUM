@@ -43,7 +43,7 @@ Target, the VOSS stack (phase 3):
 - MIT license, README with stack and scripts tables, CONTRIBUTING, issue and PR templates
 - CI runs lint, typecheck, format check, tests and build; `npm run check` locally
 - Dead code removed, typecheck clean and enforced at build, Next config deprecations fixed
-- Security: every mutating server action verifies the session cookie and derives the actor on the server. The browser no longer chooses its uid, author or role. Zod validates every input. `ADMIN_EMAILS` bootstraps admins
+- Security: every server action that needs its caller verifies a Firebase ID token and derives the actor on the server. The browser no longer chooses its uid, author or role. Zod validates every input. `ADMIN_EMAILS` bootstraps admins
 - Firestore reads return plain JSON through `serialize()`; `/api/health` for deploy checks
 
 ### Phase 1 — A forum people come back to
@@ -64,7 +64,7 @@ One PR per item, each with its own issue.
 
 - Register VFORUM as a client in voss-labs/vauth `clients.config.ts` through a reviewed PR (see `docs/voss-auth.md`)
 - Implement OIDC authorization code + PKCE against accounts.vosslabs.org
-- Two ways to keep Firebase during the transition: mint a Firebase custom token for the VOSS subject after the callback and keep Firestore and session cookies unchanged, or replace Firebase Auth with Better Auth, which needs phase 3's Postgres for its tables. Decide when the client is registered
+- Two ways to keep Firebase during the transition: mint a Firebase custom token for the VOSS subject after the callback and keep Firestore and ID-token verification unchanged, or replace Firebase Auth with Better Auth, which needs phase 3's Postgres for its tables. Decide when the client is registered
 - Remove email/password once every active account has signed in through VOSS
 
 ### Phase 3 — The VOSS stack
@@ -86,7 +86,7 @@ Clean, minimal, shadcn-native. Neutral palette, Inter body type, restrained colo
 ## Identity & RBAC
 
 - Firebase Auth verifies the mailbox; `@vit.edu.in` is enforced on sign-in in the browser and again in `requireUser()` on the server
-- After sign-in the browser posts its ID token to `/api/session`; the server mints a 7-day httpOnly session cookie. Every mutating action calls `requireProfile()`, which verifies the cookie and loads `users/{uid}`; nothing identity-related is read from action arguments
+- Every server action that needs its caller takes a Firebase ID token first and calls `requireProfile()`, which verifies it and loads `users/{uid}`; nothing identity-related is read from action arguments. Tokens over cookies: no cookie lifecycle to keep in sync with Firebase's own session, and no CSRF surface
 - Roles `user`, `moderator`, `admin` on `users/{uid}`; `ADMIN_EMAILS` grants admin regardless of the stored role, like vboard's `SUPER_ADMIN_EMAILS`
 - Permission rules:
 

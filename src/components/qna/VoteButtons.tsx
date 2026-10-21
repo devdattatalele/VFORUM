@@ -11,6 +11,8 @@ import {
   getUserVote,
 } from "@/lib/services/voteService"
 import { useToast } from "@/hooks/use-toast"
+import { voteDelta } from "@/lib/votes"
+import { idToken } from "@/lib/client-auth"
 
 interface VoteButtonsProps {
   initialUpvotes: number
@@ -49,7 +51,8 @@ export default function VoteButtons({
   // Load user's existing vote
   useEffect(() => {
     if (user?.uid) {
-      getUserVote(id, user.uid, type)
+      idToken()
+        .then((token) => getUserVote(token, id, type))
         .then((vote) => setUserVote(vote))
         .catch((error) => console.error("Error loading user vote:", error))
     }
@@ -76,15 +79,11 @@ export default function VoteButtons({
     // Optimistic update
     setUserVote(finalVote)
 
-    // Calculate vote changes for optimistic UI update
-    let upvoteChange = 0
-    let downvoteChange = 0
-
-    if (oldUserVote === "up") upvoteChange = -1
-    if (oldUserVote === "down") downvoteChange = -1
-
-    if (finalVote === "up") upvoteChange += 1
-    if (finalVote === "down") downvoteChange += 1
+    // Same arithmetic the server applies, for the optimistic update
+    const { up: upvoteChange, down: downvoteChange } = voteDelta(
+      oldUserVote,
+      finalVote
+    )
 
     setUpvotes((prev) => prev + upvoteChange)
     if (!isLikeMode) {
@@ -95,9 +94,9 @@ export default function VoteButtons({
 
     try {
       if (type === "question") {
-        await voteOnQuestion(id, user.uid, finalVote)
+        await voteOnQuestion(await idToken(), id, finalVote)
       } else if (type === "comment" && questionId) {
-        await voteOnComment(questionId, id, user.uid, finalVote)
+        await voteOnComment(await idToken(), questionId, id, finalVote)
       }
 
       const actionText = isLikeMode

@@ -20,7 +20,8 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import type { UserProfile } from "@/lib/types"
-import { createUserProfile, getUserProfile } from "@/lib/services/userService"
+import { getMyProfile } from "@/lib/services/userService"
+import type { IdToken } from "@/lib/types"
 
 interface AuthContextType {
   user: UserProfile | null
@@ -49,23 +50,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast()
   const router = useRouter()
 
-  const loadUserProfile = async (firebaseUser: FirebaseUser) => {
+  // The server verifies the ID token, creates the profile on first sign-in and
+  // resolves the role. forceRefresh picks up a display name set after sign-up.
+  const loadUserProfile = async (
+    firebaseUser: FirebaseUser,
+    forceRefresh = false
+  ) => {
     try {
-      const userProfile = await getUserProfile(firebaseUser.uid)
-      if (userProfile) {
-        setUser(userProfile)
-      } else {
-        // Create user profile if it doesn't exist
-        const newUserProfile: UserProfile = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
-          photoURL: firebaseUser.photoURL,
-        }
-        await createUserProfile(newUserProfile)
-        const createdProfile = await getUserProfile(firebaseUser.uid)
-        setUser(createdProfile)
-      }
+      const token = (await firebaseUser.getIdToken(forceRefresh)) as IdToken
+      setUser(await getMyProfile(token))
     } catch (error) {
       console.error("Error loading user profile:", error)
       // Fallback to basic user data
@@ -81,15 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const refreshUserProfile = async () => {
-    if (user) {
-      try {
-        const updatedProfile = await getUserProfile(user.uid)
-        if (updatedProfile) {
-          setUser(updatedProfile)
-        }
-      } catch (error) {
-        console.error("Error refreshing user profile:", error)
-      }
+    if (auth.currentUser) {
+      await loadUserProfile(auth.currentUser, true)
     }
   }
 
@@ -203,16 +189,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Send email verification
       await sendEmailVerification(firebaseUser)
 
-      // Create user profile in Firestore
-      const newUserProfile: UserProfile = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        displayName: displayName,
-        photoURL: firebaseUser.photoURL,
-      }
-
-      await createUserProfile(newUserProfile)
-      await loadUserProfile(firebaseUser)
+      // A fresh token carries the display name just set; the server creates
+      // the profile from it.
+      await loadUserProfile(firebaseUser, true)
 
       toast({
         title: "Account Created",

@@ -25,6 +25,6 @@ Redirect URIs match exactly, including scheme and port; the dev server runs on 9
 
 ## Keeping Firebase during the transition
 
-VOSS answers who the person is. VFORUM's data stays in Firestore, so the cheapest integration is: after the OIDC callback, mint a Firebase custom token for the VOSS subject with the Admin SDK, sign the browser in with it, and keep the existing session cookie and `requireProfile()` unchanged. The alternative, Better Auth with its own tables, needs the Postgres move in phase 3.
+VOSS answers who the person is. VFORUM's data stays in Firestore, so the cheapest integration is: after the OIDC callback, mint a Firebase custom token for the VOSS subject with the Admin SDK, sign the browser in with it, and keep ID-token verification and `requireProfile()` unchanged. The alternative, Better Auth with its own tables, needs the Postgres move in phase 3.
 
 Either way, VFORUM keeps answering the second question itself: role, permissions and ownership live in `users/{uid}` and nowhere else.

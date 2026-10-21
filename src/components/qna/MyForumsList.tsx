@@ -42,6 +42,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
+import { idToken } from "@/lib/client-auth"
 
 export default function MyForumsList() {
   const { user } = useAuth()
@@ -99,7 +100,7 @@ export default function MyForumsList() {
   const handleDeleteQuestion = async (questionId: string) => {
     setDeletingId(questionId)
     try {
-      await deleteQuestion(questionId)
+      await deleteQuestion(await idToken(), questionId)
       setQuestions((prev) => prev.filter((q) => q.id !== questionId))
       toast.success("Forum post deleted successfully!")
     } catch (error) {

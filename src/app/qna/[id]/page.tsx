@@ -37,6 +37,7 @@ import React, { useEffect, useState, useMemo } from "react"
 import { getQuestionById, updateQuestion } from "@/lib/services/questionService"
 import { getThreadedComments, addComment } from "@/lib/services/commentService"
 import { COMMUNITIES } from "@/lib/constants"
+import { idToken } from "@/lib/client-auth"
 
 // Helper function to build comment tree
 function buildCommentTree(comments: CommentType[]): CommentWithReplies[] {
@@ -170,12 +171,7 @@ export default function QuestionDetailPage() {
       return
     }
     try {
-      const newCommentId = await addComment(
-        question.id,
-        { content },
-        user,
-        parentId
-      )
+      await addComment(await idToken(), question.id, { content, parentId })
 
       // Refresh comments to get updated threaded structure
       const updatedComments = await getThreadedComments(questionId, commentSort)
@@ -232,7 +228,7 @@ export default function QuestionDetailPage() {
     if (!user || !question) return
 
     try {
-      await updateQuestion(question.id, updates, user.uid)
+      await updateQuestion(await idToken(), question.id, updates)
       setShowEditQuestion(false)
 
       // Refresh question data
