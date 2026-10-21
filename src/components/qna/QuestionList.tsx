@@ -42,6 +42,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { UserCircle } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { excerpt } from "@/lib/markdown"
+import SolvedBadge from "@/components/qna/SolvedBadge"
 
 export default function QuestionList() {
   const { user } = useAuth()
@@ -50,6 +51,7 @@ export default function QuestionList() {
   const tagFilter = searchParams.get("tag")
   const searchFromUrl = searchParams.get("search")
   const [searchTerm, setSearchTerm] = useState(searchFromUrl || "")
+  const [show, setShow] = useState<"all" | "unanswered" | "solved">("all")
   const [sortBy, setSortBy] = useState("activity-desc") // 'activity-desc', 'activity-asc', 'recent-desc', 'recent-asc', 'popular-desc', 'replies-desc', 'upvotes-desc'
   const [questions, setQuestions] = useState<Question[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -91,6 +93,11 @@ export default function QuestionList() {
         q.tags.includes(tagFilter)
       )
     }
+    if (show === "unanswered") {
+      processedQuestions = processedQuestions.filter((q) => !q.replyCount)
+    } else if (show === "solved") {
+      processedQuestions = processedQuestions.filter((q) => q.acceptedAnswerId)
+    }
     if (searchTerm) {
       processedQuestions = processedQuestions.filter(
         (q) =>
@@ -129,7 +136,7 @@ export default function QuestionList() {
           return new Date(bActivity).getTime() - new Date(aActivity).getTime()
       }
     })
-  }, [questions, communityFilter, tagFilter, searchTerm, sortBy])
+  }, [questions, communityFilter, tagFilter, searchTerm, sortBy, show])
 
   if (isLoading) {
     return (
@@ -162,7 +169,26 @@ export default function QuestionList() {
           />
         </div>
 
-        <div className="flex w-full items-center gap-2 sm:w-auto">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <div
+            role="group"
+            aria-label="Show"
+            className="flex rounded-md border bg-background/70 p-0.5"
+          >
+            {(["all", "unanswered", "solved"] as const).map((value) => (
+              <Button
+                key={value}
+                type="button"
+                size="sm"
+                variant={show === value ? "secondary" : "ghost"}
+                className="h-8 capitalize"
+                aria-pressed={show === value}
+                onClick={() => setShow(value)}
+              >
+                {value}
+              </Button>
+            ))}
+          </div>
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-full bg-background/70 focus:bg-background dark:bg-background/70 dark:focus:bg-background sm:w-[180px]">
               <ListFilter className="mr-2 h-4 w-4" />
@@ -260,8 +286,10 @@ export default function QuestionList() {
                   <TableCell className="py-3 align-top">
                     <Link href={`/qna/${question.id}`} className="group block">
                       <h3 className="mb-1 line-clamp-2 text-base font-medium text-foreground transition-colors group-hover:text-primary">
-                        {/* {question.tags.includes('pinned') && <Pin className="inline-block mr-1.5 h-4 w-4 text-accent" />} Icon for pinned questions */}
                         {question.title}
+                        {question.acceptedAnswerId && (
+                          <SolvedBadge className="ml-2 align-middle" />
+                        )}
                       </h3>
                     </Link>
                     <div className="mb-1.5 flex items-center space-x-2 text-xs text-muted-foreground">

@@ -36,6 +36,8 @@ export function toQuestion(
     downvotes: count(d.downvotes),
     views: count(d.views),
     replyCount: count(d.replyCount),
+    acceptedAnswerId:
+      typeof d.acceptedAnswerId === "string" ? d.acceptedAnswerId : null,
   }
 }
 

@@ -246,3 +246,28 @@ describe("events", () => {
     expect(await addEvent(moderator, event)).toMatch(/^[A-Za-z0-9]+$/)
   })
 })
+
+describe("accepted answers", () => {
+  it("lets the asker accept one top-level answer", async () => {
+    const { acceptAnswer } = await import("@/lib/services/questionService")
+    const id = await addQuestion(student, question)
+    const answer = await addComment(student2, id, { content: "The answer" })
+    const reply = await addComment(student, id, {
+      content: "A reply, not an answer",
+      parentId: answer,
+    })
+
+    await expect(acceptAnswer(student2, id, answer)).rejects.toThrow(
+      /author or a moderator/
+    )
+    await expect(acceptAnswer(student, id, reply)).rejects.toThrow(/top-level/)
+    await expect(acceptAnswer(student, id, "missing")).rejects.toThrow(
+      /top-level/
+    )
+
+    await acceptAnswer(student, id, answer)
+    expect((await getQuestionById(id))?.acceptedAnswerId).toBe(answer)
+    await acceptAnswer(student, id, null)
+    expect((await getQuestionById(id))?.acceptedAnswerId).toBeNull()
+  })
+})

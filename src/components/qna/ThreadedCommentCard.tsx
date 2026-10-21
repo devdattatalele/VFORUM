@@ -14,6 +14,7 @@ import {
   ChevronUp,
   Share,
   Edit3,
+  CheckCircle2,
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -22,6 +23,8 @@ import { useToast } from "@/hooks/use-toast"
 import { updateComment } from "@/lib/services/commentService"
 import { idToken } from "@/lib/client-auth"
 import Markdown from "@/components/Markdown"
+import SolvedBadge from "@/components/qna/SolvedBadge"
+import { canModerate } from "@/lib/utils/userUtils"
 
 interface ThreadedCommentCardProps {
   comment: CommentType
@@ -30,6 +33,9 @@ interface ThreadedCommentCardProps {
   onReply: (content: string, parentId: string) => Promise<void>
   onEdit?: () => void // Callback to refresh comments after edit
   children?: React.ReactNode // For nested replies
+  isAccepted?: boolean
+  canAccept?: boolean // the viewer may mark this top-level answer as accepted
+  onAccept?: (commentId: string | null) => void
 }
 
 export default function ThreadedCommentCard({
@@ -39,6 +45,9 @@ export default function ThreadedCommentCard({
   onReply,
   onEdit,
   children,
+  isAccepted = false,
+  canAccept = false,
+  onAccept,
 }: ThreadedCommentCardProps) {
   const [showReplyForm, setShowReplyForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
@@ -138,7 +147,8 @@ export default function ThreadedCommentCard({
       <div
         className={cn(
           "group relative rounded-lg bg-background/50 p-4 transition-colors hover:bg-muted/30", // Increased padding
-          level === 0 && "border border-border/50 shadow-sm"
+          level === 0 && "border border-border/50 shadow-sm",
+          isAccepted && "border-green-500/60 bg-green-500/5"
         )}
       >
         <div className="flex gap-3">
@@ -180,12 +190,7 @@ export default function ThreadedCommentCard({
                   addSuffix: true,
                 })}
               </span>
-              {level > 0 && (
-                <>
-                  <span className="opacity-70">•</span>
-                  <span className="text-xs opacity-70">level {level}</span>
-                </>
-              )}
+              {isAccepted && <SolvedBadge label="Accepted answer" />}
             </div>
 
             {/* Comment content */}
@@ -231,7 +236,21 @@ export default function ThreadedCommentCard({
                     Share
                   </Button>
                   {/* Edit button for comment author */}
-                  {user?.uid === comment.author.uid && (
+                  {canAccept && onAccept && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "h-8 px-3 text-sm hover:bg-muted",
+                        isAccepted && "text-green-700 dark:text-green-400"
+                      )}
+                      onClick={() => onAccept(isAccepted ? null : comment.id)}
+                    >
+                      <CheckCircle2 className="mr-1 h-4 w-4" />
+                      {isAccepted ? "Unaccept" : "Accept answer"}
+                    </Button>
+                  )}
+                  {canModerate(user, comment.author.uid) && (
                     <Button
                       variant="ghost"
                       size="sm"

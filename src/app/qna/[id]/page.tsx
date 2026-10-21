@@ -34,11 +34,17 @@ import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/hooks/use-toast"
 import React, { useEffect, useState, useMemo } from "react"
-import { getQuestionById, updateQuestion } from "@/lib/services/questionService"
+import {
+  acceptAnswer,
+  getQuestionById,
+  updateQuestion,
+} from "@/lib/services/questionService"
 import { getThreadedComments, addComment } from "@/lib/services/commentService"
 import { COMMUNITIES } from "@/lib/constants"
 import { idToken } from "@/lib/client-auth"
 import Markdown from "@/components/Markdown"
+import SolvedBadge from "@/components/qna/SolvedBadge"
+import { canModerate } from "@/lib/utils/userUtils"
 
 // Helper function to build comment tree
 function buildCommentTree(comments: CommentType[]): CommentWithReplies[] {
@@ -80,12 +86,18 @@ function ThreadedCommentTree({
   level = 0,
   onReply,
   onEdit,
+  acceptedId,
+  canAccept,
+  onAccept,
 }: {
   comment: CommentWithReplies
   questionId: string
   level?: number
   onReply: (content: string, parentId: string) => Promise<void>
   onEdit: () => void
+  acceptedId?: string | null
+  canAccept?: boolean
+  onAccept?: (commentId: string | null) => void
 }) {
   return (
     <ThreadedCommentCard
@@ -94,6 +106,9 @@ function ThreadedCommentTree({
       level={level}
       onReply={onReply}
       onEdit={onEdit}
+      isAccepted={level === 0 && comment.id === acceptedId}
+      canAccept={level === 0 && canAccept}
+      onAccept={onAccept}
     >
       {comment.replies.length > 0 && (
         <div className="space-y-2">
@@ -250,6 +265,26 @@ export default function QuestionDetailPage() {
     }
   }
 
+  const handleAccept = async (commentId: string | null) => {
+    if (!question) return
+    try {
+      await acceptAnswer(await idToken(), question.id, commentId)
+      setQuestion({ ...question, acceptedAnswerId: commentId })
+      toast({
+        title: commentId ? "Answer accepted" : "Accepted answer cleared",
+        description: commentId
+          ? "It now shows first, marked as the answer."
+          : undefined,
+      })
+    } catch (error) {
+      console.error("Error accepting answer:", error)
+      toast({
+        title: "Could not update the accepted answer",
+        variant: "destructive",
+      })
+    }
+  }
+
   // Filter comments based on search query
   const filteredComments = useMemo(() => {
     if (!searchQuery.trim()) return comments
@@ -263,9 +298,15 @@ export default function QuestionDetailPage() {
   }, [comments, searchQuery])
 
   // Build comment tree from filtered comments
+  // The accepted answer leads; the rest keep the chosen sort.
+  const acceptedId = question?.acceptedAnswerId ?? null
   const commentTree = useMemo(() => {
-    return buildCommentTree(filteredComments)
-  }, [filteredComments])
+    const tree = buildCommentTree(filteredComments)
+    if (!acceptedId) return tree
+    return [...tree].sort(
+      (a, b) => Number(b.id === acceptedId) - Number(a.id === acceptedId)
+    )
+  }, [filteredComments, acceptedId])
 
   if (isLoading) {
     return (
@@ -332,8 +373,11 @@ export default function QuestionDetailPage() {
                 <div className="flex items-start justify-between">
                   <CardTitle className="flex-1 font-headline text-4xl leading-tight">
                     {question.title}
+                    {question.acceptedAnswerId && (
+                      <SolvedBadge className="ml-3 align-middle text-sm" />
+                    )}
                   </CardTitle>
-                  {user?.uid === question.author.uid && (
+                  {canModerate(user, question.author.uid) && (
                     <Button
                       variant="outline"
                       size="default"
@@ -451,6 +495,9 @@ export default function QuestionDetailPage() {
                   questionId={question.id}
                   onReply={handleCommentSubmit}
                   onEdit={handleEditComment}
+                  acceptedId={acceptedId}
+                  canAccept={canModerate(user, question.author.uid)}
+                  onAccept={handleAccept}
                 />
               ))
             ) : (

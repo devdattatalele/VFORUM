@@ -52,6 +52,7 @@ export interface Question {
   views: number
   replyCount: number
   lastActivityAt?: string // ISO string, for sorting or display
+  acceptedAnswerId?: string | null // top-level comment the author marked as the answer
 }
 
 export interface Comment {

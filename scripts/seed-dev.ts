@@ -97,6 +97,7 @@ type SeedQuestion = {
   upvoters?: Uid[]
   downvoters?: Uid[]
   answers?: Answer[]
+  accepted?: number // index into answers
 }
 
 const QUESTIONS: SeedQuestion[] = [
@@ -146,6 +147,7 @@ const QUESTIONS: SeedQuestion[] = [
     by: "dev-student-2",
     communityId: "gdg",
     title: "Why does my React useEffect run twice in development?",
+    accepted: 0,
     tags: ["react", "javascript", "nextjs"],
     hoursAgo: 30,
     views: 35,
@@ -205,6 +207,7 @@ const QUESTIONS: SeedQuestion[] = [
     by: "dev-student-2",
     communityId: "acm",
     title: "Segmentation fault when reversing a linked list in C",
+    accepted: 0,
     tags: ["c", "linked-list", "debugging"],
     hoursAgo: 16,
     views: 21,
@@ -276,6 +279,7 @@ const QUESTIONS: SeedQuestion[] = [
     by: "dev-moderator",
     communityId: "general-tech",
     title: "Is git rebase safe to use on a shared branch?",
+    accepted: 0,
     tags: ["git", "version-control"],
     hoursAgo: 200,
     views: 110,
@@ -304,12 +308,14 @@ const QUESTIONS: SeedQuestion[] = [
   },
 ]
 
+// Returns the number of comments written and the ids at this level.
 async function addAnswers(
   question: DocumentReference,
   answers: Answer[],
   parentId: string | null
-): Promise<number> {
+): Promise<{ count: number; ids: string[] }> {
   let count = 0
+  const ids: string[] = []
   for (const a of answers) {
     const ref = question.collection("comments").doc()
     const votes = a.votes ?? []
@@ -327,9 +333,10 @@ async function addAnswers(
         .doc(`votes/comments/${ref.id}/${uid}`)
         .set({ voteType: "up", updatedAt: FieldValue.serverTimestamp() })
     }
-    count += 1 + (await addAnswers(question, a.replies ?? [], ref.id))
+    ids.push(ref.id)
+    count += 1 + (await addAnswers(question, a.replies ?? [], ref.id)).count
   }
-  return count
+  return { count, ids }
 }
 
 async function seedForum() {
@@ -360,8 +367,11 @@ async function seedForum() {
     for (const uid of downvoters) {
       await db.doc(`votes/questions/${ref.id}/${uid}`).set({ voteType: "down" })
     }
-    const replies = await addAnswers(ref, q.answers ?? [], null)
-    await ref.update({ replyCount: replies })
+    const { count, ids } = await addAnswers(ref, q.answers ?? [], null)
+    await ref.update({
+      replyCount: count,
+      acceptedAnswerId: q.accepted === undefined ? null : ids[q.accepted],
+    })
   }
 }
 

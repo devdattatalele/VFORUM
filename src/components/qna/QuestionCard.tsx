@@ -25,6 +25,7 @@ import VoteButtons from "./VoteButtons"
 import { COMMUNITIES } from "@/lib/constants"
 import React from "react"
 import { excerpt } from "@/lib/markdown"
+import SolvedBadge from "@/components/qna/SolvedBadge"
 
 interface QuestionCardProps {
   question: Question
@@ -87,6 +88,9 @@ export default function QuestionCard({ question }: QuestionCardProps) {
         <Link href={`/qna/${question.id}`} className="group block">
           <CardTitle className="mt-3 line-clamp-2 text-lg font-semibold leading-tight text-foreground transition-colors group-hover:text-primary">
             {question.title}
+            {question.acceptedAnswerId && (
+              <SolvedBadge className="ml-2 align-middle" />
+            )}
           </CardTitle>
         </Link>
       </CardHeader>

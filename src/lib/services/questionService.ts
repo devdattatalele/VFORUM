@@ -95,6 +95,41 @@ export async function updateQuestion(
   })
 }
 
+// The question's author (or a moderator) marks one top-level answer as the
+// accepted one, or clears it with null.
+export async function acceptAnswer(
+  idToken: IdToken,
+  questionId: string,
+  commentId: string | null
+): Promise<void> {
+  const actor = await requireProfile(idToken)
+  const ref = questions().doc(docId.parse(questionId))
+  const answerId = commentId === null ? null : docId.parse(commentId)
+  await adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref)
+    if (!snap.exists) throw new Error("Question not found.")
+    const authorUid = snap.data()?.author?.uid
+    if (!canModerate(actor, authorUid)) {
+      throw new AuthError(
+        "Only the author or a moderator can accept an answer."
+      )
+    }
+    if (answerId) {
+      const answer = await tx.get(ref.collection("comments").doc(answerId))
+      if (!answer.exists || answer.data()?.parentId) {
+        throw new Error("Only a top-level answer can be accepted.")
+      }
+    }
+    tx.update(ref, { acceptedAnswerId: answerId })
+    if (actor.uid !== authorUid) {
+      tx.set(
+        auditLog().doc(),
+        auditEntry(actor, "question.accept", ref.path, { answerId })
+      )
+    }
+  })
+}
+
 export async function deleteQuestion(
   idToken: IdToken,
   questionId: string
