@@ -1,4 +1,4 @@
-import { config } from 'dotenv';
-config();
+import { config } from "dotenv"
+config()
 
-import '@/ai/flows/auto-tag-question.ts';
+import "@/ai/flows/auto-tag-question.ts"

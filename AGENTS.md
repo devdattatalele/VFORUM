@@ -1,0 +1,70 @@
+# vforum — Project Instructions
+
+vforum is the Q&A forum and events board for VIT (Vidyalankar Institute of Technology, Mumbai), built by Devdatta Talele and run on the [VOSS Labs](https://github.com/voss-labs) project model.
+
+The product wedge: campus tech knowledge that stays findable. A question answered in a WhatsApp group is lost by next week; a question answered on vforum is found by every batch after.
+
+For the full plan, read `research/plan.md`. For deferred features, read `research/future.md`. Don't pollute the plan with future ideas.
+
+CLAUDE.md is symlinked to this file — same content applies to all coding agents.
+
+## Stack
+
+- Next.js 15 App Router (React 18) — Server Components, Server Actions, route handlers
+- TypeScript strict, ESLint (`eslint-config-next`) + Prettier (with the Tailwind plugin)
+- Firebase: Firestore for data (server side only, through the Admin SDK) and Firebase Auth for sign-in, restricted to `@vit.edu.in`
+- Genkit + Gemini for tag suggestions
+- Tailwind 3 + shadcn, lucide-react, Geist and Geist Mono; the VOSS design language (`docs/UI_UX_SPEC.md`)
+- recharts for the admin analytics charts
+- Vitest for pure-logic unit tests
+- Vercel for deploy, GitHub Actions for CI
+- npm
+
+## Commands
+
+- `npm run dev:local` — Firebase emulators + seeded demo data + dev server on port 9002, no credentials; pick a persona at `/auth`
+- `npm run dev:seed` — wipe and reseed the running emulators
+- `npm run dev` — dev server against the Firebase project in `.env.local`
+- `npm run check` — typecheck, lint, format check, tests (run before commit)
+- `npm run fix` — autofix lint and formatting
+- `npm test` — Vitest unit tests (`src/**/*.test.ts`)
+- `npm run test:int` — integration tests (`src/**/*.int.test.ts`) against the emulators; needs Java. Run it when touching `src/lib/services` or `src/lib/server`
+- `npm run genkit:dev` — Genkit dev UI for the AI flows
+- `npx shadcn@latest add <component>` — install a shadcn component on demand
+
+## Layout
+
+- `src/app/(site)/` — public pages with the top navigation; `src/app/(workspace)/` — moderation and admin with the sidebar; `globals.css` holds the design tokens
+- `src/components/` — app components; `src/components/ui/` — vendored shadcn primitives
+- `src/lib/services/<domain>.ts` — `'use server'` actions, the only code that touches Firestore
+- `src/lib/firebase-admin.ts` — server-only Admin SDK singleton; `src/lib/firebase.ts` — client Auth only
+- `src/lib/server/auth.ts` — `requireUser()` / `requireProfile()` / `requirePermission()`, the verified caller of a server action
+- `src/lib/server/docs.ts` — Firestore document to plain JSON mappers, audit log entries
+- `src/lib/client-auth.ts` — `idToken()`, the token the browser passes to server actions
+- `src/lib/schemas.ts` — Zod schemas for every server-action input
+- `src/lib/` — pure helpers (`*.test.ts` beside them), including `analytics.ts` behind the admin dashboard
+- `src/components/PageHeader.tsx`, `EmptyState.tsx`, `qna/QuestionRow.tsx` — the shared compositions; reuse them before writing new ones
+- `src/ai/` — Genkit flows
+- `docs/` — local development, deployment, VOSS sign-in notes; `research/` — plan, future work, investigations
+
+## Conventions
+
+- Validation: Zod at every server boundary
+- Identity: never trust a uid, email, role or author object sent by the browser. Server actions take an `IdToken` first and get the actor from `requireProfile(idToken)`, nothing else
+- Exports: every export of a `'use server'` file is a public endpoint. Internal helpers live in `src/lib/server/` (marked `server-only`), never in a service file
+- Firestore: every read path returns through `serialize()`; server actions may only return plain JSON
+- Imports: `@/` alias (mapped to `src/`), never relative
+- Formatting: Prettier (2 spaces, double quotes, no semicolons)
+- File size: 200–400 lines max per file; split when bigger
+- No emojis in code, commits, or docs
+- UI: semantic tokens only (no raw colours), sentence case, flat bordered cards, `sonner` for toasts, `next-themes` for the theme; follow `docs/UI_UX_SPEC.md`
+- Lint runs with `--max-warnings 0`
+
+## Identity & RBAC
+
+- Firebase Auth verifies the mailbox. `@vit.edu.in` is enforced on sign-in in the browser and again in `requireUser()` on the server. Moving sign-in to VOSS (accounts.vosslabs.org) is phase 2 of the plan
+- Every server action that needs its caller takes a Firebase ID token (`IdToken`, branded so a uid cannot be passed by mistake) as its first argument. The client gets it from `idToken()`; the server verifies it with the Admin SDK in `requireUser()`
+- Ownership: authors edit and delete their own content; `moderate_forums` edits and deletes anyone's, and that leaves an `audit_log` entry
+- Three roles: `user`, `moderator`, `admin`, stored on `users/{uid}`. Addresses in `ADMIN_EMAILS` are admin regardless of the stored role; that is how the first admin is bootstrapped
+- Capabilities live in `src/lib/utils/userUtils.ts`; check them with `hasPermission` / `canModerate`, never by comparing role strings in pages
+- Firestore rules are default-deny; only the Admin SDK reads or writes

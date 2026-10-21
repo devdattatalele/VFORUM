@@ -1,86 +1,73 @@
+import Image from "next/image"
+import Link from "next/link"
+import { format } from "date-fns"
+import { ArrowUpRight } from "lucide-react"
+import { COMMUNITIES } from "@/lib/constants"
+import type { Event } from "@/lib/types"
+import { safeHttpUrl } from "@/lib/urls"
 
-"use client";
-
-import Image from 'next/image';
-import type { Event } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, Users, Info, ExternalLink } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import Link from 'next/link';
-import { COMMUNITIES } from '@/lib/constants';
-import React from 'react'; 
-
-interface EventCardProps {
-  event: Event;
-}
-
-export default function EventCard({ event }: EventCardProps) {
-  
-  const community = COMMUNITIES.find(c => c.id === event.communityId);
+export default function EventCard({ event }: { event: Event }) {
+  const date = new Date(event.dateTime)
+  const community = COMMUNITIES.find((c) => c.id === event.communityId)
+  const rsvp = safeHttpUrl(event.rsvpLink)
 
   return (
-    <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full glass-card">
-      <CardHeader className="p-0 relative">
-        <Image
-          src={event.posterImageUrl}
-          alt={event.title}
-          width={600}
-          height={300}
-          className="w-full h-48 object-cover"
-          data-ai-hint="event poster"
-        />
-        {community && (
-          <Badge variant="community" className="absolute top-2 right-2">
-            {community.icon && <community.icon className="mr-1 h-3 w-3" />}
-            {community.name}
-          </Badge>
-        )}
-      </CardHeader>
-      <CardContent className="p-4 flex-grow">
-        <CardTitle className="text-xl mb-2 font-headline hover:text-primary transition-colors">
-           <Link href={`/events/${event.id}`}>{event.title}</Link>
-        </CardTitle>
-        <div className="flex items-center text-sm text-muted-foreground mb-2">
-          <CalendarDays className="mr-2 h-4 w-4" />
-          <span>{format(new Date(event.dateTime), "MMM d, yyyy 'at' h:mm a")}</span>
-        </div>
-        <div className="flex items-center text-sm text-muted-foreground mb-3">
-          <Info className="mr-2 h-4 w-4" />
-          <span>Organized by: {event.clubName}</span>
-        </div>
-        <CardDescription className="text-sm text-foreground line-clamp-3">
+    <article className="flex flex-col overflow-hidden rounded-lg border bg-card">
+      {/* Posters are any https image an organizer links, so they skip the
+          optimizer, which only accepts the hosts listed in next.config. */}
+      <Image
+        src={
+          safeHttpUrl(event.posterImageUrl) ??
+          "https://placehold.co/600x300.png"
+        }
+        alt=""
+        width={600}
+        height={300}
+        unoptimized
+        className="aspect-[2/1] w-full border-b object-cover"
+      />
+      <div className="flex flex-1 flex-col gap-2 p-5">
+        <p className="text-sm text-muted-foreground">
+          <span className="font-mono text-xs uppercase text-brand">
+            {format(date, "EEE d MMM")}
+          </span>{" "}
+          · {format(date, "h:mm a")}
+        </p>
+        <h3 className="text-lg font-semibold leading-snug tracking-tight">
+          <Link
+            href={`/events/${event.id}`}
+            className="hover:underline hover:underline-offset-4"
+          >
+            {event.title}
+          </Link>
+        </h3>
+        <p className="line-clamp-2 text-sm text-muted-foreground">
           {event.description}
-        </CardDescription>
-      </CardContent>
-      <CardFooter className="p-4 flex justify-between items-center border-t">
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Users className="mr-1 h-4 w-4" />
-          <span>{event.rsvpCount || 0} Going</span>
-        </div>
-        {event.rsvpLink ? (
-          <Button 
-            asChild
-            size="sm"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+        </p>
+      </div>
+      <div className="flex items-center justify-between gap-3 border-t px-5 py-3 text-sm">
+        <span className="truncate text-muted-foreground">
+          {event.clubName}
+          {community ? ` · ${community.name}` : ""}
+        </span>
+        {rsvp ? (
+          <a
+            href={rsvp}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-1 font-medium hover:underline"
           >
-            <Link href={event.rsvpLink} target="_blank" rel="noopener noreferrer">
-              RSVP
-              <ExternalLink className="ml-1 h-3 w-3" />
-            </Link>
-          </Button>
+            RSVP <ArrowUpRight className="h-4 w-4" />
+          </a>
         ) : (
-          <Button 
-            variant="outline"
-            size="sm"
-            disabled
-            className="opacity-50"
+          <Link
+            href={`/events/${event.id}`}
+            className="shrink-0 font-medium hover:underline"
           >
-            RSVP Closed
-          </Button>
+            Details
+          </Link>
         )}
-      </CardFooter>
-    </Card>
-  );
+      </div>
+    </article>
+  )
 }

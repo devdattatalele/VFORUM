@@ -1,96 +1,66 @@
-'use server';
-import type { Event, UserProfile } from '@/lib/types';
-import { adminDb } from '@/lib/firebase-admin';
-import { serialize } from '@/lib/serialize';
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { hasPermission } from '@/lib/utils/userUtils';
+"use server"
 
-// Type for event data going to Firestore, ensuring dateTime and createdAt are compatible
-interface EventDataForFirestore extends Omit<Event, 'id' | 'dateTime' | 'createdAt' | 'author'> {
-  dateTime: string; // Keep as ISO string for now
-  createdAt: Timestamp;
-  author: UserProfile; // Store the full UserProfile object
-}
+import { FieldValue } from "firebase-admin/firestore"
+import { adminDb } from "@/lib/firebase-admin"
+import { requirePermission } from "@/lib/server/auth"
+import { toEvent } from "@/lib/server/docs"
+import { docId, eventInput } from "@/lib/schemas"
+import type { IdToken, Event } from "@/lib/types"
 
+const events = () => adminDb.collection("events")
 
 export async function addEvent(
-  eventData: Omit<Event, 'id' | 'rsvpCount' | 'dateTime' | 'createdAt' | 'author'>,
-  author: UserProfile,
-  dateTime: Date // Expecting Date object from form
+  idToken: IdToken,
+  input: unknown
 ): Promise<string> {
-  // Check if user has permission to create events
-  if (!hasPermission(author, 'create_events')) {
-    throw new Error('You do not have permission to create events. Only moderators and admins can create events.');
-  }
-
-  try {
-    const docRef = await adminDb.collection('events').add({
-      ...eventData,
-      author,
-      dateTime: dateTime.toISOString(), // Store as ISO string
-      createdAt: FieldValue.serverTimestamp(), // Use Firestore server timestamp
-      rsvpCount: 0,
-    });
-    return docRef.id;
-  } catch (error) {
-    console.error('Error adding event: ', error);
-    throw new Error('Failed to add event.');
-  }
+  const actor = await requirePermission(idToken, "create_events")
+  const { dateTime, rsvpLink, ...data } = eventInput.parse(input)
+  const ref = await events().add({
+    ...data,
+    rsvpLink: rsvpLink || null,
+    author: {
+      uid: actor.uid,
+      displayName: actor.displayName,
+      photoURL: actor.photoURL,
+    },
+    dateTime: dateTime.toISOString(),
+    createdAt: FieldValue.serverTimestamp(),
+    rsvpCount: 0,
+  })
+  return ref.id
 }
 
 export async function getEvents(): Promise<Event[]> {
   try {
-    const querySnapshot = await adminDb.collection('events').get();
-    return querySnapshot.docs.map(docSnap => {
-      const data = docSnap.data();
-      return {
-        ...serialize(data),
-        id: docSnap.id,
-        // Ensure createdAt and dateTime are strings if they come from Firestore as Timestamps
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
-        dateTime: typeof data.dateTime === 'string' ? data.dateTime : (data.dateTime?.toDate ? data.dateTime.toDate().toISOString() : new Date().toISOString()),
-      } as unknown as Event;
-    });
+    const snap = await events().get()
+    return snap.docs.map((doc) => toEvent(doc.id, doc.data()))
   } catch (error) {
-    console.error('Error fetching events: ', error);
-    return [];
+    console.error("Error fetching events:", error)
+    return []
   }
 }
 
 export async function getEventById(eventId: string): Promise<Event | null> {
+  const id = docId.safeParse(eventId)
+  if (!id.success) return null
   try {
-    const docRef = adminDb.collection('events').doc(eventId);
-    const docSnap = await docRef.get();
-    if (docSnap.exists) {
-      const data = docSnap.data()!;
-      return {
-        ...serialize(data),
-        id: docSnap.id,
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
-        dateTime: typeof data.dateTime === 'string' ? data.dateTime : (data.dateTime?.toDate ? data.dateTime.toDate().toISOString() : new Date().toISOString()),
-      } as unknown as Event;
-    }
-    return null;
+    const snap = await events().doc(id.data).get()
+    return snap.exists ? toEvent(snap.id, snap.data()) : null
   } catch (error) {
-    console.error('Error fetching event by ID: ', error);
-    return null;
+    console.error("Error fetching event by ID:", error)
+    return null
   }
 }
 
-export async function getEventsByCommunity(communityId: string): Promise<Event[]> {
+export async function getEventsByCommunity(
+  communityId: string
+): Promise<Event[]> {
+  if (typeof communityId !== "string" || communityId.length > 64) return []
   try {
-    const querySnapshot = await adminDb.collection('events').where('communityId', '==', communityId).get();
-    return querySnapshot.docs.map(docSnap => {
-      const data = docSnap.data();
-      return {
-        ...serialize(data),
-        id: docSnap.id,
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
-        dateTime: typeof data.dateTime === 'string' ? data.dateTime : (data.dateTime?.toDate ? data.dateTime.toDate().toISOString() : new Date().toISOString()),
-      } as unknown as Event;
-    });
+    const snap = await events().where("communityId", "==", communityId).get()
+    return snap.docs.map((doc) => toEvent(doc.id, doc.data()))
   } catch (error) {
-    console.error('Error fetching events by community: ', error);
-    return [];
+    console.error("Error fetching events by community:", error)
+    return []
   }
 }

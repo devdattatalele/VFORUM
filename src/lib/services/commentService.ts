@@ -1,119 +1,177 @@
-'use server';
-import type { Comment, UserProfile } from '@/lib/types';
-import { adminDb } from '@/lib/firebase-admin';
-import { serialize } from '@/lib/serialize';
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { updateQuestionOnNewComment } from './questionService';
+"use server"
 
-interface CommentDataForFirestore extends Omit<Comment, 'id' | 'createdAt' | 'author'> {
-  createdAt: Timestamp;
-  author: UserProfile;
-}
+import { FieldValue } from "firebase-admin/firestore"
+import { adminDb } from "@/lib/firebase-admin"
+import { AuthError, requireProfile } from "@/lib/server/auth"
+import {
+  auditEntry,
+  auditLog,
+  notificationEntry,
+  notificationsOf,
+  toComment,
+} from "@/lib/server/docs"
+import { commentRecipients } from "@/lib/notify"
+import { commentContent, commentInput, commentSort, docId } from "@/lib/schemas"
+import type { IdToken, Comment } from "@/lib/types"
+import { canModerate, hasPermission } from "@/lib/utils/userUtils"
+
+const questionRef = (questionId: string) =>
+  adminDb.collection("questions").doc(docId.parse(questionId))
 
 export async function addComment(
+  idToken: IdToken,
   questionId: string,
-  commentData: Omit<Comment, 'id' | 'author' | 'createdAt' | 'upvotes' | 'downvotes' | 'questionId' | 'parentId'>,
-  author: UserProfile,
-  parentId?: string | null
+  input: unknown
 ): Promise<string> {
-  try {
-    const docRef = await adminDb.collection(`questions/${questionId}/comments`).add({
-      ...commentData,
-      questionId,
-      author,
-      parentId: parentId || null,
+  const actor = await requireProfile(idToken)
+  const { content, parentId } = commentInput.parse(input)
+  const qRef = questionRef(questionId)
+  const ref = qRef.collection("comments").doc()
+
+  await adminDb.runTransaction(async (tx) => {
+    const question = await tx.get(qRef)
+    if (!question.exists) throw new Error("Question not found.")
+    if (question.data()?.locked && !hasPermission(actor, "moderate_forums")) {
+      throw new Error("This question is locked.")
+    }
+    let parentAuthorUid: string | null = null
+    if (parentId) {
+      const parent = await tx.get(qRef.collection("comments").doc(parentId))
+      if (!parent.exists || parent.data()?.deleted) {
+        throw new Error("The comment you replied to is gone.")
+      }
+      parentAuthorUid = parent.data()?.author?.uid ?? null
+    }
+    tx.set(ref, {
+      questionId: qRef.id,
+      parentId: parentId ?? null,
+      content,
+      author: {
+        uid: actor.uid,
+        displayName: actor.displayName,
+        photoURL: actor.photoURL,
+      },
       createdAt: FieldValue.serverTimestamp(),
       upvotes: 0,
       downvotes: 0,
-    });
-    
-    // After successfully adding a comment, update the question's reply count and last activity
-    await updateQuestionOnNewComment(questionId);
-
-    return docRef.id;
-  } catch (error) {
-    console.error('Error adding comment: ', error);
-    throw new Error('Failed to add comment.');
-  }
+    })
+    tx.update(qRef, {
+      replyCount: FieldValue.increment(1),
+      lastActivityAt: FieldValue.serverTimestamp(),
+    })
+    const recipients = commentRecipients({
+      actorUid: actor.uid,
+      questionAuthorUid: question.data()?.author?.uid,
+      parentAuthorUid,
+    })
+    for (const { uid, type } of recipients) {
+      tx.set(
+        notificationsOf(uid).doc(),
+        notificationEntry(
+          type,
+          actor,
+          { id: qRef.id, title: question.data()?.title ?? "" },
+          ref.id
+        )
+      )
+    }
+  })
+  return ref.id
 }
 
-export async function getCommentsForQuestion(questionId: string, sortBy: string = 'newest'): Promise<Comment[]> {
+export async function getThreadedComments(
+  questionId: string,
+  sortBy: string = "newest"
+): Promise<Comment[]> {
+  const id = docId.safeParse(questionId)
+  if (!id.success) return []
+  const sort = commentSort.parse(sortBy)
   try {
-    const commentsRef = adminDb.collection(`questions/${questionId}/comments`);
-    let q;
-
-    // Add sorting options
-    switch (sortBy) {
-      case 'oldest':
-        q = commentsRef.orderBy('createdAt', 'asc');
-        break;
-      case 'top':
-        q = commentsRef.orderBy('upvotes', 'desc');
-        break;
-      case 'controversial':
-        // For controversial, we'll sort by most total votes (upvotes + downvotes)
-        // Since Firestore doesn't support computed fields, we'll sort client-side
-        q = commentsRef.orderBy('createdAt', 'desc');
-        break;
-      case 'newest':
-      default:
-        q = commentsRef.orderBy('createdAt', 'desc');
-        break;
+    const comments = adminDb.collection(`questions/${id.data}/comments`)
+    const query =
+      sort === "oldest"
+        ? comments.orderBy("createdAt", "asc")
+        : sort === "top"
+          ? comments.orderBy("upvotes", "desc")
+          : comments.orderBy("createdAt", "desc")
+    const snap = await query.get()
+    const list = snap.docs.map((doc) => toComment(doc.id, id.data, doc.data()))
+    // Firestore cannot order by a computed field, so "controversial" (most
+    // total votes) is sorted here.
+    if (sort === "controversial") {
+      list.sort((a, b) => b.upvotes + b.downvotes - (a.upvotes + a.downvotes))
     }
-
-    const querySnapshot = await q.get();
-    let comments = querySnapshot.docs.map(docSnap => {
-      const data = docSnap.data();
-      return {
-        id: docSnap.id,
-        ...serialize(data),
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
-      } as Comment;
-    });
-    
-    // Handle controversial sorting client-side
-    if (sortBy === 'controversial') {
-      comments = comments.sort((a, b) => {
-        const aTotal = (a.upvotes || 0) + (a.downvotes || 0);
-        const bTotal = (b.upvotes || 0) + (b.downvotes || 0);
-        return bTotal - aTotal;
-      });
-    }
-    
-    return comments;
+    return list
   } catch (error) {
-    console.error('Error fetching comments: ', error);
-    return [];
-  }
-}
-
-export async function getThreadedComments(questionId: string, sortBy: string = 'newest'): Promise<Comment[]> {
-  try {
-    const comments = await getCommentsForQuestion(questionId, sortBy);
-    
-    // Return all comments as-is for the buildCommentTree function to handle
-    // The buildCommentTree function in the component will create proper nesting
-    return comments;
-  } catch (error) {
-    console.error('Error fetching threaded comments: ', error);
-    return [];
+    console.error("Error fetching comments:", error)
+    return []
   }
 }
 
 export async function updateComment(
+  idToken: IdToken,
   questionId: string,
   commentId: string,
-  content: string,
-  userId: string
+  content: unknown
 ): Promise<void> {
-  try {
-    const commentRef = adminDb.collection(`questions/${questionId}/comments`).doc(commentId);
-    await commentRef.update({
-      content,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-  } catch (error) {
-    console.error('Error updating comment: ', error);
-    throw new Error('Failed to update comment.');
-  }
+  const actor = await requireProfile(idToken)
+  const ref = questionRef(questionId)
+    .collection("comments")
+    .doc(docId.parse(commentId))
+  const text = commentContent.parse(content)
+  await adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref)
+    if (!snap.exists || snap.data()?.deleted) {
+      throw new Error("Comment not found.")
+    }
+    const authorUid = snap.data()?.author?.uid
+    if (!canModerate(actor, authorUid)) {
+      throw new AuthError("Only the author or a moderator can edit this.")
+    }
+    tx.update(ref, { content: text, updatedAt: FieldValue.serverTimestamp() })
+    if (actor.uid !== authorUid) {
+      tx.set(auditLog().doc(), auditEntry(actor, "comment.edit", ref.path))
+    }
+  })
+}
+
+// Removes a comment's text but keeps its place, so replies to it still make
+// sense. Clears the accepted answer if this was it.
+export async function deleteComment(
+  idToken: IdToken,
+  questionId: string,
+  commentId: string
+): Promise<void> {
+  const actor = await requireProfile(idToken)
+  const qRef = questionRef(questionId)
+  const ref = qRef.collection("comments").doc(docId.parse(commentId))
+  await adminDb.runTransaction(async (tx) => {
+    const [question, snap] = await Promise.all([tx.get(qRef), tx.get(ref)])
+    if (!question.exists || !snap.exists) throw new Error("Comment not found.")
+    if (snap.data()?.deleted) return
+    const authorUid = snap.data()?.author?.uid
+    if (!canModerate(actor, authorUid)) {
+      throw new AuthError("Only the author or a moderator can delete this.")
+    }
+    tx.update(ref, {
+      deleted: true,
+      content: "",
+      deletedBy: actor.uid,
+      deletedAt: FieldValue.serverTimestamp(),
+    })
+    tx.update(qRef, {
+      replyCount: FieldValue.increment(-1),
+      ...(question.data()?.acceptedAnswerId === ref.id
+        ? { acceptedAnswerId: null }
+        : {}),
+    })
+    if (actor.uid !== authorUid) {
+      tx.set(
+        auditLog().doc(),
+        auditEntry(actor, "comment.delete", ref.path, {
+          content: String(snap.data()?.content ?? "").slice(0, 500),
+        })
+      )
+    }
+  })
 }
