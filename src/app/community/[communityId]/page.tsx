@@ -123,7 +123,7 @@ export default function CommunityDetailPage() {
         <Card className="text-center glass-card p-8">
           <CardHeader>
             <div className="flex justify-center mb-6">
-              <community.icon className="h-20 w-20 text-primary" />
+              {community.icon && <community.icon className="h-20 w-20 text-primary" />}
             </div>
             <CardTitle className="text-4xl font-headline">{community.name}</CardTitle>
             <CardDescription className="text-lg text-muted-foreground mt-2 max-w-2xl mx-auto">

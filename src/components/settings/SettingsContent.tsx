@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { auth } from '@/lib/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,8 +92,8 @@ export default function SettingsContent() {
     );
   }
 
-  const accountAge = user.metadata?.creationTime 
-    ? formatDistanceToNow(new Date(user.metadata.creationTime), { addSuffix: true })
+  const accountAge = user.createdAt
+    ? formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })
     : 'N/A';
 
   return (
@@ -198,7 +199,7 @@ export default function SettingsContent() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Last Sign In:</span>
-                  <span>{user.metadata?.lastSignInTime ? formatDistanceToNow(new Date(user.metadata.lastSignInTime), { addSuffix: true }) : 'N/A'}</span>
+                  <span>{auth.currentUser?.metadata.lastSignInTime ? formatDistanceToNow(new Date(auth.currentUser.metadata.lastSignInTime), { addSuffix: true }) : 'N/A'}</span>
                 </div>
               </div>
             </div>

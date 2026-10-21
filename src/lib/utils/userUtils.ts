@@ -45,3 +45,8 @@ export function isModerator(user: UserProfile | null): boolean {
 export function isAdmin(user: UserProfile | null): boolean {
   return user?.role === 'admin';
 } 
+// Authors manage their own content; moderators and admins manage everyone's.
+export function canModerate(actor: UserProfile | null, authorUid: string | undefined): boolean {
+  if (!actor) return false
+  return actor.uid === authorUid || hasPermission(actor, "moderate_forums")
+}

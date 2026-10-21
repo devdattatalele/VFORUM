@@ -26,6 +26,8 @@ export interface Event {
   communityId: string; // Link to Community
   rsvpCount?: number; // Optional
   rsvpLink?: string; // Optional external RSVP link
+  author?: UserProfile;
+  createdAt?: string; // ISO string
   // location?: string;
 }
 

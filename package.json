@@ -4,12 +4,19 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
-    "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
-    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write \"{src,scripts}/**/*.{ts,tsx,js,mjs,json,css,md}\" \"*.{ts,mjs,json,md}\"",
+    "format:check": "prettier --check \"{src,scripts}/**/*.{ts,tsx,js,mjs,json,css,md}\" \"*.{ts,mjs,json,md}\"",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test",
+    "fix": "npm run lint:fix && npm run format",
+    "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
+    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.8.0",
@@ -61,9 +68,19 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.23",
     "genkit-cli": "^1.8.0",
     "postcss": "^8",
+    "prettier": "^3.9.10",
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "server-only": "^0.0.1",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^3.2.7"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
