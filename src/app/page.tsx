@@ -115,7 +115,8 @@ export default function HomePage() {
                     Welcome back, {user.displayName || "Tech Enthusiast"}! 👋
                   </p>
                   <p className="mt-1 text-sm text-blue-600 dark:text-blue-400">
-                    Ready to dive into today's discussions and upcoming events?
+                    Ready to dive into today&apos;s discussions and upcoming
+                    events?
                   </p>
                 </div>
               ) : (

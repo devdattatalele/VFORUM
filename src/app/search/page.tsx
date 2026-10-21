@@ -107,7 +107,7 @@ function SearchResults() {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="mr-3 h-8 w-8 animate-spin text-primary" />
-        <span className="text-lg">Searching for "{query}"...</span>
+        <span className="text-lg">Searching for &quot;{query}&quot;...</span>
       </div>
     )
   }
@@ -120,8 +120,8 @@ function SearchResults() {
           No results found
         </h2>
         <p className="mx-auto mb-6 max-w-md text-muted-foreground">
-          We couldn't find anything matching "{query}". Try different keywords
-          or check your spelling.
+          We couldn&apos;t find anything matching &quot;{query}&quot;. Try
+          different keywords or check your spelling.
         </p>
         <div className="flex justify-center gap-2">
           <Button variant="outline" asChild>
@@ -143,8 +143,9 @@ function SearchResults() {
             Search Results
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Found {results.length} result{results.length !== 1 ? "s" : ""} for "
-            {query}"
+            Found {results.length} result{results.length !== 1 ? "s" : ""} for
+            &quot;
+            {query}&quot;
           </p>
         </div>
       </div>

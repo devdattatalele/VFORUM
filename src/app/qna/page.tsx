@@ -20,7 +20,7 @@ export default function QnAPage() {
         </h1>
         <p className="text-xl leading-relaxed text-muted-foreground">
           Ask questions, share knowledge, and connect with the community. Browse
-          by tags to find topics you're interested in.
+          by tags to find topics you&apos;re interested in.
         </p>
       </div>
       <Suspense fallback={<QuestionListSkeleton />}>

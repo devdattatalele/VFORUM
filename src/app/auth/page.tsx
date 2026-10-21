@@ -53,8 +53,8 @@ export default function AuthPage() {
                 </div>
 
                 <p className="text-xl leading-relaxed text-muted-foreground">
-                  Join VIT's premier community platform for knowledge sharing,
-                  networking, and discovering exciting events.
+                  Join VIT&apos;s premier community platform for knowledge
+                  sharing, networking, and discovering exciting events.
                 </p>
 
                 <div className="mt-6 flex flex-wrap gap-2">
@@ -108,7 +108,7 @@ export default function AuthPage() {
                   <div className="mt-6 border-t border-border/50 pt-6">
                     <p className="text-center text-xs text-muted-foreground">
                       By signing in, you agree to our community guidelines and
-                      acknowledge you're a verified VIT student.
+                      acknowledge you&apos;re a verified VIT student.
                     </p>
                   </div>
                 </div>

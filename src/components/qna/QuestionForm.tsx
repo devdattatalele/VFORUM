@@ -178,7 +178,7 @@ export default function QuestionForm() {
                 />
               </FormControl>
               <FormDescription>
-                Be specific and imagine you're asking a question to another
+                Be specific and imagine you&apos;re asking a question to another
                 person.
               </FormDescription>
               <FormMessage />
@@ -294,7 +294,7 @@ export default function QuestionForm() {
           />
           <FormDescription>
             Add up to 5 tags to describe what your question is about. Press
-            Enter or click "Add Tag".
+            Enter or click &quot;Add Tag&quot;.
           </FormDescription>
         </FormItem>
 

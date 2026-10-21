@@ -285,10 +285,10 @@ export default function MyForumsList() {
                               Delete Forum Post
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete "
-                              <strong>{question.title}</strong>"? This action
-                              cannot be undone and will remove all replies and
-                              discussions associated with this post.
+                              Are you sure you want to delete &quot;
+                              <strong>{question.title}</strong>&quot;? This
+                              action cannot be undone and will remove all
+                              replies and discussions associated with this post.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

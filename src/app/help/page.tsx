@@ -82,7 +82,7 @@ export default function HelpPage() {
           </div>
           <CardDescription className="mx-auto max-w-3xl text-lg text-blue-700 dark:text-blue-300">
             Your unified platform for campus tech communities. Learn about our
-            features, upcoming updates, and how we're solving campus
+            features, upcoming updates, and how we&apos;re solving campus
             communication challenges.
           </CardDescription>
         </CardHeader>
@@ -399,7 +399,7 @@ export default function HelpPage() {
             Need More Help?
           </CardTitle>
           <CardDescription className="text-blue-700 dark:text-blue-300">
-            We're here to help you make the most of the platform
+            We&apos;re here to help you make the most of the platform
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

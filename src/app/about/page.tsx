@@ -38,8 +38,8 @@ export default function HelpPage() {
         </h1>
         <p className="mx-auto max-w-3xl text-xl leading-relaxed text-muted-foreground">
           Your unified platform for campus tech communities. Learn about our
-          features, upcoming updates, and how we're solving campus communication
-          challenges.
+          features, upcoming updates, and how we&apos;re solving campus
+          communication challenges.
         </p>
       </div>
 
@@ -48,7 +48,7 @@ export default function HelpPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
             <AlertTriangle className="h-6 w-6" />
-            The Problem We're Solving
+            The Problem We&apos;re Solving
           </CardTitle>
           <CardDescription className="text-orange-700 dark:text-orange-300">
             Campus Tech Communities Fragmentation & Communication Overload
@@ -68,7 +68,9 @@ export default function HelpPage() {
                 </li>
                 <li>• Event spam creates chaos and reduces engagement</li>
                 <li>• No unified, searchable space for collaboration</li>
-                <li>• Past solutions aren't preserved for future students</li>
+                <li>
+                  • Past solutions aren&apos;t preserved for future students
+                </li>
               </ul>
             </div>
             <div className="space-y-3">
@@ -224,8 +226,8 @@ export default function HelpPage() {
             </Badge>
           </CardTitle>
           <CardDescription>
-            Exciting new features we're working on to enhance your campus tech
-            experience
+            Exciting new features we&apos;re working on to enhance your campus
+            tech experience
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -339,7 +341,7 @@ export default function HelpPage() {
         <CardHeader>
           <CardTitle>Need Help?</CardTitle>
           <CardDescription>
-            We're here to help you make the most of the platform
+            We&apos;re here to help you make the most of the platform
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 sm:flex-row">

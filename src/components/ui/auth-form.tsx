@@ -96,7 +96,9 @@ export default function AuthForm() {
     <Card className="mx-auto w-full max-w-md">
       <CardHeader className="text-center">
         <CardTitle>Welcome to VForums And Events</CardTitle>
-        <CardDescription>Connect with VIT's tech community</CardDescription>
+        <CardDescription>
+          Connect with VIT&apos;s tech community
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

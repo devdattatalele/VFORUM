@@ -149,7 +149,7 @@ export function SearchBar({
 
           {!isLoading && results.length === 0 && query.length >= 2 && (
             <div className="p-4 text-center text-sm text-muted-foreground">
-              No results found for "{query}"
+              No results found for &quot;{query}&quot;
             </div>
           )}
 
@@ -210,7 +210,7 @@ export function SearchBar({
                     onClick={() => setIsFocused(false)}
                     className="flex items-center justify-center gap-2 text-sm text-primary transition-colors hover:text-primary/80"
                   >
-                    View all results for "{query}"
+                    View all results for &quot;{query}&quot;
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>

@@ -106,7 +106,7 @@ export default function CreateEventPage() {
             </h3>
             <p className="mb-3 text-sm text-blue-800 dark:text-blue-200">
               Moderators help organize events and maintain the community. If
-              you're interested in contributing:
+              you&apos;re interested in contributing:
             </p>
             <ul className="mb-3 space-y-1 text-sm text-blue-800 dark:text-blue-200">
               <li>• Be an active community member</li>

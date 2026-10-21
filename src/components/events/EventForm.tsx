@@ -185,7 +185,7 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
                 />
               </FormControl>
               <FormDescription>
-                Link to the event's promotional image.
+                Link to the event&apos;s promotional image.
               </FormDescription>
               <FormMessage />
             </FormItem>

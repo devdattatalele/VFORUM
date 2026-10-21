@@ -323,7 +323,7 @@ export default function CommunityDetailPage() {
             <CardContent>
               <Rss className="mx-auto mb-6 h-16 w-16 text-muted-foreground" />
               <h3 className="mb-2 text-2xl font-semibold text-foreground">
-                It's a bit quiet here...
+                It&apos;s a bit quiet here...
               </h3>
               <p className="mx-auto mt-2 max-w-md text-muted-foreground">
                 No recent activity found for {community.name}. Check back later

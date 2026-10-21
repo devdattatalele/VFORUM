@@ -298,7 +298,7 @@ export default function SettingsContent() {
                 <div className="space-y-0.5">
                   <Label>Event Reminders</Label>
                   <p className="text-sm text-muted-foreground">
-                    Reminders for upcoming events you're interested in
+                    Reminders for upcoming events you&apos;re interested in
                   </p>
                 </div>
                 <Switch
