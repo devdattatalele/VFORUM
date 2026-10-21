@@ -12,7 +12,7 @@ npm run dev:local
 That one command:
 
 1. starts the Firebase Auth and Firestore emulators for the `demo-vforum` project,
-2. wipes them and loads demo data (`scripts/seed-dev.ts`): four accounts, eight questions with threaded answers and votes, four events,
+2. wipes them and loads demo data (`scripts/seed-dev.ts`): four accounts, nine questions with threaded answers and votes, two open reports and four events,
 3. runs the app at http://localhost:9002, with the emulator UI at http://localhost:4000.
 
 Open http://localhost:9002/auth and pick a persona under **Development sign-in**:
@@ -26,7 +26,7 @@ Open http://localhost:9002/auth and pick a persona under **Development sign-in**
 
 The switcher only replaces typing a password. Roles resolve from Firestore exactly as in production. You can also sign up with any `@vit.edu.in` address; the verification link is printed in the emulator log.
 
-Nothing here can touch a real Firebase project. `demo-` projects cannot reach real resources, the seed script refuses to run without the emulator hosts set, and `next build` refuses to build when `NEXT_PUBLIC_FIREBASE_EMULATORS` is set.
+Nothing here can touch a real Firebase project. `demo-` projects cannot reach real resources, the seed script wipes nothing but the emulators, and `next build` refuses to build when `NEXT_PUBLIC_FIREBASE_EMULATORS` is set.
 
 Data lives only while `dev:local` runs and is reseeded on every start. `npm run dev:seed` reseeds it while the emulators are up.
 
@@ -64,3 +64,14 @@ npm run dev
 | `GOOGLE_GENAI_API_KEY`          | Optional, for AI tag suggestions                                   |
 
 `GET /api/health` returns `{"ok":true}` when the Admin credential works; otherwise it returns the real error.
+
+## Demo content on a real project
+
+For a presentation, `npm run seed:live` adds the same questions, answers, votes, events and reports to a real project:
+
+```bash
+FIREBASE_SERVICE_ACCOUNT_PATH=./serviceAccountKey.json npm run seed:live
+FIREBASE_SERVICE_ACCOUNT_PATH=./serviceAccountKey.json npm run seed:live -- --remove
+```
+
+It wipes nothing and creates no sign-in accounts: the personas exist only as authors, so present with your own account. It refuses to run twice. `--remove` deletes everything the personas posted, including answers other people left on their questions; the audit log stays.

@@ -47,6 +47,7 @@ npm run dev:local
 | -------------------- | ---------------------------------------------- |
 | `npm run dev:local`  | Emulators, demo data and the dev server        |
 | `npm run dev:seed`   | Wipe and reseed the running emulators          |
+| `npm run seed:live`  | Add the demo content to a real project         |
 | `npm run dev`        | Dev server against the project in `.env.local` |
 | `npm run build`      | Production build                               |
 | `npm run check`      | Typecheck, lint, format check, and tests       |

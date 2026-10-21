@@ -24,6 +24,7 @@ CLAUDE.md is symlinked to this file — same content applies to all coding agent
 
 - `npm run dev:local` — Firebase emulators + seeded demo data + dev server on port 9002, no credentials; pick a persona at `/auth`
 - `npm run dev:seed` — wipe and reseed the running emulators
+- `npm run seed:live` — add the demo content to the real project in `FIREBASE_SERVICE_ACCOUNT_PATH`: additive, no sign-in accounts; `-- --remove` takes it out
 - `npm run dev` — dev server against the Firebase project in `.env.local`
 - `npm run check` — typecheck, lint, format check, tests (run before commit)
 - `npm run fix` — autofix lint and formatting

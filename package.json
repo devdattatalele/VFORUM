@@ -6,6 +6,7 @@
     "dev": "next dev --turbopack -p 9002",
     "dev:local": "npx -y firebase-tools@15.32.1 emulators:exec --project demo-vforum --ui \"npm run -s dev:seed && NEXT_PUBLIC_FIREBASE_EMULATORS=1 next dev --turbopack -p 9002\"",
     "dev:seed": "tsx scripts/seed-dev.ts",
+    "seed:live": "tsx scripts/seed-dev.ts --live",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
