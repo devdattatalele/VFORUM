@@ -1,0 +1,248 @@
+import { beforeAll, describe, expect, it } from "vitest"
+import { adminDb } from "@/lib/firebase-admin"
+import { createAccount, persona, tokenFor } from "@/test/emulator"
+import type { IdToken } from "@/lib/types"
+import {
+  addQuestion,
+  deleteQuestion,
+  getQuestionById,
+  getQuestions,
+  updateQuestion,
+} from "@/lib/services/questionService"
+import {
+  addComment,
+  getThreadedComments,
+  updateComment,
+} from "@/lib/services/commentService"
+import { getUserVote, voteOnQuestion } from "@/lib/services/voteService"
+import { addEvent } from "@/lib/services/eventService"
+import {
+  getAllUsers,
+  getMyProfile,
+  searchUser,
+  updateUserRole,
+} from "@/lib/services/userService"
+
+const question = {
+  title: "Integration test question title",
+  content: "Body long enough to pass validation rules.",
+  tags: ["Testing", "integration"],
+  communityId: "general-tech",
+}
+
+let student: IdToken
+let student2: IdToken
+let moderator: IdToken
+let admin: IdToken
+
+beforeAll(async () => {
+  ;[student, student2, moderator, admin] = await Promise.all([
+    tokenFor(persona("dev-student").email),
+    tokenFor(persona("dev-student-2").email),
+    tokenFor(persona("dev-moderator").email),
+    tokenFor(persona("dev-admin").email),
+  ])
+})
+
+const auditCount = async (action: string) =>
+  (await adminDb.collection("audit_log").where("action", "==", action).get())
+    .size
+
+describe("identity", () => {
+  it("rejects calls without a valid token", async () => {
+    await expect(addQuestion("" as IdToken, question)).rejects.toThrow(
+      /Sign in/
+    )
+    await expect(
+      addQuestion("forged.token.value" as IdToken, question)
+    ).rejects.toThrow(/Sign in/)
+  })
+
+  it("rejects accounts outside the college domain", async () => {
+    const outsider = await createAccount("someone@gmail.com")
+    await expect(addQuestion(outsider, question)).rejects.toThrow(
+      /vit\.edu\.in/
+    )
+  })
+
+  it("derives the author from the token, ignoring anything the client sends", async () => {
+    const id = await addQuestion(student, {
+      ...question,
+      author: { uid: "dev-admin", displayName: "Spoofed" },
+      upvotes: 999,
+    })
+    const saved = await getQuestionById(id)
+    expect(saved?.author.uid).toBe("dev-student")
+    expect(saved?.upvotes).toBe(0)
+    expect(saved?.tags).toEqual(["testing", "integration"])
+  })
+
+  it("creates a profile with a derived name on first sign-in", async () => {
+    const fresh = await createAccount("new.joinee@vit.edu.in")
+    const profile = await getMyProfile(fresh)
+    expect(profile.role).toBe("user")
+    expect(profile.displayName).toBe("New Joinee")
+  })
+
+  it("never sends stored author emails or roles to visitors", async () => {
+    const ref = await adminDb.collection("questions").add({
+      ...question,
+      author: {
+        uid: "legacy",
+        displayName: "Legacy",
+        photoURL: null,
+        email: "legacy@vit.edu.in",
+        role: "admin",
+        permissions: ["manage_users"],
+      },
+      createdAt: new Date(),
+    })
+    const listed = (await getQuestions()).find((q) => q.id === ref.id)
+    expect(Object.keys(listed!.author).sort()).toEqual([
+      "displayName",
+      "photoURL",
+      "uid",
+    ])
+  })
+})
+
+describe("ownership", () => {
+  it("lets only the author or a moderator edit and delete, and audits moderators", async () => {
+    const id = await addQuestion(student, question)
+    const edit = { ...question, title: "Edited integration test title" }
+
+    await expect(updateQuestion(student2, id, edit)).rejects.toThrow(
+      /author or a moderator/
+    )
+    await expect(deleteQuestion(student2, id)).rejects.toThrow(
+      /author or a moderator/
+    )
+
+    await updateQuestion(student, id, edit)
+    expect(await auditCount("question.edit")).toBe(0)
+
+    await updateQuestion(moderator, id, {
+      ...edit,
+      title: "Moderator fixed the title",
+    })
+    expect((await getQuestionById(id))?.title).toBe("Moderator fixed the title")
+    expect(await auditCount("question.edit")).toBe(1)
+
+    await addComment(student2, id, {
+      content: "An answer that will be removed",
+    })
+    await deleteQuestion(moderator, id)
+    expect(await getQuestionById(id)).toBeNull()
+    expect(
+      (await adminDb.collection(`questions/${id}/comments`).get()).empty
+    ).toBe(true)
+    expect(await auditCount("question.delete")).toBe(1)
+  })
+
+  it("applies the same rule to comments", async () => {
+    const id = await addQuestion(student, question)
+    const commentId = await addComment(student2, id, {
+      content: "First answer",
+    })
+    await expect(
+      updateComment(student, id, commentId, "Hijacked")
+    ).rejects.toThrow(/author or a moderator/)
+    await updateComment(student2, id, commentId, "First answer, edited")
+    const [comment] = await getThreadedComments(id)
+    expect(comment.content).toBe("First answer, edited")
+  })
+})
+
+describe("comments", () => {
+  it("counts replies and rejects replies to missing comments", async () => {
+    const id = await addQuestion(student, question)
+    const parent = await addComment(student2, id, {
+      content: "Top-level answer",
+    })
+    await addComment(student, id, { content: "A reply", parentId: parent })
+    expect((await getQuestionById(id))?.replyCount).toBe(2)
+    await expect(
+      addComment(student, id, { content: "Orphan", parentId: "missing" })
+    ).rejects.toThrow()
+    await expect(
+      addComment(student, "a/b", { content: "Path" })
+    ).rejects.toThrow()
+  })
+})
+
+describe("votes", () => {
+  it("counts one vote per user and moves it on change", async () => {
+    const id = await addQuestion(student, question)
+    const counts = async () => {
+      const q = await getQuestionById(id)
+      return [q?.upvotes, q?.downvotes]
+    }
+    await voteOnQuestion(student2, id, "up")
+    await voteOnQuestion(student2, id, "up")
+    expect(await counts()).toEqual([1, 0])
+    await voteOnQuestion(student2, id, "down")
+    expect(await counts()).toEqual([0, 1])
+    expect(await getUserVote(student2, id, "question")).toBe("down")
+    await voteOnQuestion(student2, id, "none")
+    expect(await counts()).toEqual([0, 0])
+    await Promise.all([
+      voteOnQuestion(moderator, id, "up"),
+      voteOnQuestion(moderator, id, "up"),
+    ])
+    expect(await counts()).toEqual([1, 0])
+  })
+})
+
+describe("roles", () => {
+  it("keeps user management to admins and audits role changes", async () => {
+    await expect(
+      updateUserRole(student, "dev-student", "admin")
+    ).rejects.toThrow(/permission/)
+    await expect(
+      searchUser(student, persona("dev-admin").email)
+    ).rejects.toThrow(/permission/)
+    await expect(getAllUsers(moderator)).rejects.toThrow(/permission/)
+
+    const found = await searchUser(admin, persona("dev-student-2").email)
+    expect(found?.uid).toBe("dev-student-2")
+
+    await updateUserRole(admin, "dev-student-2", "moderator")
+    expect(
+      (await getMyProfile(await tokenFor(persona("dev-student-2").email))).role
+    ).toBe("moderator")
+    expect(await auditCount("user.role")).toBe(1)
+    await updateUserRole(admin, "dev-student-2", "user")
+  })
+
+  it("bootstraps admins from ADMIN_EMAILS for verified mailboxes only", async () => {
+    const previous = process.env.ADMIN_EMAILS
+    process.env.ADMIN_EMAILS = `${persona("dev-student").email}, unverified@vit.edu.in`
+    try {
+      expect((await getMyProfile(student)).role).toBe("admin")
+      const unverified = await createAccount("unverified@vit.edu.in", false)
+      expect((await getMyProfile(unverified)).role).toBe("user")
+    } finally {
+      process.env.ADMIN_EMAILS = previous
+    }
+  })
+})
+
+describe("events", () => {
+  const event = {
+    title: "Integration Event",
+    description: "An event created by the integration test suite.",
+    posterImageUrl: "https://placehold.co/600x400.png",
+    clubName: "Test Club",
+    communityId: "gdg",
+    rsvpLink: "",
+    dateTime: new Date("2030-01-01T10:00:00.000Z"),
+  }
+
+  it("lets moderators create events and rejects script links", async () => {
+    await expect(addEvent(student, event)).rejects.toThrow(/permission/)
+    await expect(
+      addEvent(moderator, { ...event, rsvpLink: "javascript:alert(1)" })
+    ).rejects.toThrow()
+    expect(await addEvent(moderator, event)).toMatch(/^[A-Za-z0-9]+$/)
+  })
+})

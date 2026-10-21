@@ -14,6 +14,7 @@ import {
   CheckCircle,
 } from "lucide-react"
 import AuthForm from "@/components/ui/auth-form"
+import DevSignIn from "@/components/dev/DevSignIn"
 import { Badge } from "@/components/ui/badge"
 
 export default function AuthPage() {
@@ -103,6 +104,7 @@ export default function AuthPage() {
                     </p>
                   </div>
 
+                  <DevSignIn />
                   <AuthForm />
 
                   <div className="mt-6 border-t border-border/50 pt-6">

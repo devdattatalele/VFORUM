@@ -1,5 +1,16 @@
 import type { NextConfig } from "next"
 
+if (
+  process.env.NODE_ENV === "production" &&
+  process.env.NEXT_PUBLIC_FIREBASE_EMULATORS
+) {
+  throw new Error(
+    "NEXT_PUBLIC_FIREBASE_EMULATORS is set for a production build. It points " +
+      "sign-in at the local emulators and enables the persona switcher; it must " +
+      "never be present in anything deployable."
+  )
+}
+
 const nextConfig: NextConfig = {
   // ESLint runs in CI (`npm run lint`); the build does not repeat it.
   eslint: { ignoreDuringBuilds: true },

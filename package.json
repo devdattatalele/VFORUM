@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
+    "dev:local": "npx -y firebase-tools@15.32.1 emulators:exec --project demo-vforum --ui \"npm run -s dev:seed && NEXT_PUBLIC_FIREBASE_EMULATORS=1 next dev --turbopack -p 9002\"",
+    "dev:seed": "tsx scripts/seed-dev.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -11,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:int": "npx -y firebase-tools@15.32.1 emulators:exec --project demo-vforum --only auth,firestore \"npm run -s dev:seed && vitest run --config vitest.integration.config.ts\"",
     "format": "prettier --write \"{src,scripts}/**/*.{ts,tsx,js,mjs,json,css,md}\" \"*.{ts,mjs,json,md}\"",
     "format:check": "prettier --check \"{src,scripts}/**/*.{ts,tsx,js,mjs,json,css,md}\" \"*.{ts,mjs,json,md}\"",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run test",

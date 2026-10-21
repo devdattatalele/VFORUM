@@ -21,10 +21,13 @@ CLAUDE.md is symlinked to this file — same content applies to all coding agent
 
 ## Commands
 
-- `npm run dev` — dev server on port 9002
+- `npm run dev:local` — Firebase emulators + seeded demo data + dev server on port 9002, no credentials; pick a persona at `/auth`
+- `npm run dev:seed` — wipe and reseed the running emulators
+- `npm run dev` — dev server against the Firebase project in `.env.local`
 - `npm run check` — typecheck, lint, format check, tests (run before commit)
 - `npm run fix` — autofix lint and formatting
-- `npm test` — Vitest
+- `npm test` — Vitest unit tests (`src/**/*.test.ts`)
+- `npm run test:int` — integration tests (`src/**/*.int.test.ts`) against the emulators; needs Java. Run it when touching `src/lib/services` or `src/lib/server`
 - `npm run genkit:dev` — Genkit dev UI for the AI flows
 - `npx shadcn@latest add <component>` — install a shadcn component on demand
 

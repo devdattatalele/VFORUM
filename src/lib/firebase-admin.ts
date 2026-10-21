@@ -35,6 +35,14 @@ function getAdminApp(): App {
     return existingApps[0]
   }
 
+  // Local development and tests run against the Firebase emulators
+  // (`npm run dev:local`, `npm run test:int`), which need no credential.
+  if (process.env.FIRESTORE_EMULATOR_HOST) {
+    return initializeApp({
+      projectId: process.env.GCLOUD_PROJECT ?? "demo-vforum",
+    })
+  }
+
   return initializeApp({
     credential: loadAdminCredential(),
   })

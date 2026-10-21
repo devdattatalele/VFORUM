@@ -21,24 +21,28 @@ Live: https://vforum-devdattataleles-projects.vercel.app
 
 ## Getting started
 
+No Firebase project or credentials needed. You need Node 20+ and Java 11+ for the Firestore emulator.
+
 ```bash
 npm install
-cp .env.example .env.local   # fill in, see docs/local-dev.md
-npm run dev
+npm run dev:local
 ```
 
-Open http://localhost:9002. `GET /api/health` returns `{"ok":true}` when the Admin credential works. Put your own address in `ADMIN_EMAILS` to get the admin panel at `/admin`.
+`dev:local` starts the Firebase emulators, seeds demo data and runs the app at http://localhost:9002. Open `/auth` and pick a persona: Admin, Moderator or Student. See [docs/local-dev.md](docs/local-dev.md).
 
 ## Scripts
 
-| Script               | What it does                             |
-| -------------------- | ---------------------------------------- |
-| `npm run dev`        | Dev server with Turbopack on port 9002   |
-| `npm run build`      | Production build                         |
-| `npm run check`      | Typecheck, lint, format check, and tests |
-| `npm run fix`        | Autofix lint and formatting              |
-| `npm test`           | Vitest                                   |
-| `npm run genkit:dev` | Genkit dev UI for the AI flows           |
+| Script               | What it does                                   |
+| -------------------- | ---------------------------------------------- |
+| `npm run dev:local`  | Emulators, demo data and the dev server        |
+| `npm run dev:seed`   | Wipe and reseed the running emulators          |
+| `npm run dev`        | Dev server against the project in `.env.local` |
+| `npm run build`      | Production build                               |
+| `npm run check`      | Typecheck, lint, format check, and tests       |
+| `npm run fix`        | Autofix lint and formatting                    |
+| `npm test`           | Unit tests (Vitest)                            |
+| `npm run test:int`   | Permission matrix against the emulators        |
+| `npm run genkit:dev` | Genkit dev UI for the AI flows                 |
 
 ## Documentation
 

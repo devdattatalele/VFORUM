@@ -6,8 +6,8 @@ VFORUM follows the VOSS Labs project model. Contributions are welcome from all V
 
 1. Fork the repo and clone your fork
 2. `npm install`
-3. Follow [docs/local-dev.md](docs/local-dev.md) to create `.env.local` (a Firebase project is needed today; an emulator-based `dev:setup` is phase 1 of the plan)
-4. `npm run dev`, then open http://localhost:9002
+3. Install Java 11 or newer (the Firestore emulator needs it), see [docs/local-dev.md](docs/local-dev.md)
+4. `npm run dev:local`, then pick a persona at http://localhost:9002/auth
 
 ## Making changes
 
@@ -17,6 +17,7 @@ VFORUM follows the VOSS Labs project model. Contributions are welcome from all V
 
 ```bash
 npm run check
+npm run test:int   # when you touch src/lib/services or src/lib/server
 ```
 
 4. Push and open a pull request against `master`

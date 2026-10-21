@@ -45,6 +45,7 @@ Target, the VOSS stack (phase 3):
 - Dead code removed, typecheck clean and enforced at build, Next config deprecations fixed
 - Security: every server action that needs its caller verifies a Firebase ID token and derives the actor on the server. The browser no longer chooses its uid, author or role. Zod validates every input. `ADMIN_EMAILS` bootstraps admins
 - Firestore reads return plain JSON through `serialize()`; `/api/health` for deploy checks
+- Local development without credentials: `npm run dev:local` runs the Firebase emulators with seeded demo data and a persona switcher; `npm run test:int` runs the permission matrix against them in CI
 
 ### Phase 1 — A forum people come back to
 
@@ -57,8 +58,7 @@ One PR per item, each with its own issue.
 5. Public profile `/u/[uid]`: display name, joined, questions asked, answers given, votes received
 6. Tag pages `/tags` and `/tags/[tag]` with counts; tag autocomplete when asking
 7. Moderation: pin and lock a question, delete comments, report content, audit trail of moderator actions
-8. Local development without credentials: Firebase Emulator Suite (Auth + Firestore), a seed script and one persona per role behind `npm run dev:setup`, so a fresh clone runs like every other VOSS project
-9. Allowed email domains configured in the environment, not hardcoded, so the project can run for other colleges
+8. Allowed email domains configured in the environment, not hardcoded, so the project can run for other colleges
 
 ### Phase 2 — Sign in with VOSS
 
