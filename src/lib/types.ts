@@ -67,6 +67,19 @@ export interface Comment {
   downvotes: number // Add downvotes field
 }
 
+export type NotificationType = "answer" | "comment" | "reply" | "accepted"
+
+export interface AppNotification {
+  id: string
+  type: NotificationType
+  questionId: string
+  questionTitle: string
+  commentId: string | null
+  actor: PublicAuthor
+  read: boolean
+  createdAt: string
+}
+
 export interface Tag {
   name: string
   count?: number // Optional: for tag clouds or popular tags

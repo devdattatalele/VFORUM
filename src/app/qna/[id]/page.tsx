@@ -179,6 +179,18 @@ export default function QuestionDetailPage() {
     }
   }, [questionId, commentSort])
 
+  // Links from notifications point at #comment-<id>; the comments load after
+  // navigation, so scroll once they are on the page.
+  useEffect(() => {
+    if (isLoading) return
+    const target = window.location.hash.slice(1)
+    if (target) {
+      document
+        .getElementById(target)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+  }, [isLoading])
+
   const handleCommentSubmit = async (
     content: string,
     parentId?: string | null

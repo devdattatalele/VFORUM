@@ -3,7 +3,15 @@ import { FieldValue, type DocumentData } from "firebase-admin/firestore"
 import { adminDb } from "@/lib/firebase-admin"
 import { publicAuthor } from "@/lib/identity"
 import { serialize } from "@/lib/serialize"
-import type { Comment, Event, Question, UserProfile } from "@/lib/types"
+import type {
+  AppNotification,
+  Comment,
+  Event,
+  NotificationType,
+  PublicAuthor,
+  Question,
+  UserProfile,
+} from "@/lib/types"
 import { getPermissionsForRole } from "@/lib/utils/userUtils"
 
 // Firestore documents become plain JSON here, field by field, so nothing a
@@ -90,6 +98,55 @@ export function toProfile(raw: DocumentData | undefined): UserProfile {
     permissions: getPermissionsForRole(role),
     createdAt: typeof d.createdAt === "string" ? d.createdAt : undefined,
     updatedAt: typeof d.updatedAt === "string" ? d.updatedAt : undefined,
+  }
+}
+
+export function toNotification(
+  id: string,
+  raw: DocumentData | undefined
+): AppNotification {
+  const d = serialize(raw ?? {})
+  const type: NotificationType = [
+    "answer",
+    "comment",
+    "reply",
+    "accepted",
+  ].includes(d.type)
+    ? d.type
+    : "answer"
+  return {
+    id,
+    type,
+    questionId: String(d.questionId ?? ""),
+    questionTitle: String(d.questionTitle ?? ""),
+    commentId: typeof d.commentId === "string" ? d.commentId : null,
+    actor: publicAuthor(d.actor),
+    read: d.read === true,
+    createdAt: iso(d.createdAt),
+  }
+}
+
+export const notificationsOf = (uid: string) =>
+  adminDb.collection(`users/${uid}/notifications`)
+
+export function notificationEntry(
+  type: NotificationType,
+  actor: PublicAuthor,
+  question: { id: string; title: string },
+  commentId: string | null
+) {
+  return {
+    type,
+    questionId: question.id,
+    questionTitle: question.title,
+    commentId,
+    actor: {
+      uid: actor.uid,
+      displayName: actor.displayName,
+      photoURL: actor.photoURL,
+    },
+    read: false,
+    createdAt: FieldValue.serverTimestamp(),
   }
 }
 

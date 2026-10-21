@@ -271,3 +271,36 @@ describe("accepted answers", () => {
     expect((await getQuestionById(id))?.acceptedAnswerId).toBeNull()
   })
 })
+
+describe("notifications", () => {
+  it("tells the right people, once, and never the actor", async () => {
+    const { acceptAnswer } = await import("@/lib/services/questionService")
+    const { getMyNotifications, markNotificationsRead } =
+      await import("@/lib/services/notificationService")
+    const about = async (token: IdToken, questionId: string) =>
+      (await getMyNotifications(token)).items
+        .filter((n) => n.questionId === questionId)
+        .map((n) => n.type)
+        .sort()
+
+    const id = await addQuestion(student, question)
+    const answer = await addComment(student2, id, { content: "Answer" })
+    await addComment(student, id, { content: "Thanks!", parentId: answer })
+    await addComment(moderator, id, { content: "Also see", parentId: answer })
+    await acceptAnswer(student, id, answer)
+    await acceptAnswer(student, id, answer)
+
+    expect(await about(student, id)).toEqual(["answer", "comment"])
+    expect(await about(student2, id)).toEqual(["accepted", "reply", "reply"])
+    expect(await about(moderator, id)).toEqual([])
+
+    const before = (await getMyNotifications(student2)).unread
+    const first = (await getMyNotifications(student2)).items.find(
+      (n) => n.questionId === id
+    )!
+    await markNotificationsRead(student2, [first.id, "not-a-real-id"])
+    expect((await getMyNotifications(student2)).unread).toBe(before - 1)
+    await markNotificationsRead(student2)
+    expect((await getMyNotifications(student2)).unread).toBe(0)
+  })
+})

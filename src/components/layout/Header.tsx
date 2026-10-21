@@ -29,6 +29,7 @@ import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { SearchBar } from "@/components/ui/search-bar"
 import React from "react"
+import NotificationBell from "@/components/layout/NotificationBell"
 
 export default function Header() {
   const { user, signOut, loading } = useAuth()
@@ -117,6 +118,8 @@ export default function Header() {
                 <Github className="h-4 w-4" />
               </Link>
             </Button>
+
+            <NotificationBell />
 
             {/* Theme Toggle */}
             <ThemeToggle />

@@ -3,7 +3,13 @@
 import { FieldValue } from "firebase-admin/firestore"
 import { adminDb } from "@/lib/firebase-admin"
 import { AuthError, requireProfile } from "@/lib/server/auth"
-import { auditEntry, auditLog, toQuestion } from "@/lib/server/docs"
+import {
+  auditEntry,
+  auditLog,
+  notificationEntry,
+  notificationsOf,
+  toQuestion,
+} from "@/lib/server/docs"
 import { docId, questionInput, questionUpdate } from "@/lib/schemas"
 import type { IdToken, Question } from "@/lib/types"
 import { canModerate } from "@/lib/utils/userUtils"
@@ -114,13 +120,31 @@ export async function acceptAnswer(
         "Only the author or a moderator can accept an answer."
       )
     }
+    let answerAuthorUid: string | null = null
     if (answerId) {
       const answer = await tx.get(ref.collection("comments").doc(answerId))
       if (!answer.exists || answer.data()?.parentId) {
         throw new Error("Only a top-level answer can be accepted.")
       }
+      answerAuthorUid = answer.data()?.author?.uid ?? null
     }
     tx.update(ref, { acceptedAnswerId: answerId })
+    if (
+      answerId &&
+      answerAuthorUid &&
+      answerAuthorUid !== actor.uid &&
+      snap.data()?.acceptedAnswerId !== answerId
+    ) {
+      tx.set(
+        notificationsOf(answerAuthorUid).doc(),
+        notificationEntry(
+          "accepted",
+          actor,
+          { id: ref.id, title: snap.data()?.title ?? "" },
+          answerId
+        )
+      )
+    }
     if (actor.uid !== authorUid) {
       tx.set(
         auditLog().doc(),

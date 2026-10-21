@@ -3,7 +3,14 @@
 import { FieldValue } from "firebase-admin/firestore"
 import { adminDb } from "@/lib/firebase-admin"
 import { AuthError, requireProfile } from "@/lib/server/auth"
-import { auditEntry, auditLog, toComment } from "@/lib/server/docs"
+import {
+  auditEntry,
+  auditLog,
+  notificationEntry,
+  notificationsOf,
+  toComment,
+} from "@/lib/server/docs"
+import { commentRecipients } from "@/lib/notify"
 import { commentContent, commentInput, commentSort, docId } from "@/lib/schemas"
 import type { IdToken, Comment } from "@/lib/types"
 import { canModerate } from "@/lib/utils/userUtils"
@@ -24,9 +31,11 @@ export async function addComment(
   await adminDb.runTransaction(async (tx) => {
     const question = await tx.get(qRef)
     if (!question.exists) throw new Error("Question not found.")
+    let parentAuthorUid: string | null = null
     if (parentId) {
       const parent = await tx.get(qRef.collection("comments").doc(parentId))
       if (!parent.exists) throw new Error("The comment you replied to is gone.")
+      parentAuthorUid = parent.data()?.author?.uid ?? null
     }
     tx.set(ref, {
       questionId: qRef.id,
@@ -45,6 +54,22 @@ export async function addComment(
       replyCount: FieldValue.increment(1),
       lastActivityAt: FieldValue.serverTimestamp(),
     })
+    const recipients = commentRecipients({
+      actorUid: actor.uid,
+      questionAuthorUid: question.data()?.author?.uid,
+      parentAuthorUid,
+    })
+    for (const { uid, type } of recipients) {
+      tx.set(
+        notificationsOf(uid).doc(),
+        notificationEntry(
+          type,
+          actor,
+          { id: qRef.id, title: question.data()?.title ?? "" },
+          ref.id
+        )
+      )
+    }
   })
   return ref.id
 }

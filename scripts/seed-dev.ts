@@ -13,6 +13,7 @@ import {
   type DocumentReference,
 } from "firebase-admin/firestore"
 import { DEV_PASSWORD, DEV_PERSONAS } from "../src/lib/dev-personas"
+import { commentRecipients } from "../src/lib/notify"
 import { getPermissionsForRole } from "../src/lib/utils/userUtils"
 
 const firestoreHost = process.env.FIRESTORE_EMULATOR_HOST
@@ -311,8 +312,9 @@ const QUESTIONS: SeedQuestion[] = [
 // Returns the number of comments written and the ids at this level.
 async function addAnswers(
   question: DocumentReference,
+  meta: { title: string; by: Uid },
   answers: Answer[],
-  parentId: string | null
+  parent: { id: string; by: Uid } | null
 ): Promise<{ count: number; ids: string[] }> {
   let count = 0
   const ids: string[] = []
@@ -321,7 +323,7 @@ async function addAnswers(
     const votes = a.votes ?? []
     await ref.set({
       questionId: question.id,
-      parentId,
+      parentId: parent?.id ?? null,
       content: a.content,
       author: author(a.by),
       createdAt: hoursAgo(a.hoursAgo),
@@ -333,8 +335,31 @@ async function addAnswers(
         .doc(`votes/comments/${ref.id}/${uid}`)
         .set({ voteType: "up", updatedAt: FieldValue.serverTimestamp() })
     }
+    const recipients = commentRecipients({
+      actorUid: a.by,
+      questionAuthorUid: meta.by,
+      parentAuthorUid: parent?.by,
+    })
+    for (const { uid, type } of recipients) {
+      await db.collection(`users/${uid}/notifications`).add({
+        type,
+        questionId: question.id,
+        questionTitle: meta.title,
+        commentId: ref.id,
+        actor: author(a.by),
+        read: a.hoursAgo > 48,
+        createdAt: hoursAgo(a.hoursAgo),
+      })
+    }
     ids.push(ref.id)
-    count += 1 + (await addAnswers(question, a.replies ?? [], ref.id)).count
+    count +=
+      1 +
+      (
+        await addAnswers(question, meta, a.replies ?? [], {
+          id: ref.id,
+          by: a.by,
+        })
+      ).count
   }
   return { count, ids }
 }
@@ -367,7 +392,12 @@ async function seedForum() {
     for (const uid of downvoters) {
       await db.doc(`votes/questions/${ref.id}/${uid}`).set({ voteType: "down" })
     }
-    const { count, ids } = await addAnswers(ref, q.answers ?? [], null)
+    const { count, ids } = await addAnswers(
+      ref,
+      { title: q.title, by: q.by },
+      q.answers ?? [],
+      null
+    )
     await ref.update({
       replyCount: count,
       acceptedAnswerId: q.accepted === undefined ? null : ids[q.accepted],
