@@ -304,3 +304,115 @@ describe("notifications", () => {
     expect((await getMyNotifications(student2)).unread).toBe(0)
   })
 })
+
+describe("moderation", () => {
+  it("keeps pin and lock to moderators, and lock stops new answers", async () => {
+    const { setQuestionFlags } = await import("@/lib/services/questionService")
+    const id = await addQuestion(student, question)
+
+    await expect(
+      setQuestionFlags(student, id, { pinned: true })
+    ).rejects.toThrow(/permission/)
+    await setQuestionFlags(moderator, id, { pinned: true, locked: true })
+    const flagged = await getQuestionById(id)
+    expect([flagged?.pinned, flagged?.locked]).toEqual([true, true])
+
+    await expect(
+      addComment(student2, id, { content: "Late answer" })
+    ).rejects.toThrow(/locked/)
+    await addComment(moderator, id, { content: "Closing note from moderators" })
+    await setQuestionFlags(moderator, id, { locked: false })
+    await addComment(student2, id, { content: "Answer after unlock" })
+  })
+
+  it("deletes comments in place, for the author or a moderator", async () => {
+    const { acceptAnswer } = await import("@/lib/services/questionService")
+    const { deleteComment } = await import("@/lib/services/commentService")
+    const id = await addQuestion(student, question)
+    const answer = await addComment(student2, id, { content: "Doomed answer" })
+    const reply = await addComment(student, id, {
+      content: "Reply",
+      parentId: answer,
+    })
+    await acceptAnswer(student, id, answer)
+    await voteOnQuestion(student, id, "up")
+
+    await expect(deleteComment(student, id, answer)).rejects.toThrow(
+      /author or a moderator/
+    )
+    await deleteComment(student2, id, answer)
+    await deleteComment(student2, id, answer)
+
+    const after = await getQuestionById(id)
+    expect(after?.replyCount).toBe(1)
+    expect(after?.acceptedAnswerId).toBeNull()
+    const comments = await getThreadedComments(id)
+    const deleted = comments.find((c) => c.id === answer)!
+    expect([deleted.deleted, deleted.content]).toEqual([true, ""])
+    expect(comments.find((c) => c.id === reply)?.parentId).toBe(answer)
+
+    const { voteOnComment } = await import("@/lib/services/voteService")
+    await expect(voteOnComment(student, id, answer, "up")).rejects.toThrow()
+    await expect(
+      updateComment(student2, id, answer, "Back from the dead")
+    ).rejects.toThrow()
+    await expect(
+      addComment(student, id, { content: "Hello?", parentId: answer })
+    ).rejects.toThrow()
+    await expect(acceptAnswer(student, id, answer)).rejects.toThrow()
+
+    await deleteComment(moderator, id, reply)
+    expect(await auditCount("comment.delete")).toBe(1)
+  })
+
+  it("collects reports for moderators and resolves them", async () => {
+    const { getOpenReports, reportContent, resolveReports, getAuditLog } =
+      await import("@/lib/services/moderationService")
+    const id = await addQuestion(student, question)
+    const spam = await addComment(student2, id, {
+      content: "Buy followers now",
+    })
+
+    await reportContent(student, {
+      questionId: id,
+      commentId: spam,
+      reason: "spam",
+    })
+    await reportContent(student, {
+      questionId: id,
+      commentId: spam,
+      reason: "spam",
+      details: "Again",
+    })
+    await reportContent(moderator, {
+      questionId: id,
+      commentId: spam,
+      reason: "spam",
+    })
+    await reportContent(student2, { questionId: id, reason: "off-topic" })
+
+    await expect(getOpenReports(student)).rejects.toThrow(/permission/)
+    const open = (await getOpenReports(moderator)).filter(
+      (r) => r.questionId === id
+    )
+    expect(open.filter((r) => r.commentId === spam)).toHaveLength(2)
+    expect(open.find((r) => r.commentId === spam)?.excerpt).toBe(
+      "Buy followers now"
+    )
+
+    await resolveReports(moderator, id, null, "dismiss")
+    await resolveReports(moderator, id, spam, "remove")
+    expect(
+      (await getOpenReports(moderator)).filter((r) => r.questionId === id)
+    ).toEqual([])
+    expect(
+      (await getThreadedComments(id)).find((c) => c.id === spam)?.deleted
+    ).toBe(true)
+
+    await expect(getAuditLog(moderator)).rejects.toThrow(/permission/)
+    const actions = (await getAuditLog(admin)).map((e) => e.action)
+    expect(actions).toEqual(
+      expect.arrayContaining(["report.dismiss", "report.remove"])
+    )
+  })
+})

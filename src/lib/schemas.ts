@@ -70,3 +70,19 @@ export const eventInput = z.object({
 })
 
 export const searchTerm = z.string().trim().max(200)
+
+export const questionFlags = z
+  .object({ pinned: z.boolean().optional(), locked: z.boolean().optional() })
+  .refine(
+    (f) => f.pinned !== undefined || f.locked !== undefined,
+    "Nothing to change."
+  )
+
+export const reportInput = z.object({
+  questionId: docId,
+  commentId: docId.nullish(),
+  reason: z.enum(["spam", "harassment", "off-topic", "other"]),
+  details: z.string().trim().max(500).optional().default(""),
+})
+
+export const reportResolution = z.enum(["dismiss", "remove"])

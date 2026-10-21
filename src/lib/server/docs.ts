@@ -3,8 +3,12 @@ import { FieldValue, type DocumentData } from "firebase-admin/firestore"
 import { adminDb } from "@/lib/firebase-admin"
 import { publicAuthor } from "@/lib/identity"
 import { serialize } from "@/lib/serialize"
+import { excerpt } from "@/lib/markdown"
 import type {
   AppNotification,
+  AuditEntry,
+  Report,
+  ReportReason,
   Comment,
   Event,
   NotificationType,
@@ -46,6 +50,8 @@ export function toQuestion(
     replyCount: count(d.replyCount),
     acceptedAnswerId:
       typeof d.acceptedAnswerId === "string" ? d.acceptedAnswerId : null,
+    pinned: d.pinned === true,
+    locked: d.locked === true,
   }
 }
 
@@ -59,7 +65,8 @@ export function toComment(
     id,
     questionId,
     parentId: typeof d.parentId === "string" ? d.parentId : null,
-    content: String(d.content ?? ""),
+    content: d.deleted === true ? "" : String(d.content ?? ""),
+    deleted: d.deleted === true,
     author: publicAuthor(d.author),
     createdAt: iso(d.createdAt),
     updatedAt: typeof d.updatedAt === "string" ? d.updatedAt : undefined,
@@ -122,6 +129,43 @@ export function toNotification(
     commentId: typeof d.commentId === "string" ? d.commentId : null,
     actor: publicAuthor(d.actor),
     read: d.read === true,
+    createdAt: iso(d.createdAt),
+  }
+}
+
+export function toReport(id: string, raw: DocumentData | undefined): Report {
+  const d = serialize(raw ?? {})
+  const reasons: ReportReason[] = ["spam", "harassment", "off-topic", "other"]
+  return {
+    id,
+    questionId: String(d.questionId ?? ""),
+    commentId: typeof d.commentId === "string" ? d.commentId : null,
+    questionTitle: String(d.questionTitle ?? ""),
+    excerpt: excerpt(String(d.excerpt ?? ""), 200),
+    targetAuthor: publicAuthor(d.targetAuthor),
+    reason: reasons.includes(d.reason) ? d.reason : "other",
+    details: String(d.details ?? ""),
+    reporter: publicAuthor(d.reporter),
+    status:
+      d.status === "dismissed" || d.status === "removed" ? d.status : "open",
+    createdAt: iso(d.createdAt),
+  }
+}
+
+export function toAuditEntry(
+  id: string,
+  raw: DocumentData | undefined
+): AuditEntry {
+  const d = serialize(raw ?? {})
+  return {
+    id,
+    actorEmail: typeof d.actorEmail === "string" ? d.actorEmail : null,
+    action: String(d.action ?? ""),
+    target: String(d.target ?? ""),
+    details:
+      d.details && typeof d.details === "object" && !Array.isArray(d.details)
+        ? d.details
+        : {},
     createdAt: iso(d.createdAt),
   }
 }

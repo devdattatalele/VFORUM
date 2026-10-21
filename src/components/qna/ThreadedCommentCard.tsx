@@ -15,6 +15,8 @@ import {
   Share,
   Edit3,
   CheckCircle2,
+  Flag,
+  Trash2,
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -25,6 +27,17 @@ import { idToken } from "@/lib/client-auth"
 import Markdown from "@/components/Markdown"
 import SolvedBadge from "@/components/qna/SolvedBadge"
 import { canModerate } from "@/lib/utils/userUtils"
+import ReportDialog from "@/components/qna/ReportDialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface ThreadedCommentCardProps {
   comment: CommentType
@@ -36,6 +49,8 @@ interface ThreadedCommentCardProps {
   isAccepted?: boolean
   canAccept?: boolean // the viewer may mark this top-level answer as accepted
   onAccept?: (commentId: string | null) => void
+  canReply?: boolean // false on locked questions, except for moderators
+  onDelete?: (commentId: string) => void
 }
 
 export default function ThreadedCommentCard({
@@ -48,7 +63,11 @@ export default function ThreadedCommentCard({
   isAccepted = false,
   canAccept = false,
   onAccept,
+  canReply = true,
+  onDelete,
 }: ThreadedCommentCardProps) {
+  const [reporting, setReporting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [showReplyForm, setShowReplyForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -181,7 +200,9 @@ export default function ThreadedCommentCard({
               <span className="cursor-pointer text-base font-medium text-foreground hover:text-primary">
                 {" "}
                 {/* Increased font size */}
-                {comment.author.displayName || "Anonymous"}
+                {comment.deleted
+                  ? "[deleted]"
+                  : comment.author.displayName || "Anonymous"}
               </span>
               <span className="opacity-70">•</span>
               <CalendarDays className="h-4 w-4" />
@@ -193,17 +214,21 @@ export default function ThreadedCommentCard({
               {isAccepted && <SolvedBadge label="Accepted answer" />}
             </div>
 
+            {!isCollapsed && comment.deleted && (
+              <p className="mb-2 text-sm italic text-muted-foreground">
+                This comment was deleted.
+              </p>
+            )}
+
             {/* Comment content */}
-            {!isCollapsed && (
+            {!isCollapsed && !comment.deleted && (
               <>
                 <Markdown className="mb-4 text-base leading-relaxed text-foreground/90">
                   {comment.content}
                 </Markdown>
 
                 {/* Comment actions */}
-                <div className="flex items-center gap-3">
-                  {" "}
-                  {/* Increased gap */}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <VoteButtons
                     initialUpvotes={comment.upvotes || 0}
                     initialDownvotes={comment.downvotes || 0}
@@ -214,7 +239,7 @@ export default function ThreadedCommentCard({
                     size="sm"
                     mode="like"
                   />
-                  {user && !isMaxLevel && (
+                  {user && !isMaxLevel && canReply && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -259,6 +284,28 @@ export default function ThreadedCommentCard({
                     >
                       <Edit3 className="mr-1 h-4 w-4" />
                       Edit
+                    </Button>
+                  )}
+                  {onDelete && canModerate(user, comment.author.uid) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-3 text-sm text-muted-foreground hover:bg-muted hover:text-destructive"
+                      onClick={() => setConfirmDelete(true)}
+                    >
+                      <Trash2 className="mr-1 h-4 w-4" />
+                      Delete
+                    </Button>
+                  )}
+                  {user && user.uid !== comment.author.uid && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-3 text-sm text-muted-foreground hover:bg-muted"
+                      onClick={() => setReporting(true)}
+                    >
+                      <Flag className="mr-1 h-4 w-4" />
+                      Report
                     </Button>
                   )}
                 </div>
@@ -307,6 +354,28 @@ export default function ThreadedCommentCard({
           {children}
         </div>
       )}
+      <ReportDialog
+        open={reporting}
+        onOpenChange={setReporting}
+        questionId={questionId}
+        commentId={comment.id}
+      />
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this comment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Its text is removed for everyone. Replies to it stay.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => onDelete?.(comment.id)}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

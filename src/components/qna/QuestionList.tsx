@@ -25,6 +25,7 @@ import {
   GitCommitVertical,
   TrendingUp,
   Pin,
+  Lock,
   ArrowUp,
 } from "lucide-react"
 import {
@@ -43,6 +44,10 @@ import { UserCircle } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { excerpt } from "@/lib/markdown"
 import SolvedBadge from "@/components/qna/SolvedBadge"
+
+// Moderators pin questions to the top; the chosen sort applies below them.
+const pinnedFirst = (list: Question[]) =>
+  [...list].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned))
 
 export default function QuestionList() {
   const { user } = useAuth()
@@ -109,33 +114,36 @@ export default function QuestionList() {
       )
     }
 
-    return processedQuestions.sort((a, b) => {
-      const aActivity = a.lastActivityAt || a.createdAt
-      const bActivity = b.lastActivityAt || b.createdAt
+    // Copy before sorting: processedQuestions can be the state array itself.
+    return pinnedFirst(
+      [...processedQuestions].sort((a, b) => {
+        const aActivity = a.lastActivityAt || a.createdAt
+        const bActivity = b.lastActivityAt || b.createdAt
 
-      switch (sortBy) {
-        case "recent-desc":
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          )
-        case "recent-asc":
-          return (
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          )
-        case "activity-desc":
-          return new Date(bActivity).getTime() - new Date(aActivity).getTime()
-        case "activity-asc":
-          return new Date(aActivity).getTime() - new Date(bActivity).getTime()
-        case "popular-desc": // by views
-          return (b.views || 0) - (a.views || 0)
-        case "replies-desc":
-          return (b.replyCount || 0) - (a.replyCount || 0)
-        case "upvotes-desc":
-          return (b.upvotes || 0) - (a.upvotes || 0)
-        default:
-          return new Date(bActivity).getTime() - new Date(aActivity).getTime()
-      }
-    })
+        switch (sortBy) {
+          case "recent-desc":
+            return (
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            )
+          case "recent-asc":
+            return (
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            )
+          case "activity-desc":
+            return new Date(bActivity).getTime() - new Date(aActivity).getTime()
+          case "activity-asc":
+            return new Date(aActivity).getTime() - new Date(bActivity).getTime()
+          case "popular-desc": // by views
+            return (b.views || 0) - (a.views || 0)
+          case "replies-desc":
+            return (b.replyCount || 0) - (a.replyCount || 0)
+          case "upvotes-desc":
+            return (b.upvotes || 0) - (a.upvotes || 0)
+          default:
+            return new Date(bActivity).getTime() - new Date(aActivity).getTime()
+        }
+      })
+    )
   }, [questions, communityFilter, tagFilter, searchTerm, sortBy, show])
 
   if (isLoading) {
@@ -286,7 +294,19 @@ export default function QuestionList() {
                   <TableCell className="py-3 align-top">
                     <Link href={`/qna/${question.id}`} className="group block">
                       <h3 className="mb-1 line-clamp-2 text-base font-medium text-foreground transition-colors group-hover:text-primary">
+                        {question.pinned && (
+                          <Pin
+                            className="mr-1.5 inline-block h-4 w-4 text-primary"
+                            aria-label="Pinned"
+                          />
+                        )}
                         {question.title}
+                        {question.locked && (
+                          <Lock
+                            className="ml-1.5 inline-block h-3.5 w-3.5 text-muted-foreground"
+                            aria-label="Locked"
+                          />
+                        )}
                         {question.acceptedAnswerId && (
                           <SolvedBadge className="ml-2 align-middle" />
                         )}

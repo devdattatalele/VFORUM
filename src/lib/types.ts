@@ -53,6 +53,8 @@ export interface Question {
   replyCount: number
   lastActivityAt?: string // ISO string, for sorting or display
   acceptedAnswerId?: string | null // top-level comment the author marked as the answer
+  pinned?: boolean // moderators keep it at the top of the forum
+  locked?: boolean // moderators closed it to new answers
 }
 
 export interface Comment {
@@ -65,6 +67,7 @@ export interface Comment {
   updatedAt?: string // ISO string, for tracking edits
   upvotes: number
   downvotes: number // Add downvotes field
+  deleted?: boolean // removed by its author or a moderator; replies stay
 }
 
 export type NotificationType = "answer" | "comment" | "reply" | "accepted"
@@ -77,6 +80,31 @@ export interface AppNotification {
   commentId: string | null
   actor: PublicAuthor
   read: boolean
+  createdAt: string
+}
+
+export type ReportReason = "spam" | "harassment" | "off-topic" | "other"
+
+export interface Report {
+  id: string
+  questionId: string
+  commentId: string | null
+  questionTitle: string
+  excerpt: string
+  targetAuthor: PublicAuthor
+  reason: ReportReason
+  details: string
+  reporter: PublicAuthor
+  status: "open" | "dismissed" | "removed"
+  createdAt: string
+}
+
+export interface AuditEntry {
+  id: string
+  actorEmail: string | null
+  action: string
+  target: string
+  details: Record<string, unknown>
   createdAt: string
 }
 

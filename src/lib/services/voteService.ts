@@ -17,7 +17,9 @@ async function castVote(
 ) {
   await adminDb.runTransaction(async (tx) => {
     const [itemSnap, voteSnap] = await Promise.all([tx.get(item), tx.get(vote)])
-    if (!itemSnap.exists) throw new Error("Not found.")
+    if (!itemSnap.exists || itemSnap.data()?.deleted) {
+      throw new Error("Not found.")
+    }
     const current: VoteType = voteSnap.data()?.voteType ?? "none"
     if (current === next) return
     tx.set(vote, { voteType: next, updatedAt: FieldValue.serverTimestamp() })

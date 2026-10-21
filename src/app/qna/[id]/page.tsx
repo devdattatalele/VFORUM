@@ -28,6 +28,8 @@ import {
   AlertTriangle,
   Eye,
   Edit3,
+  Lock,
+  Pin,
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
@@ -39,12 +41,17 @@ import {
   getQuestionById,
   updateQuestion,
 } from "@/lib/services/questionService"
-import { getThreadedComments, addComment } from "@/lib/services/commentService"
+import {
+  addComment,
+  deleteComment,
+  getThreadedComments,
+} from "@/lib/services/commentService"
 import { COMMUNITIES } from "@/lib/constants"
 import { idToken } from "@/lib/client-auth"
 import Markdown from "@/components/Markdown"
 import SolvedBadge from "@/components/qna/SolvedBadge"
-import { canModerate } from "@/lib/utils/userUtils"
+import { canModerate, hasPermission } from "@/lib/utils/userUtils"
+import QuestionActions from "@/components/qna/QuestionActions"
 
 // Helper function to build comment tree
 function buildCommentTree(comments: CommentType[]): CommentWithReplies[] {
@@ -89,6 +96,8 @@ function ThreadedCommentTree({
   acceptedId,
   canAccept,
   onAccept,
+  canReply,
+  onDelete,
 }: {
   comment: CommentWithReplies
   questionId: string
@@ -98,6 +107,8 @@ function ThreadedCommentTree({
   acceptedId?: string | null
   canAccept?: boolean
   onAccept?: (commentId: string | null) => void
+  canReply?: boolean
+  onDelete?: (commentId: string) => void
 }) {
   return (
     <ThreadedCommentCard
@@ -109,6 +120,8 @@ function ThreadedCommentTree({
       isAccepted={level === 0 && comment.id === acceptedId}
       canAccept={level === 0 && canAccept}
       onAccept={onAccept}
+      canReply={canReply}
+      onDelete={onDelete}
     >
       {comment.replies.length > 0 && (
         <div className="space-y-2">
@@ -120,6 +133,8 @@ function ThreadedCommentTree({
               level={level + 1}
               onReply={onReply}
               onEdit={onEdit}
+              canReply={canReply}
+              onDelete={onDelete}
             />
           ))}
         </div>
@@ -219,6 +234,26 @@ export default function QuestionDetailPage() {
     }
   }
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!question) return
+    try {
+      await deleteComment(await idToken(), question.id, commentId)
+      setQuestion({
+        ...question,
+        replyCount: Math.max(0, question.replyCount - 1),
+        acceptedAnswerId:
+          question.acceptedAnswerId === commentId
+            ? null
+            : question.acceptedAnswerId,
+      })
+      setComments(await getThreadedComments(questionId, commentSort))
+      toast({ title: "Comment deleted" })
+    } catch (error) {
+      console.error("Error deleting comment:", error)
+      toast({ title: "Could not delete the comment", variant: "destructive" })
+    }
+  }
+
   const handleSortChange = (newSort: string) => {
     setCommentSort(newSort)
   }
@@ -310,6 +345,9 @@ export default function QuestionDetailPage() {
   }, [comments, searchQuery])
 
   // Build comment tree from filtered comments
+  // Locked questions take answers from moderators only.
+  const canAnswer = !question?.locked || hasPermission(user, "moderate_forums")
+
   // The accepted answer leads; the rest keep the chosen sort.
   const acceptedId = question?.acceptedAnswerId ?? null
   const commentTree = useMemo(() => {
@@ -388,18 +426,24 @@ export default function QuestionDetailPage() {
                     {question.acceptedAnswerId && (
                       <SolvedBadge className="ml-3 align-middle text-sm" />
                     )}
+                    {question.pinned && (
+                      <Badge variant="secondary" className="ml-2 align-middle">
+                        <Pin className="mr-1 h-3.5 w-3.5" /> Pinned
+                      </Badge>
+                    )}
+                    {question.locked && (
+                      <Badge variant="secondary" className="ml-2 align-middle">
+                        <Lock className="mr-1 h-3.5 w-3.5" /> Locked
+                      </Badge>
+                    )}
                   </CardTitle>
-                  {canModerate(user, question.author.uid) && (
-                    <Button
-                      variant="outline"
-                      size="default"
-                      onClick={handleEditQuestion}
-                      className="ml-4"
-                    >
-                      <Edit3 className="mr-2 h-5 w-5" />
-                      Edit
-                    </Button>
-                  )}
+                  <QuestionActions
+                    question={question}
+                    onEdit={handleEditQuestion}
+                    onChange={(changes) =>
+                      setQuestion({ ...question, ...changes })
+                    }
+                  />
                 </div>
 
                 <div className="mt-4 flex items-center space-x-3 text-base text-muted-foreground">
@@ -489,13 +533,21 @@ export default function QuestionDetailPage() {
             />
           </div>
 
-          <div className="px-2">
-            <CompactCommentForm
-              questionId={question.id}
-              onSubmit={(content) => handleCommentSubmit(content, null)}
-              placeholder="Add a comment..."
-            />
-          </div>
+          {question.locked && (
+            <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+              <Lock className="h-4 w-4 shrink-0" />
+              Moderators locked this question. New answers are closed.
+            </div>
+          )}
+          {canAnswer && (
+            <div className="px-2">
+              <CompactCommentForm
+                questionId={question.id}
+                onSubmit={(content) => handleCommentSubmit(content, null)}
+                placeholder="Add a comment..."
+              />
+            </div>
+          )}
 
           {/* Threaded Comments */}
           <div className="space-y-4">
@@ -510,6 +562,8 @@ export default function QuestionDetailPage() {
                   acceptedId={acceptedId}
                   canAccept={canModerate(user, question.author.uid)}
                   onAccept={handleAccept}
+                  canReply={canAnswer}
+                  onDelete={handleDeleteComment}
                 />
               ))
             ) : (

@@ -20,9 +20,9 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Zap, Crown } from "lucide-react"
+import { ShieldCheck, Zap, Crown } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
-import { isAdmin } from "@/lib/utils/userUtils"
+import { isAdmin, isModerator } from "@/lib/utils/userUtils"
 import { useEffect, useState } from "react"
 
 export default function AppSidebar() {
@@ -85,6 +85,21 @@ export default function AppSidebar() {
                 </Link>
               </SidebarMenuItem>
             ))}
+
+            {user && isModerator(user) && (
+              <SidebarMenuItem>
+                <Link href="/moderation" className="w-full">
+                  <SidebarMenuButton
+                    isActive={pathname === "/moderation"}
+                    tooltip={{ children: "Moderation", side: "right" }}
+                    className="h-10 rounded-lg border border-transparent text-sm font-medium transition-all duration-200 hover:border-border"
+                  >
+                    <ShieldCheck className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">Moderation</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            )}
 
             {/* Admin Link - Only show for admin users */}
             {user && isAdmin(user) && (

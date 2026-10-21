@@ -2,7 +2,7 @@
 
 import { FieldValue } from "firebase-admin/firestore"
 import { adminDb } from "@/lib/firebase-admin"
-import { AuthError, requireProfile } from "@/lib/server/auth"
+import { AuthError, requirePermission, requireProfile } from "@/lib/server/auth"
 import {
   auditEntry,
   auditLog,
@@ -10,7 +10,12 @@ import {
   notificationsOf,
   toQuestion,
 } from "@/lib/server/docs"
-import { docId, questionInput, questionUpdate } from "@/lib/schemas"
+import {
+  docId,
+  questionFlags,
+  questionInput,
+  questionUpdate,
+} from "@/lib/schemas"
 import type { IdToken, Question } from "@/lib/types"
 import { canModerate } from "@/lib/utils/userUtils"
 
@@ -123,7 +128,7 @@ export async function acceptAnswer(
     let answerAuthorUid: string | null = null
     if (answerId) {
       const answer = await tx.get(ref.collection("comments").doc(answerId))
-      if (!answer.exists || answer.data()?.parentId) {
+      if (!answer.exists || answer.data()?.parentId || answer.data()?.deleted) {
         throw new Error("Only a top-level answer can be accepted.")
       }
       answerAuthorUid = answer.data()?.author?.uid ?? null
@@ -151,6 +156,26 @@ export async function acceptAnswer(
         auditEntry(actor, "question.accept", ref.path, { answerId })
       )
     }
+  })
+}
+
+// Moderators pin a question to the top of the forum or lock it to new answers.
+export async function setQuestionFlags(
+  idToken: IdToken,
+  questionId: string,
+  flags: unknown
+): Promise<void> {
+  const actor = await requirePermission(idToken, "moderate_forums")
+  const ref = questions().doc(docId.parse(questionId))
+  const changes = questionFlags.parse(flags)
+  await adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref)
+    if (!snap.exists) throw new Error("Question not found.")
+    tx.update(ref, changes)
+    tx.set(
+      auditLog().doc(),
+      auditEntry(actor, "question.flags", ref.path, changes)
+    )
   })
 }
 

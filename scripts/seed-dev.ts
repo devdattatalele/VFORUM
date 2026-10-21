@@ -99,9 +99,36 @@ type SeedQuestion = {
   downvoters?: Uid[]
   answers?: Answer[]
   accepted?: number // index into answers
+  pinned?: boolean
 }
 
 const QUESTIONS: SeedQuestion[] = [
+  {
+    by: "dev-moderator",
+    communityId: "general-tech",
+    title: "How to ask a good question on VForums",
+    tags: ["meta", "guide"],
+    hoursAgo: 400,
+    views: 230,
+    pinned: true,
+    upvoters: ["dev-student", "dev-student-2", "dev-admin"],
+    content: [
+      "Good questions get answered fast. Before you post:",
+      "",
+      "1. **Search first.** Someone in an earlier batch may have asked it.",
+      "2. **Say what you tried** and what happened instead.",
+      "3. **Paste code as text**, in a fenced block with the language:",
+      "",
+      "```python",
+      "def mean(xs):",
+      "    return sum(xs) / len(xs)  # ZeroDivisionError on []",
+      "```",
+      "",
+      "4. **Pick the right community and tags**, so the right people see it.",
+      "",
+      "When an answer solves your problem, mark it **accepted** so the next person finds it.",
+    ].join("\n"),
+  },
   {
     by: "dev-student",
     communityId: "gdg",
@@ -364,7 +391,8 @@ async function addAnswers(
   return { count, ids }
 }
 
-async function seedForum() {
+async function seedForum(): Promise<Map<string, string>> {
+  const questionIds = new Map<string, string>()
   for (const q of QUESTIONS) {
     const ref = db.collection("questions").doc()
     const upvoters = q.upvoters ?? []
@@ -385,6 +413,8 @@ async function seedForum() {
       downvotes: downvoters.length,
       views: q.views,
       replyCount: 0,
+      pinned: q.pinned ?? false,
+      locked: false,
     })
     for (const uid of upvoters) {
       await db.doc(`votes/questions/${ref.id}/${uid}`).set({ voteType: "up" })
@@ -401,6 +431,70 @@ async function seedForum() {
     await ref.update({
       replyCount: count,
       acceptedAnswerId: q.accepted === undefined ? null : ids[q.accepted],
+    })
+    questionIds.set(q.title, ref.id)
+  }
+  return questionIds
+}
+
+// A spam comment from an account outside the persona list, reported twice,
+// so the moderation queue has something to review.
+async function seedReports(questionIds: Map<string, string>) {
+  const spammer = {
+    uid: "dev-spammer",
+    displayName: "Promo Bot",
+    photoURL: null,
+  }
+  await auth.createUser({
+    uid: spammer.uid,
+    email: "promo.bot@vit.edu.in",
+    password: DEV_PASSWORD,
+    displayName: spammer.displayName,
+    emailVerified: true,
+  })
+  await db.doc(`users/${spammer.uid}`).set({
+    uid: spammer.uid,
+    email: "promo.bot@vit.edu.in",
+    displayName: spammer.displayName,
+    photoURL: null,
+    role: "user",
+    permissions: getPermissionsForRole("user"),
+    createdAt: hoursAgo(3),
+    updatedAt: hoursAgo(3),
+  })
+
+  const title = "Best resources to prepare for ACM ICPC regionals?"
+  const questionId = questionIds.get(title)!
+  const question = db.doc(`questions/${questionId}`)
+  const content =
+    "Get 1000 Instagram followers for Rs 99!! DM me now, limited offer"
+  const comment = question.collection("comments").doc()
+  await comment.set({
+    questionId,
+    parentId: null,
+    content,
+    author: spammer,
+    createdAt: hoursAgo(2),
+    upvotes: 0,
+    downvotes: 0,
+  })
+  await question.update({ replyCount: FieldValue.increment(1) })
+
+  for (const [uid, details] of [
+    ["dev-student", ""],
+    ["dev-student-2", "Posted the same thing in three threads"],
+  ] as const) {
+    await db.doc(`reports/${questionId}_${comment.id}_${uid}`).set({
+      questionId,
+      commentId: comment.id,
+      questionTitle: title,
+      excerpt: content,
+      targetAuthor: spammer,
+      reason: "spam",
+      details,
+      reporter: author(uid),
+      status: "open",
+      createdAt: hoursAgo(1),
     })
   }
 }
@@ -459,10 +553,10 @@ async function seedEvents() {
 async function main() {
   await wipe()
   await seedPeople()
-  await seedForum()
+  await seedReports(await seedForum())
   await seedEvents()
   console.log(
-    `Seeded ${DEV_PERSONAS.length} personas, ${QUESTIONS.length} questions and 4 events into ${projectId}.`
+    `Seeded ${DEV_PERSONAS.length} personas, ${QUESTIONS.length} questions, 2 open reports and 4 events into ${projectId}.`
   )
 }
 
