@@ -1,22 +1,11 @@
 import type { Community, Event, Question, UserProfile, Comment } from "./types"
-import {
-  Users,
-  Cpu,
-  Bot,
-  ToyBrick,
-  Code,
-  CalendarDays,
-  MessageSquareQuote,
-  Home,
-  Rss,
-  Info,
-} from "lucide-react"
+import { Users, Cpu, Bot, ToyBrick, Code, Rss } from "lucide-react"
 
+// Top navigation, in the order vboard uses: discovery first.
 export const NAV_LINKS = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/events", label: "Events", icon: CalendarDays },
-  { href: "/qna", label: "Q&A Forum", icon: MessageSquareQuote },
-  { href: "/about", label: "About", icon: Info },
+  { href: "/qna", label: "Forum" },
+  { href: "/events", label: "Events" },
+  { href: "/communities", label: "Communities" },
 ]
 
 export const COMMUNITIES: Community[] = [

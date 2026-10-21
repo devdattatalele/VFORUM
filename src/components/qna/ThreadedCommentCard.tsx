@@ -1,33 +1,22 @@
 "use client"
 
-import React, { useState } from "react"
-import type { Comment as CommentType } from "@/lib/types"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import VoteButtons from "./VoteButtons"
-import CompactCommentForm from "./CompactCommentForm"
+import { useState } from "react"
+import Link from "next/link"
+import { formatDistanceToNow } from "date-fns"
 import {
-  UserCircle,
-  CalendarDays,
-  MessageSquare,
-  ChevronDown,
-  ChevronUp,
-  Share,
-  Edit3,
   CheckCircle2,
   Flag,
+  Link2,
+  MessageSquare,
+  Pencil,
   Trash2,
 } from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
-import { cn } from "@/lib/utils"
-import { useAuth } from "@/contexts/AuthContext"
-import { useToast } from "@/hooks/use-toast"
-import { updateComment } from "@/lib/services/commentService"
-import { idToken } from "@/lib/client-auth"
+import { toast } from "sonner"
 import Markdown from "@/components/Markdown"
-import SolvedBadge from "@/components/qna/SolvedBadge"
-import { canModerate } from "@/lib/utils/userUtils"
+import CompactCommentForm from "@/components/qna/CompactCommentForm"
 import ReportDialog from "@/components/qna/ReportDialog"
+import SolvedBadge from "@/components/qna/SolvedBadge"
+import VoteButtons from "@/components/qna/VoteButtons"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,328 +27,228 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import Link from "next/link"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/AuthContext"
+import { idToken } from "@/lib/client-auth"
+import { updateComment } from "@/lib/services/commentService"
+import type { Comment } from "@/lib/types"
+import { cn } from "@/lib/utils"
+import { canModerate } from "@/lib/utils/userUtils"
 
-interface ThreadedCommentCardProps {
-  comment: CommentType
-  questionId: string
-  level?: number
-  onReply: (content: string, parentId: string) => Promise<void>
-  onEdit?: () => void // Callback to refresh comments after edit
-  children?: React.ReactNode // For nested replies
-  isAccepted?: boolean
-  canAccept?: boolean // the viewer may mark this top-level answer as accepted
-  onAccept?: (commentId: string | null) => void
-  canReply?: boolean // false on locked questions, except for moderators
-  onDelete?: (commentId: string) => void
-}
+const MAX_DEPTH = 6
 
+// One answer or reply. Top-level answers are cards; replies hang off a rule.
 export default function ThreadedCommentCard({
   comment,
   questionId,
   level = 0,
   onReply,
-  onEdit,
-  children,
+  onEdited,
   isAccepted = false,
   canAccept = false,
   onAccept,
   canReply = true,
   onDelete,
-}: ThreadedCommentCardProps) {
+  children,
+}: {
+  comment: Comment
+  questionId: string
+  level?: number
+  onReply: (content: string, parentId: string) => Promise<void>
+  onEdited?: () => void
+  isAccepted?: boolean
+  canAccept?: boolean
+  onAccept?: (commentId: string | null) => void
+  canReply?: boolean
+  onDelete?: (commentId: string) => void
+  children?: React.ReactNode
+}) {
+  const { user } = useAuth()
+  const [replying, setReplying] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
   const [reporting, setReporting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [showReplyForm, setShowReplyForm] = useState(false)
-  const [showEditForm, setShowEditForm] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const { user } = useAuth()
-  const { toast } = useToast()
 
-  const maxLevel = 8 // Maximum nesting level
-  const isMaxLevel = level >= maxLevel
+  const canManage = canModerate(user, comment.author.uid)
+  const name = comment.author.displayName || "Anonymous"
 
-  const handleReply = async (content: string) => {
-    await onReply(content, comment.id)
-    setShowReplyForm(false)
-  }
-
-  const handleCancel = () => {
-    setShowReplyForm(false)
-    setShowEditForm(false)
-  }
-
-  const handleShare = async () => {
+  const share = async () => {
     try {
-      const url = `${window.location.origin}/qna/${questionId}#comment-${comment.id}`
-      await navigator.clipboard.writeText(url)
-      toast({
-        title: "Link copied!",
-        description: "Comment link has been copied to clipboard.",
-      })
-    } catch (error) {
-      toast({
-        title: "Copy failed",
-        description: "Unable to copy link. Please try again.",
-        variant: "destructive",
-      })
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/qna/${questionId}#comment-${comment.id}`
+      )
+      toast.success("Link copied")
+    } catch {
+      toast.error("Could not copy the link")
     }
   }
 
-  const handleEdit = () => {
-    setShowEditForm(true)
-    setShowReplyForm(false)
+  const saveEdit = async (content: string) => {
+    await updateComment(await idToken(), questionId, comment.id, content)
+    setEditing(false)
+    toast.success("Comment updated")
+    onEdited?.()
   }
 
-  const handleEditSubmit = async (content: string) => {
-    if (!user) return
-
-    try {
-      await updateComment(await idToken(), questionId, comment.id, content)
-      setShowEditForm(false)
-      toast({
-        title: "Comment updated",
-        description: "Your comment has been updated successfully.",
-      })
-
-      // Call the onEdit callback to refresh comments
-      if (onEdit) {
-        onEdit()
-      }
-    } catch (error) {
-      console.error("Error updating comment:", error)
-      toast({
-        title: "Update failed",
-        description: "Unable to update comment. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const CollapseButton = () => (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="h-6 w-6 p-0 hover:bg-muted/50"
-      onClick={() => setIsCollapsed(!isCollapsed)}
-    >
-      {isCollapsed ? (
-        <ChevronDown className="h-3 w-3" />
-      ) : (
-        <ChevronUp className="h-3 w-3" />
-      )}
-    </Button>
-  )
+  const action = "h-8 gap-1.5 px-2 text-muted-foreground"
 
   return (
     <div
       id={`comment-${comment.id}`}
-      className={cn(
-        "relative",
-        level > 0 && "ml-10", // Increased indentation
-        isCollapsed && "opacity-60"
-      )}
+      className={cn("scroll-mt-24", level > 0 && "border-l pl-4")}
     >
-      {/* Threading line for nested comments */}
-      {level > 0 && (
-        <div className="absolute bottom-0 left-[-20px] top-0 w-[2px] bg-border/30" />
-      )}
-
       <div
         className={cn(
-          "group relative rounded-lg bg-background/50 p-4 transition-colors hover:bg-muted/30", // Increased padding
-          level === 0 && "border border-border/50 shadow-sm",
-          isAccepted && "border-green-500/60 bg-green-500/5"
+          level === 0 && "rounded-lg border bg-card p-4",
+          isAccepted && "border-success/60"
         )}
       >
-        <div className="flex gap-3">
-          {" "}
-          {/* Increased gap */}
-          {/* Collapse button for threads with replies */}
-          <div className="flex flex-col items-center pt-1">
-            {children && <CollapseButton />}
-            <Avatar className="mt-1 h-8 w-8">
-              {" "}
-              {/* Increased avatar size */}
-              <AvatarImage
-                src={comment.author.photoURL || undefined}
-                alt={comment.author.displayName || "Author"}
-              />
-              <AvatarFallback className="text-sm">
-                {comment.author.displayName ? (
-                  comment.author.displayName.charAt(0).toUpperCase()
-                ) : (
-                  <UserCircle size={14} />
-                )}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-          <div className="min-w-0 flex-1">
-            {/* Comment header */}
-            <div className="mb-3 flex items-center gap-3 text-sm text-muted-foreground">
-              {" "}
-              {/* Increased gaps and margin */}
-              {comment.deleted ? (
-                <span className="text-base font-medium text-muted-foreground">
-                  [deleted]
-                </span>
-              ) : (
-                <Link
-                  href={`/u/${comment.author.uid}`}
-                  className="text-base font-medium text-foreground hover:text-primary hover:underline"
-                >
-                  {comment.author.displayName || "Anonymous"}
-                </Link>
-              )}
-              <span className="opacity-70">•</span>
-              <CalendarDays className="h-4 w-4" />
-              <span>
-                {formatDistanceToNow(new Date(comment.createdAt), {
-                  addSuffix: true,
-                })}
-              </span>
-              {isAccepted && <SolvedBadge label="Accepted answer" />}
-            </div>
-
-            {!isCollapsed && comment.deleted && (
-              <p className="mb-2 text-sm italic text-muted-foreground">
-                This comment was deleted.
-              </p>
-            )}
-
-            {/* Comment content */}
-            {!isCollapsed && !comment.deleted && (
-              <>
-                <Markdown className="mb-4 text-base leading-relaxed text-foreground/90">
-                  {comment.content}
-                </Markdown>
-
-                {/* Comment actions */}
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <VoteButtons
-                    initialUpvotes={comment.upvotes || 0}
-                    initialDownvotes={comment.downvotes || 0}
-                    id={comment.id}
-                    type="comment"
-                    questionId={questionId}
-                    orientation="horizontal"
-                    size="sm"
-                    mode="like"
-                  />
-                  {user && !isMaxLevel && canReply && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-3 text-sm hover:bg-muted" // Increased height and padding
-                      onClick={() => setShowReplyForm(!showReplyForm)}
-                    >
-                      <MessageSquare className="mr-1 h-4 w-4" />
-                      Reply
-                    </Button>
-                  )}
-                  {/* Share button */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-3 text-sm hover:bg-muted" // Increased height and padding
-                    onClick={handleShare}
-                  >
-                    <Share className="mr-1 h-4 w-4" />
-                    Share
-                  </Button>
-                  {/* Edit button for comment author */}
-                  {canAccept && onAccept && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "h-8 px-3 text-sm hover:bg-muted",
-                        isAccepted && "text-green-700 dark:text-green-400"
-                      )}
-                      onClick={() => onAccept(isAccepted ? null : comment.id)}
-                    >
-                      <CheckCircle2 className="mr-1 h-4 w-4" />
-                      {isAccepted ? "Unaccept" : "Accept answer"}
-                    </Button>
-                  )}
-                  {canModerate(user, comment.author.uid) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-3 text-sm hover:bg-muted" // Increased height and padding
-                      onClick={handleEdit}
-                    >
-                      <Edit3 className="mr-1 h-4 w-4" />
-                      Edit
-                    </Button>
-                  )}
-                  {onDelete && canModerate(user, comment.author.uid) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-3 text-sm text-muted-foreground hover:bg-muted hover:text-destructive"
-                      onClick={() => setConfirmDelete(true)}
-                    >
-                      <Trash2 className="mr-1 h-4 w-4" />
-                      Delete
-                    </Button>
-                  )}
-                  {user && user.uid !== comment.author.uid && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-3 text-sm text-muted-foreground hover:bg-muted"
-                      onClick={() => setReporting(true)}
-                    >
-                      <Flag className="mr-1 h-4 w-4" />
-                      Report
-                    </Button>
-                  )}
-                </div>
-
-                {/* Reply form */}
-                {showReplyForm && (
-                  <div className="mt-4 border-l-2 border-primary/30 pl-4">
-                    {" "}
-                    {/* Increased margins and padding */}
-                    <CompactCommentForm
-                      questionId={questionId}
-                      parentId={comment.id}
-                      onSubmit={handleReply}
-                      onCancel={handleCancel}
-                      placeholder={`Reply to ${comment.author.displayName || "this comment"}...`}
-                    />
-                  </div>
-                )}
-
-                {/* Edit form */}
-                {showEditForm && (
-                  <div className="mt-4 border-l-2 border-orange-500/30 pl-4">
-                    {" "}
-                    {/* Increased margins and padding */}
-                    <CompactCommentForm
-                      questionId={questionId}
-                      parentId={null}
-                      onSubmit={handleEditSubmit}
-                      onCancel={handleCancel}
-                      placeholder="Edit your comment..."
-                      initialContent={comment.content}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+          <Avatar className="h-6 w-6">
+            <AvatarImage src={comment.author.photoURL ?? undefined} alt="" />
+            <AvatarFallback className="bg-secondary text-[11px]">
+              {comment.deleted ? "?" : name.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          {comment.deleted ? (
+            <span className="text-muted-foreground">[deleted]</span>
+          ) : (
+            <Link
+              href={`/u/${comment.author.uid}`}
+              className="font-medium hover:underline"
+            >
+              {name}
+            </Link>
+          )}
+          <span className="text-muted-foreground">
+            ·{" "}
+            {formatDistanceToNow(new Date(comment.createdAt), {
+              addSuffix: true,
+            })}
+            {comment.updatedAt && !comment.deleted && " · edited"}
+          </span>
+          {isAccepted && <SolvedBadge label="Accepted answer" />}
         </div>
+
+        {comment.deleted ? (
+          <p className="mt-2 text-sm italic text-muted-foreground">
+            This comment was deleted.
+          </p>
+        ) : editing ? (
+          <CompactCommentForm
+            startOpen
+            initialContent={comment.content}
+            submitLabel="Save"
+            onSubmit={saveEdit}
+            onCancel={() => setEditing(false)}
+            className="mt-3"
+          />
+        ) : (
+          <>
+            <Markdown className="mt-2 text-[15px]">{comment.content}</Markdown>
+            <div className="mt-2 flex flex-wrap items-center gap-0.5">
+              <VoteButtons
+                mode="like"
+                id={comment.id}
+                type="comment"
+                questionId={questionId}
+                initialUpvotes={comment.upvotes}
+                initialDownvotes={comment.downvotes}
+              />
+              {user && canReply && level < MAX_DEPTH && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={action}
+                  onClick={() => setReplying((v) => !v)}
+                >
+                  <MessageSquare className="h-4 w-4" /> Reply
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className={action}
+                onClick={share}
+              >
+                <Link2 className="h-4 w-4" /> Share
+              </Button>
+              {canAccept && onAccept && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(action, isAccepted && "text-success")}
+                  onClick={() => onAccept(isAccepted ? null : comment.id)}
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {isAccepted ? "Unaccept" : "Accept answer"}
+                </Button>
+              )}
+              {canManage && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={action}
+                  onClick={() => setEditing(true)}
+                >
+                  <Pencil className="h-4 w-4" /> Edit
+                </Button>
+              )}
+              {canManage && onDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(action, "hover:text-destructive")}
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </Button>
+              )}
+              {user && user.uid !== comment.author.uid && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={action}
+                  onClick={() => setReporting(true)}
+                >
+                  <Flag className="h-4 w-4" /> Report
+                </Button>
+              )}
+            </div>
+          </>
+        )}
+
+        {replying && (
+          <CompactCommentForm
+            startOpen
+            placeholder={`Reply to ${name}`}
+            submitLabel="Reply"
+            onSubmit={async (content) => {
+              await onReply(content, comment.id)
+              setReplying(false)
+            }}
+            onCancel={() => setReplying(false)}
+            className="mt-3"
+          />
+        )}
       </div>
 
-      {/* Nested replies */}
-      {!isCollapsed && children && (
-        <div className="mt-3">
-          {" "}
-          {/* Increased margin */}
-          {children}
+      {children && (
+        <div className="mt-3 space-y-3">
+          <button
+            type="button"
+            onClick={() => setCollapsed((v) => !v)}
+            aria-expanded={!collapsed}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            {collapsed ? "Show replies" : "Hide replies"}
+          </button>
+          {!collapsed && children}
         </div>
       )}
+
       <ReportDialog
         open={reporting}
         onOpenChange={setReporting}

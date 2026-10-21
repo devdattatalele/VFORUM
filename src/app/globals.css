@@ -2,93 +2,86 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: var(--font-inter), sans-serif;
-}
-
+/* VOSS design tokens: the values vboard, vauth and vosslabs.org use, as HSL
+   channels so Tailwind opacity modifiers work. Components use these semantic
+   tokens only; no raw colours in markup. Spec: docs/UI_UX_SPEC.md */
 @layer base {
   :root {
-    /* Light Theme Colors - Google Color Scheme */
-    --background: 0 0% 98%; /* Keep existing off-white background */
-    --foreground: 220 15% 20%; /* Keep existing dark cool gray for text */
-
-    --card: 0 0% 100%; /* Keep existing white */
-    --card-foreground: 220 15% 20%;
-
+    --background: 0 0% 98%; /* #fafafa paper */
+    --foreground: 0 0% 4%; /* #0a0a0a ink */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 20%;
-
-    --primary: 217 89% 61%; /* Google Blue #4285F4 */
-    --primary-foreground: 0 0% 100%; /* White */
-
-    --secondary: 217 20% 90%; /* Very light Google blue */
-    --secondary-foreground: 217 89% 35%; /* Darker Google blue for text */
-
-    --muted: 220 15% 94%; /* Keep existing light cool gray */
-    --muted-foreground: 220 10% 50%; /* Keep existing medium cool gray */
-
-    --accent: 217 91% 60%; /* Blue accent instead of green */
-    --accent-foreground: 0 0% 100%; /* White */
-
-    --destructive: 4 90% 58%; /* Google Red #EA4335 */
+    --popover-foreground: 0 0% 4%;
+    --primary: 0 0% 4%; /* primary actions are ink */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96%; /* #f5f5f5 */
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 32%; /* #525252 */
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 217 89% 61%; /* Google Blue for rings */
-
+    --success: 145 45% 34%; /* #2f7d4f */
+    --warning: 36 100% 35%; /* #b26a00 */
+    --brand: 13 74% 44%; /* #c4421d, VOSS orange on light */
+    --brand-foreground: 0 0% 100%;
+    --border: 0 0% 90%; /* #e5e5e5 */
+    --input: 0 0% 90%;
+    --ring: 13 74% 44%;
     --radius: 0.5rem;
 
-    /* Sidebar light theme - Blue colors */
-    --sidebar-background: 0 0% 96%; /* Keep existing light background */
-    --sidebar-foreground: 220 15% 25%;
-    --sidebar-primary: 217 89% 61%; /* Google Blue */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 91% 60%; /* Blue accent instead of green */
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 15% 85%;
-    --sidebar-ring: 217 89% 61%; /* Google Blue */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 4%;
+    --sidebar-primary: 0 0% 4%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 13 74% 44%;
+
+    /* Chart series: slots 1 and 2 of the validated categorical palette */
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
   }
 
   .dark {
-    /* Dark Theme Colors - Google Color Scheme */
-    --background: 220 5% 13%; /* Keep existing dark background */
-    --foreground: 220 15% 92%; /* Keep existing light cool gray for text */
+    --background: 0 0% 4%; /* #0a0a0a */
+    --foreground: 0 0% 98%;
+    --card: 0 0% 7%; /* #111111 */
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 9%; /* #161616 */
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 9%;
+    --muted-foreground: 0 0% 64%; /* #a3a3a3 */
+    --accent: 0 0% 9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 0 0% 4%;
+    --success: 144 43% 56%; /* #5fbf85 */
+    --warning: 36 71% 58%; /* #e0a44a */
+    --brand: 20 96% 61%; /* #fb7a3c, VOSS orange */
+    --brand-foreground: 0 0% 4%;
+    --border: 0 0% 15%; /* #262626 */
+    --input: 0 0% 15%;
+    --ring: 20 96% 61%;
 
-    --card: 220 5% 18%; /* Keep existing dark grey for cards */
-    --card-foreground: 220 15% 92%;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 20 96% 61%;
 
-    --popover: 220 5% 18%;
-    --popover-foreground: 220 15% 92%;
-
-    --primary: 217 89% 65%; /* Brighter Google Blue for dark mode */
-    --primary-foreground: 0 0% 100%; /* White */
-
-    --secondary: 217 40% 25%; /* Dark muted Google blue */
-    --secondary-foreground: 217 50% 80%; /* Lighter Google blue for text */
-
-    --muted: 220 10% 25%; /* Keep existing darker cool gray */
-    --muted-foreground: 220 10% 65%; /* Keep existing medium-light cool gray */
-
-    --accent: 217 91% 65%; /* Blue accent for dark mode */
-    --accent-foreground: 0 0% 100%; /* White */
-
-    --destructive: 4 90% 65%; /* Brighter Google Red for dark mode */
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 220 5% 22%; /* Keep existing border color */
-    --input: 220 5% 25%; /* Keep existing input background */
-    --ring: 217 89% 65%; /* Brighter Google Blue for rings */
-
-    /* Sidebar dark theme - Blue colors */
-    --sidebar-background: 220 5% 16%; /* Keep existing dark sidebar background */
-    --sidebar-foreground: 220 15% 90%;
-    --sidebar-primary: 217 89% 65%; /* Brighter Google Blue */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 91% 65%; /* Blue accent for dark mode */
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 5% 20%;
-    --sidebar-ring: 217 89% 65%; /* Brighter Google Blue */
+    --series-1: #3987e5;
+    --series-2: #d95926;
   }
 }
 
@@ -96,181 +89,138 @@ body {
   * {
     @apply border-border;
   }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
-    @apply bg-background font-body text-foreground;
+    @apply bg-background font-sans text-foreground antialiased;
+    line-height: 1.55;
+    font-feature-settings: "ss01", "cv11";
   }
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-headline;
+
+  ::selection {
+    background: hsl(var(--brand));
+    color: hsl(var(--brand-foreground));
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 }
 
-/* Add Google color accent utilities */
-@layer utilities {
-  .text-google-blue {
-    color: hsl(217 89% 61%);
+/* VOSS layout: full width up to 1320px, 16px gutters on mobile, 24px above. */
+@layer components {
+  .container {
+    width: 100%;
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: 1rem;
   }
-  .text-google-red {
-    color: hsl(4 90% 58%);
-  }
-  .text-google-yellow {
-    color: hsl(45 100% 50%);
-  }
-  .text-google-green {
-    color: hsl(142 76% 36%);
-  }
-
-  .bg-google-blue {
-    background-color: hsl(217 89% 61%);
-  }
-  .bg-google-red {
-    background-color: hsl(4 90% 58%);
-  }
-  .bg-google-yellow {
-    background-color: hsl(45 100% 50%);
-  }
-  .bg-google-green {
-    background-color: hsl(142 76% 36%);
-  }
-
-  .border-google-blue {
-    border-color: hsl(217 89% 61%);
-  }
-  .border-google-red {
-    border-color: hsl(4 90% 58%);
-  }
-  .border-google-yellow {
-    border-color: hsl(45 100% 50%);
-  }
-  .border-google-green {
-    border-color: hsl(142 76% 36%);
-  }
-
-  /* Community tag utilities */
-  .bg-community-tag {
-    background-color: hsl(142 76% 36%);
-  }
-  .text-community-tag {
-    color: hsl(142 76% 36%);
-  }
-  .border-community-tag {
-    border-color: hsl(142 76% 36%);
+  @media (min-width: 768px) {
+    .container {
+      padding-inline: 1.5rem;
+    }
   }
 }
 
-/* Add a utility class for glassmorphism - still available if needed elsewhere */
-.glass-card {
-  @apply border border-white/10 bg-card/80 backdrop-blur-lg;
-}
-.dark .glass-card {
-  @apply border-white/5 bg-card/70 backdrop-blur-lg;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
-/* Code highlighting for Markdown (rehype-highlight), GitHub-like in both themes.
-   Plain CSS on purpose: Tailwind drops @layer rules whose class names never
-   appear in the source, and the hljs-* classes only exist at runtime. */
+/* Code highlighting for Markdown (rehype-highlight), the VS Code Light and
+   Dark+ colours vosslabs.org uses. Plain CSS on purpose: Tailwind drops @layer
+   rules whose class names never appear in the source, and hljs-* classes only
+   exist at runtime. */
 .hljs-comment,
 .hljs-quote {
-  color: #6a737d;
+  color: #008000;
   font-style: italic;
 }
 .hljs-keyword,
 .hljs-selector-tag,
-.hljs-literal,
 .hljs-doctag,
 .hljs-meta .hljs-keyword {
-  color: #d73a49;
+  color: #7c3aed;
+}
+.hljs-literal,
+.hljs-number,
+.hljs-symbol {
+  color: #0070c1;
 }
 .hljs-string,
 .hljs-regexp,
-.hljs-meta .hljs-string {
-  color: #032f62;
+.hljs-meta .hljs-string,
+.hljs-addition {
+  color: #a31515;
 }
-.hljs-number,
-.hljs-built_in,
-.hljs-symbol,
+.hljs-title,
+.hljs-title.function_,
+.hljs-title.class_,
+.hljs-section,
+.hljs-built_in {
+  color: #795e26;
+}
 .hljs-variable,
 .hljs-template-variable,
 .hljs-attr,
 .hljs-attribute,
-.hljs-property {
-  color: #005cc5;
-}
-.hljs-title,
-.hljs-section,
-.hljs-title.function_,
-.hljs-title.class_ {
-  color: #6f42c1;
-}
-.hljs-type,
+.hljs-property,
 .hljs-params,
-.hljs-selector-class,
-.hljs-selector-id {
-  color: #e36209;
-}
 .hljs-name,
-.hljs-tag {
-  color: #22863a;
-}
-.hljs-addition {
-  color: #22863a;
-  background: #f0fff4;
+.hljs-tag,
+.hljs-type {
+  color: #001080;
 }
 .hljs-deletion {
-  color: #b31d28;
-  background: #ffeef0;
+  color: #a31515;
+  text-decoration: line-through;
 }
 .dark .hljs-comment,
 .dark .hljs-quote {
-  color: #8b949e;
+  color: #6a9955;
 }
 .dark .hljs-keyword,
 .dark .hljs-selector-tag,
-.dark .hljs-literal,
 .dark .hljs-doctag,
 .dark .hljs-meta .hljs-keyword {
-  color: #ff7b72;
+  color: #a78bfa;
+}
+.dark .hljs-literal,
+.dark .hljs-number,
+.dark .hljs-symbol {
+  color: #569cd6;
 }
 .dark .hljs-string,
 .dark .hljs-regexp,
-.dark .hljs-meta .hljs-string {
-  color: #a5d6ff;
+.dark .hljs-meta .hljs-string,
+.dark .hljs-addition,
+.dark .hljs-deletion {
+  color: #ce9178;
 }
-.dark .hljs-number,
-.dark .hljs-built_in,
-.dark .hljs-symbol,
+.dark .hljs-title,
+.dark .hljs-title.function_,
+.dark .hljs-title.class_,
+.dark .hljs-section,
+.dark .hljs-built_in {
+  color: #dcdcaa;
+}
 .dark .hljs-variable,
 .dark .hljs-template-variable,
 .dark .hljs-attr,
 .dark .hljs-attribute,
-.dark .hljs-property {
-  color: #79c0ff;
-}
-.dark .hljs-title,
-.dark .hljs-section,
-.dark .hljs-title.function_,
-.dark .hljs-title.class_ {
-  color: #d2a8ff;
-}
-.dark .hljs-type,
+.dark .hljs-property,
 .dark .hljs-params,
-.dark .hljs-selector-class,
-.dark .hljs-selector-id {
-  color: #ffa657;
-}
 .dark .hljs-name,
-.dark .hljs-tag {
-  color: #7ee787;
-}
-.dark .hljs-addition {
-  color: #7ee787;
-  background: rgb(46 160 67 / 0.15);
-}
-.dark .hljs-deletion {
-  color: #ffa198;
-  background: rgb(248 81 73 / 0.15);
+.dark .hljs-tag,
+.dark .hljs-type {
+  color: #9cdcfe;
 }

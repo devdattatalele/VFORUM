@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { COMMUNITIES } from "@/lib/constants"
 import type { Event } from "@/lib/types"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import React from "react"
 import { useAuth } from "@/contexts/AuthContext"
@@ -65,7 +65,6 @@ interface EventFormProps {
 }
 
 export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
-  const { toast } = useToast()
   const router = useRouter()
   const { user } = useAuth()
   const [isLoading, setIsLoading] = React.useState(false)
@@ -91,10 +90,8 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
 
   async function onSubmit(data: EventFormValues) {
     if (!user) {
-      toast({
-        title: "Not Authenticated",
+      toast.error("Not Authenticated", {
         description: "You must be signed in to create an event.",
-        variant: "destructive",
       })
       return
     }
@@ -117,8 +114,7 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
         rsvpLink,
         dateTime: data.dateTime,
       })
-      toast({
-        title: event ? "Event Updated!" : "Event Created!",
+      toast.success(event ? "Event Updated!" : "Event Created!", {
         description: `"${data.title}" has been successfully ${event ? "updated" : "created"}.`,
       })
       if (onSubmitSuccess) {
@@ -129,10 +125,8 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
       }
     } catch (error) {
       console.error("Error submitting event:", error)
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Could not save the event. Please try again.",
-        variant: "destructive",
       })
     } finally {
       setIsLoading(false)
@@ -147,12 +141,9 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Event Title</FormLabel>
+              <FormLabel>Title</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="e.g., Tech Talk on Quantum Computing"
-                  {...field}
-                />
+                <Input placeholder="e.g. Intro to Git and GitHub" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -163,7 +154,7 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Event Description</FormLabel>
+              <FormLabel>Description</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Provide details about the event, speakers, agenda, etc."
@@ -180,7 +171,7 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
           name="posterImageUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Poster Image URL</FormLabel>
+              <FormLabel>Poster image URL</FormLabel>
               <FormControl>
                 <Input
                   type="url"
@@ -200,7 +191,7 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
           name="rsvpLink"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>RSVP Link (Optional)</FormLabel>
+              <FormLabel>RSVP link (optional)</FormLabel>
               <FormControl>
                 <Input
                   type="url"
@@ -222,7 +213,7 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
             name="dateTime"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Event Date & Time</FormLabel>
+                <FormLabel>Date and time</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -303,9 +294,9 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
             name="clubName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Organizing Club/Group Name</FormLabel>
+                <FormLabel>Organizing club</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., GDG VIT Pune" {...field} />
+                  <Input placeholder="e.g. GDG on Campus VIT" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -317,7 +308,7 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
           name="communityId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Community Channel</FormLabel>
+              <FormLabel>Community</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -344,7 +335,7 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
         <Button
           type="submit"
           disabled={isLoading || !user}
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
+          className="w-full sm:w-auto"
         >
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {user

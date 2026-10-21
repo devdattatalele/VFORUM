@@ -92,7 +92,7 @@ export default function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative h-8 w-8 border border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+          className="relative"
           aria-label={
             state.unread
               ? `Notifications, ${state.unread} unread`
@@ -101,7 +101,7 @@ export default function NotificationBell() {
         >
           <Bell className="h-4 w-4" />
           {state.unread > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white">
+            <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 font-mono text-[10px] font-semibold leading-none text-brand-foreground">
               {state.unread > 9 ? "9+" : state.unread}
             </span>
           )}
@@ -134,14 +134,14 @@ export default function NotificationBell() {
                   onClick={() => openNotification(n)}
                   className={cn(
                     "flex w-full gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-muted",
-                    !n.read && "bg-primary/5"
+                    !n.read && "bg-brand/5"
                   )}
                 >
                   <span
                     aria-hidden
                     className={cn(
                       "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-                      n.read ? "bg-transparent" : "bg-primary"
+                      n.read ? "bg-transparent" : "bg-brand"
                     )}
                   />
                   <span className="min-w-0">

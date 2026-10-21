@@ -1,245 +1,132 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
+import { ArrowBigDown, ArrowBigUp, ThumbsUp } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { ArrowBigUp, ArrowBigDown, Heart, Share2 } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
-import {
-  voteOnQuestion,
-  voteOnComment,
-  getUserVote,
-} from "@/lib/services/voteService"
-import { useToast } from "@/hooks/use-toast"
-import { voteDelta } from "@/lib/votes"
 import { idToken } from "@/lib/client-auth"
+import {
+  getUserVote,
+  voteOnComment,
+  voteOnQuestion,
+} from "@/lib/services/voteService"
+import { cn } from "@/lib/utils"
+import { voteDelta, type VoteType } from "@/lib/votes"
 
-interface VoteButtonsProps {
-  initialUpvotes: number
-  initialDownvotes?: number
-  orientation?: "vertical" | "horizontal"
-  size?: "sm" | "default"
-  id: string // ID of the item being voted on (question/comment)
-  type: "question" | "comment" // Type of item being voted on
-  questionId?: string // Required for comment voting
-  mode?: "upvote" | "like" // New prop to control voting mode
-  showShare?: boolean // Whether to show share button
-  onShare?: () => void // Share callback
-}
-
+// Up and down votes on questions, a single like on comments. Updates
+// optimistically with the same arithmetic the server applies.
 export default function VoteButtons({
-  initialUpvotes,
-  initialDownvotes = 0,
-  orientation = "vertical",
-  size = "default",
   id,
   type,
   questionId,
-  mode = "upvote", // Default to upvote mode
-  showShare = false,
-  onShare,
-}: VoteButtonsProps) {
-  const [upvotes, setUpvotes] = useState(initialUpvotes)
-  const [downvotes, setDownvotes] = useState(initialDownvotes)
-  const [userVote, setUserVote] = useState<"up" | "down" | "none">("none")
-  const [isLoading, setIsLoading] = useState(false)
+  initialUpvotes,
+  initialDownvotes = 0,
+  mode = "upvote",
+}: {
+  id: string
+  type: "question" | "comment"
+  questionId?: string
+  initialUpvotes: number
+  initialDownvotes?: number
+  mode?: "upvote" | "like"
+}) {
   const { user } = useAuth()
-  const { toast } = useToast()
+  const [up, setUp] = useState(initialUpvotes)
+  const [down, setDown] = useState(initialDownvotes)
+  const [vote, setVote] = useState<VoteType>("none")
+  const [busy, setBusy] = useState(false)
 
-  const isLikeMode = mode === "like"
-
-  // Load user's existing vote
   useEffect(() => {
-    if (user?.uid) {
-      idToken()
-        .then((token) => getUserVote(token, id, type))
-        .then((vote) => setUserVote(vote))
-        .catch((error) => console.error("Error loading user vote:", error))
-    }
-  }, [id, user?.uid, type])
+    if (!user) return
+    idToken()
+      .then((token) => getUserVote(token, id, type))
+      .then(setVote)
+      .catch(() => {})
+  }, [id, type, user])
 
-  const handleVote = async (newVote: "up" | "down") => {
+  const cast = async (pressed: "up" | "down") => {
     if (!user) {
-      toast({
-        title: "Sign in required",
-        description: "You need to be signed in to vote.",
-        variant: "destructive",
-      })
+      toast.error("Sign in to vote")
       return
     }
-
-    if (isLoading) return
-
-    // In like mode, only handle 'up' votes (likes)
-    if (isLikeMode && newVote === "down") return
-
-    const finalVote = userVote === newVote ? "none" : newVote
-    const oldUserVote = userVote
-
-    // Optimistic update
-    setUserVote(finalVote)
-
-    // Same arithmetic the server applies, for the optimistic update
-    const { up: upvoteChange, down: downvoteChange } = voteDelta(
-      oldUserVote,
-      finalVote
-    )
-
-    setUpvotes((prev) => prev + upvoteChange)
-    if (!isLikeMode) {
-      setDownvotes((prev) => prev + downvoteChange)
-    }
-
-    setIsLoading(true)
-
+    if (busy) return
+    const previous = vote
+    const next: VoteType = vote === pressed ? "none" : pressed
+    const delta = voteDelta(previous, next)
+    setVote(next)
+    setUp((n) => n + delta.up)
+    setDown((n) => n + delta.down)
+    setBusy(true)
     try {
-      if (type === "question") {
-        await voteOnQuestion(await idToken(), id, finalVote)
-      } else if (type === "comment" && questionId) {
-        await voteOnComment(await idToken(), questionId, id, finalVote)
-      }
-
-      const actionText = isLikeMode
-        ? finalVote === "none"
-          ? "removed like from"
-          : "liked"
-        : finalVote === "none"
-          ? "removed vote from"
-          : `${finalVote}voted`
-
-      toast({
-        title: finalVote === "none" ? "Vote removed" : "Vote recorded",
-        description: `You ${actionText} this ${type}.`,
-      })
-    } catch (error) {
-      // Revert optimistic update on error
-      setUserVote(oldUserVote)
-      setUpvotes((prev) => prev - upvoteChange)
-      if (!isLikeMode) {
-        setDownvotes((prev) => prev - downvoteChange)
-      }
-
-      console.error("Error voting:", error)
-      toast({
-        title: "Voting failed",
-        description: "Unable to record your vote. Please try again.",
-        variant: "destructive",
-      })
+      const token = await idToken()
+      if (type === "question") await voteOnQuestion(token, id, next)
+      else if (questionId) await voteOnComment(token, questionId, id, next)
+    } catch {
+      setVote(previous)
+      setUp((n) => n - delta.up)
+      setDown((n) => n - delta.down)
+      toast.error("Could not record your vote")
     } finally {
-      setIsLoading(false)
+      setBusy(false)
     }
   }
 
-  const handleShare = () => {
-    if (onShare) {
-      onShare()
-    }
-  }
-
-  const score = isLikeMode ? upvotes : upvotes - downvotes
-
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-1",
-        orientation === "vertical" ? "flex-col" : "flex-row"
-      )}
-    >
+  if (mode === "like") {
+    const liked = vote === "up"
+    return (
       <Button
         variant="ghost"
-        size="icon"
+        size="sm"
+        onClick={() => cast("up")}
+        disabled={busy}
+        aria-pressed={liked}
+        aria-label={liked ? "Remove like" : "Like"}
         className={cn(
-          "rounded-full",
-          size === "sm" ? "h-7 w-7" : "h-9 w-9",
-          userVote === "up"
-            ? isLikeMode
-              ? "text-red-500"
-              : "text-primary"
-            : "text-muted-foreground hover:text-primary/80",
-          isLoading && "cursor-not-allowed opacity-50"
+          "h-8 gap-1.5 px-2 text-muted-foreground",
+          liked && "text-brand"
         )}
-        onClick={() => handleVote("up")}
-        disabled={isLoading}
-        aria-pressed={userVote === "up"}
-        aria-label={isLikeMode ? "Like" : "Upvote"}
       >
-        {isLikeMode ? (
-          <Heart
-            className={cn(
-              size === "sm" ? "h-4 w-4" : "h-5 w-5",
-              userVote === "up" ? "fill-red-500" : ""
-            )}
-          />
-        ) : (
-          <ArrowBigUp
-            className={cn(
-              size === "sm" ? "h-4 w-4" : "h-5 w-5",
-              userVote === "up" ? "fill-primary" : ""
-            )}
-          />
-        )}
+        <ThumbsUp className={cn("h-4 w-4", liked && "fill-current")} />
+        <span className="font-mono text-xs">{up}</span>
       </Button>
+    )
+  }
 
-      <span
-        className={cn(
-          "font-semibold tabular-nums",
-          size === "sm" ? "text-sm" : "text-base",
-          orientation === "vertical" ? "my-0.5" : "mx-1",
-          isLikeMode
-            ? score > 0
-              ? "text-red-500"
-              : "text-muted-foreground"
-            : score > 0
-              ? "text-green-600"
-              : score < 0
-                ? "text-red-600"
-                : "text-muted-foreground"
-        )}
+  return (
+    <div className="inline-flex items-center rounded-md border p-0.5">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => cast("up")}
+        disabled={busy}
+        aria-pressed={vote === "up"}
+        aria-label="Upvote"
+        className={cn(vote === "up" && "text-brand")}
       >
-        {score}
+        <ArrowBigUp
+          className={cn("h-5 w-5", vote === "up" && "fill-current")}
+        />
+      </Button>
+      <span
+        className="min-w-7 text-center font-mono text-sm font-medium"
+        aria-label="Score"
+      >
+        {up - down}
       </span>
-
-      {!isLikeMode && initialDownvotes !== undefined && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "rounded-full",
-            size === "sm" ? "h-7 w-7" : "h-9 w-9",
-            userVote === "down"
-              ? "text-destructive"
-              : "text-muted-foreground hover:text-destructive/80",
-            isLoading && "cursor-not-allowed opacity-50"
-          )}
-          onClick={() => handleVote("down")}
-          disabled={isLoading}
-          aria-pressed={userVote === "down"}
-          aria-label="Downvote"
-        >
-          <ArrowBigDown
-            className={cn(
-              size === "sm" ? "h-4 w-4" : "h-5 w-5",
-              userVote === "down" ? "fill-destructive" : ""
-            )}
-          />
-        </Button>
-      )}
-
-      {showShare && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "rounded-full",
-            size === "sm" ? "h-7 w-7" : "h-9 w-9",
-            "text-muted-foreground hover:text-primary/80"
-          )}
-          onClick={handleShare}
-          aria-label="Share"
-        >
-          <Share2 className={cn(size === "sm" ? "h-4 w-4" : "h-5 w-5")} />
-        </Button>
-      )}
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => cast("down")}
+        disabled={busy}
+        aria-pressed={vote === "down"}
+        aria-label="Downvote"
+        className={cn(vote === "down" && "text-brand")}
+      >
+        <ArrowBigDown
+          className={cn("h-5 w-5", vote === "down" && "fill-current")}
+        />
+      </Button>
     </div>
   )
 }

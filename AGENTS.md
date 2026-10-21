@@ -1,8 +1,8 @@
-# VFORUM — Project Instructions
+# vforum — Project Instructions
 
-VFORUM is the Q&A forum and events board for VIT (Vidyalankar Institute of Technology, Mumbai), built by Devdatta Talele and run on the [VOSS Labs](https://github.com/voss-labs) project model.
+vforum is the Q&A forum and events board for VIT (Vidyalankar Institute of Technology, Mumbai), built by Devdatta Talele and run on the [VOSS Labs](https://github.com/voss-labs) project model.
 
-The product wedge: campus tech knowledge that stays findable. A question answered in a WhatsApp group is lost by next week; a question answered on VFORUM is found by every batch after.
+The product wedge: campus tech knowledge that stays findable. A question answered in a WhatsApp group is lost by next week; a question answered on vforum is found by every batch after.
 
 For the full plan, read `research/plan.md`. For deferred features, read `research/future.md`. Don't pollute the plan with future ideas.
 
@@ -14,7 +14,8 @@ CLAUDE.md is symlinked to this file — same content applies to all coding agent
 - TypeScript strict, ESLint (`eslint-config-next`) + Prettier (with the Tailwind plugin)
 - Firebase: Firestore for data (server side only, through the Admin SDK) and Firebase Auth for sign-in, restricted to `@vit.edu.in`
 - Genkit + Gemini for tag suggestions
-- Tailwind 3 + shadcn, lucide-react
+- Tailwind 3 + shadcn, lucide-react, Geist and Geist Mono; the VOSS design language (`docs/UI_UX_SPEC.md`)
+- recharts for the admin analytics charts
 - Vitest for pure-logic unit tests
 - Vercel for deploy, GitHub Actions for CI
 - npm
@@ -33,7 +34,7 @@ CLAUDE.md is symlinked to this file — same content applies to all coding agent
 
 ## Layout
 
-- `src/app/` — routes (App Router); `globals.css` holds the design tokens
+- `src/app/(site)/` — public pages with the top navigation; `src/app/(workspace)/` — moderation and admin with the sidebar; `globals.css` holds the design tokens
 - `src/components/` — app components; `src/components/ui/` — vendored shadcn primitives
 - `src/lib/services/<domain>.ts` — `'use server'` actions, the only code that touches Firestore
 - `src/lib/firebase-admin.ts` — server-only Admin SDK singleton; `src/lib/firebase.ts` — client Auth only
@@ -41,7 +42,8 @@ CLAUDE.md is symlinked to this file — same content applies to all coding agent
 - `src/lib/server/docs.ts` — Firestore document to plain JSON mappers, audit log entries
 - `src/lib/client-auth.ts` — `idToken()`, the token the browser passes to server actions
 - `src/lib/schemas.ts` — Zod schemas for every server-action input
-- `src/lib/` — pure helpers (`*.test.ts` beside them)
+- `src/lib/` — pure helpers (`*.test.ts` beside them), including `analytics.ts` behind the admin dashboard
+- `src/components/PageHeader.tsx`, `EmptyState.tsx`, `qna/QuestionRow.tsx` — the shared compositions; reuse them before writing new ones
 - `src/ai/` — Genkit flows
 - `docs/` — local development, deployment, VOSS sign-in notes; `research/` — plan, future work, investigations
 
@@ -55,6 +57,8 @@ CLAUDE.md is symlinked to this file — same content applies to all coding agent
 - Formatting: Prettier (2 spaces, double quotes, no semicolons)
 - File size: 200–400 lines max per file; split when bigger
 - No emojis in code, commits, or docs
+- UI: semantic tokens only (no raw colours), sentence case, flat bordered cards, `sonner` for toasts, `next-themes` for the theme; follow `docs/UI_UX_SPEC.md`
+- Lint runs with `--max-warnings 0`
 
 ## Identity & RBAC
 

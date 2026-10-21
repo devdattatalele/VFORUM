@@ -1,8 +1,8 @@
-# VFORUM — Plan
+# vforum — Plan
 
-VFORUM is the Q&A forum and events board for VIT (Vidyalankar Institute of Technology, Mumbai), built by Devdatta Talele. It follows the VOSS Labs project model (https://github.com/voss-labs): MIT, public, one `npm run check`, plan-driven, contributor-first.
+vforum is the Q&A forum and events board for VIT (Vidyalankar Institute of Technology, Mumbai), built by Devdatta Talele. It follows the VOSS Labs project model (https://github.com/voss-labs): MIT, public, one `npm run check`, plan-driven, contributor-first.
 
-The wedge: campus tech knowledge that stays findable. A question asked in a WhatsApp group is answered once and lost; a question asked on VFORUM is answered once and found by every batch after.
+The wedge: campus tech knowledge that stays findable. A question asked in a WhatsApp group is answered once and lost; a question asked on vforum is answered once and found by every batch after.
 
 ## Where it stands (2026-10-21)
 
@@ -25,6 +25,7 @@ Added on the `voss-model` branch (phase 0 and most of phase 1):
 - Notifications for answers, replies and accepted answers
 - Public profiles at `/u/<uid>`
 - Moderation: reports, a moderation queue, pin, lock, in-place comment deletion, audit log
+- The VOSS design language across every page, and an admin analytics dashboard
 
 ## Tech stack
 
@@ -68,7 +69,7 @@ Remaining, one PR per item, each with its own issue:
 
 ### Phase 2 — Sign in with VOSS
 
-- Register VFORUM as a client in voss-labs/vauth `clients.config.ts` through a reviewed PR (see `docs/voss-auth.md`)
+- Register vforum as a client in voss-labs/vauth `clients.config.ts` through a reviewed PR (see `docs/voss-auth.md`)
 - Implement OIDC authorization code + PKCE against accounts.vosslabs.org
 - Two ways to keep Firebase during the transition: mint a Firebase custom token for the VOSS subject after the callback and keep Firestore and ID-token verification unchanged, or replace Firebase Auth with Better Auth, which needs phase 3's Postgres for its tables. Decide when the client is registered
 - Remove email/password once every active account has signed in through VOSS
@@ -78,12 +79,12 @@ Remaining, one PR per item, each with its own issue:
 - Move data to Postgres on Neon with Drizzle, SQL migrations, `dev:setup` with Docker or PGlite and demo data
 - Upgrade to Next 16, React 19, Tailwind 4, shadcn base-nova
 - Export Firestore, import into Postgres, cut over behind a flag
-- At this point VFORUM can move under the voss-labs organization as a sister project of vboard
+- At this point vforum can move under the voss-labs organization as a sister project of vboard
 
 ## Product boundaries
 
-- Events overlap with vboard (events and communities for VIT with one-tap registration). VFORUM keeps its events board until vboard ships registrations; then events link to vboard and VFORUM concentrates on Q&A. Decide at phase 2
-- VFORUM never stores roll numbers, departments or anything a student record would hold
+- Events overlap with vboard (events and communities for VIT with one-tap registration). vforum keeps its events board until vboard ships registrations; then events link to vboard and vforum concentrates on Q&A. Decide at phase 2
+- vforum never stores roll numbers, departments or anything a student record would hold
 
 ## Design / UX
 

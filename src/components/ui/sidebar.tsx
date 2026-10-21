@@ -134,7 +134,16 @@ const SidebarProvider = React.forwardRef<
         setOpenMobile,
         toggleSidebar,
       }),
-      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+      [
+        isHovering,
+        state,
+        open,
+        setOpen,
+        isMobile,
+        openMobile,
+        setOpenMobile,
+        toggleSidebar,
+      ]
     )
 
     return (
@@ -183,14 +192,8 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const {
-      isMobile,
-      state,
-      openMobile,
-      setOpenMobile,
-      isHovering,
-      setIsHovering,
-    } = useSidebar()
+    const { isMobile, state, openMobile, setOpenMobile, setIsHovering } =
+      useSidebar()
 
     function handleMouseEnter() {
       setIsHovering(true)

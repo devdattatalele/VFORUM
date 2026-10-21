@@ -13,7 +13,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { idToken } from "@/lib/client-auth"
 import { reportContent } from "@/lib/services/moderationService"
 import type { ReportReason } from "@/lib/types"
@@ -36,7 +36,6 @@ export default function ReportDialog({
   questionId: string
   commentId: string | null
 }) {
-  const { toast } = useToast()
   const [reason, setReason] = useState<ReportReason>("spam")
   const [details, setDetails] = useState("")
   const [sending, setSending] = useState(false)
@@ -50,11 +49,11 @@ export default function ReportDialog({
         reason,
         details,
       })
-      toast({ title: "Reported", description: "Moderators will take a look." })
+      toast.success("Reported", { description: "Moderators will take a look." })
       setDetails("")
       onOpenChange(false)
     } catch {
-      toast({ title: "Could not send the report", variant: "destructive" })
+      toast.error("Could not send the report")
     } finally {
       setSending(false)
     }

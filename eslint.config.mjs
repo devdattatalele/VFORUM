@@ -16,12 +16,11 @@ const eslintConfig = [
   },
   {
     rules: {
-      // Existing code predates these rules. They stay visible as warnings so new
-      // code is held to them without blocking CI on the backlog.
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": "warn",
-      "react-hooks/exhaustive-deps": "warn",
-      "@next/next/no-img-element": "warn",
+      // `const { node, ...props } = x` drops `node` on purpose.
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { ignoreRestSiblings: true, argsIgnorePattern: "^_" },
+      ],
     },
   },
 ]

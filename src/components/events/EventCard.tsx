@@ -1,96 +1,73 @@
-"use client"
-
 import Image from "next/image"
-import type { Event } from "@/lib/types"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { CalendarDays, Users, Info, ExternalLink } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { format } from "date-fns"
 import Link from "next/link"
+import { format } from "date-fns"
+import { ArrowUpRight } from "lucide-react"
 import { COMMUNITIES } from "@/lib/constants"
-import React from "react"
+import type { Event } from "@/lib/types"
 import { safeHttpUrl } from "@/lib/urls"
 
-interface EventCardProps {
-  event: Event
-}
-
-export default function EventCard({ event }: EventCardProps) {
+export default function EventCard({ event }: { event: Event }) {
+  const date = new Date(event.dateTime)
   const community = COMMUNITIES.find((c) => c.id === event.communityId)
-  const rsvpLink = safeHttpUrl(event.rsvpLink)
+  const rsvp = safeHttpUrl(event.rsvpLink)
 
   return (
-    <Card className="glass-card flex h-full flex-col overflow-hidden shadow-lg transition-shadow duration-300 hover:shadow-xl">
-      <CardHeader className="relative p-0">
-        {/* Posters are any https image an organizer links, so they skip the
-            optimizer, which only accepts the hosts listed in next.config. */}
-        <Image
-          src={
-            safeHttpUrl(event.posterImageUrl) ??
-            "https://placehold.co/600x400.png"
-          }
-          unoptimized
-          alt={event.title}
-          width={600}
-          height={300}
-          className="h-48 w-full object-cover"
-          data-ai-hint="event poster"
-        />
-        {community && (
-          <Badge variant="community" className="absolute right-2 top-2">
-            {community.icon && <community.icon className="mr-1 h-3 w-3" />}
-            {community.name}
-          </Badge>
-        )}
-      </CardHeader>
-      <CardContent className="flex-grow p-4">
-        <CardTitle className="mb-2 font-headline text-xl transition-colors hover:text-primary">
-          <Link href={`/events/${event.id}`}>{event.title}</Link>
-        </CardTitle>
-        <div className="mb-2 flex items-center text-sm text-muted-foreground">
-          <CalendarDays className="mr-2 h-4 w-4" />
-          <span>
-            {format(new Date(event.dateTime), "MMM d, yyyy 'at' h:mm a")}
-          </span>
-        </div>
-        <div className="mb-3 flex items-center text-sm text-muted-foreground">
-          <Info className="mr-2 h-4 w-4" />
-          <span>Organized by: {event.clubName}</span>
-        </div>
-        <CardDescription className="line-clamp-3 text-sm text-foreground">
-          {event.description}
-        </CardDescription>
-      </CardContent>
-      <CardFooter className="flex items-center justify-between border-t p-4">
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Users className="mr-1 h-4 w-4" />
-          <span>{event.rsvpCount || 0} Going</span>
-        </div>
-        {rsvpLink ? (
-          <Button
-            asChild
-            size="sm"
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
+    <article className="flex flex-col overflow-hidden rounded-lg border bg-card">
+      {/* Posters are any https image an organizer links, so they skip the
+          optimizer, which only accepts the hosts listed in next.config. */}
+      <Image
+        src={
+          safeHttpUrl(event.posterImageUrl) ??
+          "https://placehold.co/600x300.png"
+        }
+        alt=""
+        width={600}
+        height={300}
+        unoptimized
+        className="aspect-[2/1] w-full border-b object-cover"
+      />
+      <div className="flex flex-1 flex-col gap-2 p-5">
+        <p className="text-sm text-muted-foreground">
+          <span className="font-mono text-xs uppercase text-brand">
+            {format(date, "EEE d MMM")}
+          </span>{" "}
+          · {format(date, "h:mm a")}
+        </p>
+        <h3 className="text-lg font-semibold leading-snug tracking-tight">
+          <Link
+            href={`/events/${event.id}`}
+            className="hover:underline hover:underline-offset-4"
           >
-            <Link href={rsvpLink} target="_blank" rel="noopener noreferrer">
-              RSVP
-              <ExternalLink className="ml-1 h-3 w-3" />
-            </Link>
-          </Button>
+            {event.title}
+          </Link>
+        </h3>
+        <p className="line-clamp-2 text-sm text-muted-foreground">
+          {event.description}
+        </p>
+      </div>
+      <div className="flex items-center justify-between gap-3 border-t px-5 py-3 text-sm">
+        <span className="truncate text-muted-foreground">
+          {event.clubName}
+          {community ? ` · ${community.name}` : ""}
+        </span>
+        {rsvp ? (
+          <a
+            href={rsvp}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-1 font-medium hover:underline"
+          >
+            RSVP <ArrowUpRight className="h-4 w-4" />
+          </a>
         ) : (
-          <Button variant="outline" size="sm" disabled className="opacity-50">
-            RSVP Closed
-          </Button>
+          <Link
+            href={`/events/${event.id}`}
+            className="shrink-0 font-medium hover:underline"
+          >
+            Details
+          </Link>
         )}
-      </CardFooter>
-    </Card>
+      </div>
+    </article>
   )
 }

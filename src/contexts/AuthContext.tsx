@@ -17,7 +17,7 @@ import {
   updateProfile,
   sendEmailVerification,
 } from "firebase/auth"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import type { UserProfile } from "@/lib/types"
 import { getMyProfile } from "@/lib/services/userService"
@@ -47,7 +47,6 @@ const validateEmailDomain = (email: string): boolean => {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const { toast } = useToast()
   const router = useRouter()
 
   // The server verifies the ID token, creates the profile on first sign-in and
@@ -91,10 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             firebaseSignOut(auth)
             setUser(null)
             if (firebaseUser.email) {
-              toast({
-                title: "Access Denied",
+              toast.error("Access denied", {
                 description: `Sign-in is restricted to @${ALLOWED_EMAIL_DOMAIN} email addresses.`,
-                variant: "destructive",
               })
             }
           }
@@ -106,14 +103,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     )
 
     return () => unsubscribe()
-  }, [toast])
+  }, [])
 
   const signIn = async (email: string, password: string) => {
     if (!validateEmailDomain(email)) {
-      toast({
-        title: "Invalid Email Domain",
+      toast.error("Use your VIT email", {
         description: `Please use a @${ALLOWED_EMAIL_DOMAIN} email address.`,
-        variant: "destructive",
       })
       return
     }
@@ -125,15 +120,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       await loadUserProfile(firebaseUser)
 
-      toast({
-        title: "Signed In",
-        description: "Successfully signed in.",
-      })
-    } catch (error: any) {
+      toast.success("Signed in")
+    } catch (error) {
       console.error("Error signing in: ", error)
       let errorMessage = "Failed to sign in."
 
-      switch (error.code) {
+      switch ((error as { code?: string }).code) {
         case "auth/user-not-found":
           errorMessage = "No account found with this email address."
           break
@@ -151,11 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           break
       }
 
-      toast({
-        title: "Sign-In Error",
-        description: errorMessage,
-        variant: "destructive",
-      })
+      toast.error("Could not sign in", { description: errorMessage })
       setUser(null)
     } finally {
       setLoading(false)
@@ -168,10 +156,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     displayName: string
   ) => {
     if (!validateEmailDomain(email)) {
-      toast({
-        title: "Invalid Email Domain",
+      toast.error("Use your VIT email", {
         description: `Please use a @${ALLOWED_EMAIL_DOMAIN} email address.`,
-        variant: "destructive",
       })
       return
     }
@@ -193,16 +179,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // the profile from it.
       await loadUserProfile(firebaseUser, true)
 
-      toast({
-        title: "Account Created",
-        description:
-          "Account created successfully! Please check your email for verification.",
+      toast.success("Account created", {
+        description: "Check your college email for a verification link.",
       })
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error signing up: ", error)
       let errorMessage = "Failed to create account."
 
-      switch (error.code) {
+      switch ((error as { code?: string }).code) {
         case "auth/email-already-in-use":
           errorMessage = "An account with this email already exists."
           break
@@ -214,11 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           break
       }
 
-      toast({
-        title: "Sign-Up Error",
-        description: errorMessage,
-        variant: "destructive",
-      })
+      toast.error("Could not create the account", { description: errorMessage })
       setUser(null)
     } finally {
       setLoading(false)
@@ -230,18 +210,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await firebaseSignOut(auth)
       setUser(null)
-      toast({
-        title: "Signed Out",
-        description: "Successfully signed out.",
-      })
+      toast.success("Signed out")
       // Redirect to auth page after logout
       router.push("/auth")
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error signing out: ", error)
-      toast({
-        title: "Sign-Out Error",
-        description: error.message || "Failed to sign out.",
-        variant: "destructive",
+      toast.error("Could not sign out", {
+        description: (error as Error).message || "Failed to sign out.",
       })
     } finally {
       setLoading(false)

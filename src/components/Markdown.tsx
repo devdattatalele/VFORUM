@@ -69,10 +69,10 @@ export default function Markdown({
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[[rehypeHighlight, { languages, aliases }]]}
         components={{
-          a: ({ node: _node, ...props }) => (
+          a: ({ node, ...props }) => (
             <a {...props} target="_blank" rel="noopener noreferrer nofollow" />
           ),
-          img: ({ node: _node, alt, ...props }) => (
+          img: ({ node, alt, ...props }) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img alt={alt ?? ""} loading="lazy" {...props} />
           ),

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import ReportDialog from "@/components/qna/ReportDialog"
 import { useAuth } from "@/contexts/AuthContext"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { idToken } from "@/lib/client-auth"
 import {
   deleteQuestion,
@@ -45,7 +45,6 @@ export default function QuestionActions({
 }) {
   const { user } = useAuth()
   const router = useRouter()
-  const { toast } = useToast()
   const [reporting, setReporting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -58,28 +57,27 @@ export default function QuestionActions({
     try {
       await setQuestionFlags(await idToken(), question.id, flags)
       onChange(flags)
-      toast({
-        title:
-          flags.pinned !== undefined
-            ? flags.pinned
-              ? "Pinned to the top of the forum"
-              : "Unpinned"
-            : flags.locked
-              ? "Locked: new answers are closed"
-              : "Unlocked",
-      })
+      toast.success(
+        flags.pinned !== undefined
+          ? flags.pinned
+            ? "Pinned to the top of the forum"
+            : "Unpinned"
+          : flags.locked
+            ? "Locked: new answers are closed"
+            : "Unlocked"
+      )
     } catch {
-      toast({ title: "Could not update the question", variant: "destructive" })
+      toast.error("Could not update the question")
     }
   }
 
   const remove = async () => {
     try {
       await deleteQuestion(await idToken(), question.id)
-      toast({ title: "Question deleted" })
+      toast.success("Question deleted")
       router.push("/qna")
     } catch {
-      toast({ title: "Could not delete the question", variant: "destructive" })
+      toast.error("Could not delete the question")
     }
   }
 

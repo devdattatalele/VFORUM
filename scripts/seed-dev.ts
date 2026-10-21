@@ -106,7 +106,7 @@ const QUESTIONS: SeedQuestion[] = [
   {
     by: "dev-moderator",
     communityId: "general-tech",
-    title: "How to ask a good question on VForums",
+    title: "How to ask a good question on vforum",
     tags: ["meta", "guide"],
     hoursAgo: 400,
     views: 230,

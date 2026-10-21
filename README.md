@@ -1,4 +1,4 @@
-# VFORUM
+# vforum
 
 Q&A forum and events board for VIT (Vidyalankar Institute of Technology, Mumbai), built by Devdatta Talele on the [VOSS Labs](https://github.com/voss-labs) project model.
 
@@ -14,19 +14,21 @@ Live: https://vforum-devdattataleles-projects.vercel.app
 - **Profiles.** Every member has a page with their questions, answers, accepted answers and upvotes.
 - **Moderation.** Students report spam or abuse; moderators work a queue, pin and lock questions, and remove content. Every privileged action lands in an audit log.
 - **Events.** Clubs post upcoming events with RSVP links.
+- **Analytics.** Admins see answer rates, time to first answer, activity per week, top tags and top contributors.
 
 ## Stack
 
-| Layer     | Choice                                                                      |
-| --------- | --------------------------------------------------------------------------- |
-| Framework | Next.js 15 App Router, React 18                                             |
-| Language  | TypeScript (strict)                                                         |
-| Styling   | Tailwind CSS 3, shadcn, lucide-react                                        |
-| Data      | Firestore through the Admin SDK (rules are default-deny)                    |
-| Auth      | Firebase Auth, `@vit.edu.in` only, ID token verified on every server action |
-| AI        | Genkit + Gemini for tag suggestions                                         |
-| Quality   | ESLint, Prettier, Vitest                                                    |
-| Deploy    | Vercel, CI on GitHub Actions                                                |
+| Layer     | Choice                                                                         |
+| --------- | ------------------------------------------------------------------------------ |
+| Framework | Next.js 15 App Router, React 18                                                |
+| Language  | TypeScript (strict)                                                            |
+| Design    | VOSS design language: Geist, ink and paper, VOSS orange (`docs/UI_UX_SPEC.md`) |
+| Styling   | Tailwind CSS 3, shadcn, lucide-react                                           |
+| Data      | Firestore through the Admin SDK (rules are default-deny)                       |
+| Auth      | Firebase Auth, `@vit.edu.in` only, ID token verified on every server action    |
+| AI        | Genkit + Gemini for tag suggestions                                            |
+| Quality   | ESLint, Prettier, Vitest                                                       |
+| Deploy    | Vercel, CI on GitHub Actions                                                   |
 
 ## Getting started
 

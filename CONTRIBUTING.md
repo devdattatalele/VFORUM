@@ -1,6 +1,6 @@
-# Contributing to VFORUM
+# Contributing to vforum
 
-VFORUM follows the VOSS Labs project model. Contributions are welcome from all Vidyalankar students.
+vforum follows the VOSS Labs project model. Contributions are welcome from all Vidyalankar students.
 
 ## Setup
 

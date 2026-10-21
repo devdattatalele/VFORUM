@@ -1,4 +1,4 @@
-# Deploying VFORUM to Vercel
+# Deploying vforum to Vercel
 
 Production is the Vercel project `vforum`, built from `master`. Preview deployments are built from pull requests and are behind Vercel Authentication.
 

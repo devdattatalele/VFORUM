@@ -16,9 +16,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { X, Tag as TagIcon, Wand2, Loader2 } from "lucide-react"
+import { X, Wand2, Loader2 } from "lucide-react"
 import React, { useState } from "react"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
 import {
@@ -55,8 +55,11 @@ const questionFormSchema = z.object({
 
 type QuestionFormValues = z.infer<typeof questionFormSchema>
 
-export default function QuestionForm() {
-  const { toast } = useToast()
+export default function QuestionForm({
+  defaultCommunity,
+}: {
+  defaultCommunity?: string | null
+}) {
   const router = useRouter()
   const { user } = useAuth()
   const [currentTags, setCurrentTags] = useState<string[]>([])
@@ -72,9 +75,11 @@ export default function QuestionForm() {
       content: "",
       tags: [],
       communityId:
-        DEFAULT_COMMUNITY_ID === "all"
+        COMMUNITIES.find((c) => c.id === defaultCommunity && c.id !== "all")
+          ?.id ??
+        (DEFAULT_COMMUNITY_ID === "all"
           ? COMMUNITIES.find((c) => c.id !== "all")?.id || ""
-          : DEFAULT_COMMUNITY_ID, // Ensure a valid default if 'all'
+          : DEFAULT_COMMUNITY_ID),
     },
   })
 
@@ -100,10 +105,8 @@ export default function QuestionForm() {
   const handleAutoTag = async () => {
     const questionContent = form.getValues("content")
     if (!questionContent || questionContent.trim().length < 20) {
-      toast({
-        title: "Content too short",
+      toast.error("Content too short", {
         description: "Please write more content before auto-tagging.",
-        variant: "destructive",
       })
       return
     }
@@ -118,17 +121,14 @@ export default function QuestionForm() {
         ).slice(0, 5)
         setCurrentTags(mergedTags)
         form.setValue("tags", mergedTags, { shouldValidate: true })
-        toast({
-          title: "Tags Suggested!",
+        toast.success("Tags suggested", {
           description: "AI has suggested tags based on your content.",
         })
       }
     } catch (error) {
       console.error("Error auto-tagging:", error)
-      toast({
-        title: "Auto-tagging failed",
+      toast.error("Auto-tagging failed", {
         description: "Could not suggest tags at this time.",
-        variant: "destructive",
       })
     } finally {
       setIsTaggingAi(false)
@@ -137,28 +137,23 @@ export default function QuestionForm() {
 
   async function onSubmit(data: QuestionFormValues) {
     if (!user) {
-      toast({
-        title: "Authentication Error",
+      toast.error("Authentication Error", {
         description: "You must be signed in to ask a question.",
-        variant: "destructive",
       })
       return
     }
     setIsSubmitting(true)
     try {
       await addQuestion(await idToken(), data)
-      toast({
-        title: "Question Posted!",
+      toast.success("Question Posted!", {
         description: "Your question has been successfully posted to the forum.",
       })
       router.push("/qna")
       router.refresh()
     } catch (error) {
       console.error("Error submitting question:", error)
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Could not post your question. Please try again.",
-        variant: "destructive",
       })
     } finally {
       setIsSubmitting(false)
@@ -173,10 +168,10 @@ export default function QuestionForm() {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Question Title</FormLabel>
+              <FormLabel>Title</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="e.g., How to set up a Python virtual environment on Windows?"
+                  placeholder="e.g. How do I set up a Python virtual environment on Windows?"
                   {...field}
                 />
               </FormControl>
@@ -194,7 +189,7 @@ export default function QuestionForm() {
           render={({ field }) => (
             <FormItem>
               <div className="flex items-center justify-between">
-                <FormLabel>Detailed Question</FormLabel>
+                <FormLabel>Details</FormLabel>
                 <Button
                   type="button"
                   variant="ghost"
@@ -236,11 +231,11 @@ export default function QuestionForm() {
           name="communityId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Community Channel</FormLabel>
+              <FormLabel>Community</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select the most relevant community for your question" />
+                    <SelectValue placeholder="Pick the closest community" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -265,7 +260,7 @@ export default function QuestionForm() {
           <div className="mb-2 flex items-center gap-2">
             <Input
               type="text"
-              placeholder="Add a tag (e.g., python, react)"
+              placeholder="Add a tag, e.g. python"
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={(e) => {
@@ -282,7 +277,7 @@ export default function QuestionForm() {
               onClick={handleAddTag}
               disabled={currentTags.length >= 5 || tagInput.trim() === ""}
             >
-              Add Tag
+              Add
             </Button>
             <Button
               type="button"
@@ -295,21 +290,21 @@ export default function QuestionForm() {
               ) : (
                 <Wand2 className="mr-2 h-4 w-4" />
               )}
-              AI Suggest
+              Suggest tags
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
             {currentTags.map((tag) => (
               <Badge
                 key={tag}
-                variant="secondary"
-                className="px-2 py-1 text-sm"
+                variant="outline"
+                className="px-2 py-1 font-mono text-sm"
               >
                 {tag}
                 <button
                   type="button"
                   onClick={() => handleRemoveTag(tag)}
-                  className="ml-1.5 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                  className="ml-1 rounded-full p-0.5 hover:bg-accent"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -322,22 +317,21 @@ export default function QuestionForm() {
             render={() => <FormMessage className="mt-1" />}
           />
           <FormDescription>
-            Add up to 5 tags to describe what your question is about. Press
-            Enter or click &quot;Add Tag&quot;.
+            Up to five tags. Press Enter to add one.
           </FormDescription>
         </FormItem>
 
         <Button
           type="submit"
           disabled={isSubmitting || !user}
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
+          className="w-full sm:w-auto"
         >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {user
             ? isSubmitting
               ? "Posting..."
-              : "Post Your Question"
-            : "Sign in to Post"}
+              : "Post question"
+            : "Sign in to post"}
         </Button>
       </form>
     </Form>

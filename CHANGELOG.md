@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Redesigned in the VOSS Labs design language: Geist, ink-on-paper neutrals, the VOSS orange accent, flat bordered cards, top navigation like vboard and a sidebar workspace for moderators and admins. Renamed to vforum. One theme system (next-themes, follows the system) and one toast system (sonner).
+- Admin analytics at `/admin`: questions, answer rate, solved rate, median time to first answer, members; weekly questions and answers, time-to-first-answer histogram, top tags, questions by community and top contributors.
+- Members page lists everyone with inline role changes; the audit log has its own page.
+- Settings only shows what works: display name (now saved for real), theme, privacy note and sign-out. The event page no longer shows a fake RSVP counter. About and Help describe only what exists.
+- Communities index page; the forum list shows popular tags and communities beside the questions.
+- Lint is clean and strict (`--max-warnings 0`); unused UI primitives and packages removed.
 - Questions and answers render as Markdown with syntax-highlighted code; the ask form has a preview.
 - Accepted answers: the asker marks one; it leads the thread and the question shows Solved. The forum list filters All / Unanswered / Solved.
 - Notifications for answers, replies and accepted answers, with a bell in the header.

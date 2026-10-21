@@ -15,8 +15,8 @@ export default function DevSignIn() {
   if (!usingEmulators) return null
 
   return (
-    <div className="mb-6 rounded-lg border border-dashed border-amber-500/60 bg-amber-500/5 p-4">
-      <p className="text-sm font-semibold text-foreground">
+    <div className="rounded-lg border border-dashed border-brand/50 p-4">
+      <p className="font-mono text-xs uppercase tracking-wider text-brand">
         Development sign-in
       </p>
       <p className="mb-3 text-xs text-muted-foreground">
