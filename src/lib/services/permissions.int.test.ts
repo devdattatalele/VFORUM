@@ -444,3 +444,36 @@ describe("profiles", () => {
     expect(await getPublicProfile("nobody-here")).toBeNull()
   })
 })
+
+describe("own profile", () => {
+  it("lets members rename themselves, within limits", async () => {
+    const { updateMyProfile } = await import("@/lib/services/userService")
+    const updated = await updateMyProfile(student2, {
+      displayName: "  Riya S  ",
+    })
+    expect(updated.displayName).toBe("Riya S")
+    expect((await getMyProfile(student2)).displayName).toBe("Riya S")
+    await expect(
+      updateMyProfile(student2, { displayName: "R" })
+    ).rejects.toThrow()
+    await expect(
+      updateMyProfile("" as IdToken, { displayName: "Nobody" })
+    ).rejects.toThrow(/Sign in/)
+    await updateMyProfile(student2, {
+      displayName: persona("dev-student-2").displayName,
+    })
+  })
+})
+
+describe("analytics", () => {
+  it("is for admins only and reflects the seeded forum", async () => {
+    const { getForumAnalytics } =
+      await import("@/lib/services/analyticsService")
+    await expect(getForumAnalytics(moderator)).rejects.toThrow(/permission/)
+    const data = await getForumAnalytics(admin)
+    expect(data.totals.questions).toBeGreaterThan(0)
+    expect(data.totals.members).toBeGreaterThanOrEqual(4)
+    expect(data.weekly).toHaveLength(12)
+    expect(data.topContributors.length).toBeGreaterThan(0)
+  })
+})

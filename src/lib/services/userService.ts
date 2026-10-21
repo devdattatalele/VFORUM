@@ -1,10 +1,10 @@
 "use server"
 
 import { FieldValue } from "firebase-admin/firestore"
-import { adminDb } from "@/lib/firebase-admin"
+import { adminAuth, adminDb } from "@/lib/firebase-admin"
 import { requirePermission, requireProfile } from "@/lib/server/auth"
 import { auditEntry, auditLog, toProfile } from "@/lib/server/docs"
-import { docId, role as roleSchema } from "@/lib/schemas"
+import { docId, profileInput, role as roleSchema } from "@/lib/schemas"
 import type { IdToken, UserProfile } from "@/lib/types"
 import { getPermissionsForRole } from "@/lib/utils/userUtils"
 
@@ -13,6 +13,21 @@ const users = () => adminDb.collection("users")
 // The signed-in user's own profile, created on first sign-in.
 export async function getMyProfile(idToken: IdToken): Promise<UserProfile> {
   return requireProfile(idToken)
+}
+
+// The caller's display name, shown on everything they post from now on.
+// Earlier posts keep the name they were written under.
+export async function updateMyProfile(
+  idToken: IdToken,
+  input: unknown
+): Promise<UserProfile> {
+  const actor = await requireProfile(idToken)
+  const { displayName } = profileInput.parse(input)
+  await users()
+    .doc(actor.uid)
+    .update({ displayName, updatedAt: FieldValue.serverTimestamp() })
+  await adminAuth.updateUser(actor.uid, { displayName })
+  return { ...actor, displayName }
 }
 
 // Admin lookup by uid or email.

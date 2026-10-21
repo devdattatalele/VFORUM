@@ -86,3 +86,11 @@ export const reportInput = z.object({
 })
 
 export const reportResolution = z.enum(["dismiss", "remove"])
+
+export const profileInput = z.object({
+  displayName: z
+    .string()
+    .trim()
+    .min(2, "At least 2 characters.")
+    .max(60, "At most 60 characters."),
+})
