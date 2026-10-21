@@ -108,6 +108,33 @@ export interface AuditEntry {
   createdAt: string
 }
 
+export interface ProfileAnswer {
+  questionId: string
+  questionTitle: string
+  commentId: string
+  excerpt: string
+  createdAt: string
+  upvotes: number
+  accepted: boolean
+}
+
+// What anyone can see about a member. No email, no permissions.
+export interface PublicProfile {
+  uid: string
+  displayName: string | null
+  photoURL: string | null
+  role: "user" | "moderator" | "admin"
+  joinedAt: string | null
+  stats: {
+    questions: number
+    answers: number
+    accepted: number
+    upvotes: number
+  }
+  questions: Question[]
+  answers: ProfileAnswer[]
+}
+
 export interface Tag {
   name: string
   count?: number // Optional: for tag clouds or popular tags

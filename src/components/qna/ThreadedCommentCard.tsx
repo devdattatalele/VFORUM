@@ -38,6 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import Link from "next/link"
 
 interface ThreadedCommentCardProps {
   comment: CommentType
@@ -197,13 +198,18 @@ export default function ThreadedCommentCard({
             <div className="mb-3 flex items-center gap-3 text-sm text-muted-foreground">
               {" "}
               {/* Increased gaps and margin */}
-              <span className="cursor-pointer text-base font-medium text-foreground hover:text-primary">
-                {" "}
-                {/* Increased font size */}
-                {comment.deleted
-                  ? "[deleted]"
-                  : comment.author.displayName || "Anonymous"}
-              </span>
+              {comment.deleted ? (
+                <span className="text-base font-medium text-muted-foreground">
+                  [deleted]
+                </span>
+              ) : (
+                <Link
+                  href={`/u/${comment.author.uid}`}
+                  className="text-base font-medium text-foreground hover:text-primary hover:underline"
+                >
+                  {comment.author.displayName || "Anonymous"}
+                </Link>
+              )}
               <span className="opacity-70">•</span>
               <CalendarDays className="h-4 w-4" />
               <span>

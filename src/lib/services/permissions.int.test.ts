@@ -416,3 +416,31 @@ describe("moderation", () => {
     )
   })
 })
+
+describe("profiles", () => {
+  it("counts a member's questions, answers and accepted answers, without private fields", async () => {
+    const { acceptAnswer } = await import("@/lib/services/questionService")
+    const { getPublicProfile } = await import("@/lib/services/profileService")
+    const before = (await getPublicProfile("dev-student-2"))!
+
+    const id = await addQuestion(student, question)
+    const answer = await addComment(student2, id, { content: "Profile answer" })
+    await voteOnQuestion(student, id, "up")
+    const { voteOnComment } = await import("@/lib/services/voteService")
+    await voteOnComment(student, id, answer, "up")
+    await acceptAnswer(student, id, answer)
+
+    const after = (await getPublicProfile("dev-student-2"))!
+    expect(after.stats.answers).toBe(before.stats.answers + 1)
+    expect(after.stats.accepted).toBe(before.stats.accepted + 1)
+    expect(after.stats.upvotes).toBe(before.stats.upvotes + 1)
+    expect(after.answers[0]).toMatchObject({
+      questionId: id,
+      commentId: answer,
+      accepted: true,
+    })
+    expect(after).not.toHaveProperty("email")
+    expect(await getPublicProfile("a/b")).toBeNull()
+    expect(await getPublicProfile("nobody-here")).toBeNull()
+  })
+})

@@ -460,9 +460,12 @@ export default function QuestionDetailPage() {
                       )}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="font-medium">
+                  <Link
+                    href={`/u/${question.author.uid}`}
+                    className="font-medium hover:text-primary hover:underline"
+                  >
                     {question.author.displayName || "Anonymous"}
-                  </span>
+                  </Link>
                   <span className="text-muted-foreground/50">&bull;</span>
                   <CalendarDays className="h-5 w-5" />
                   <span>

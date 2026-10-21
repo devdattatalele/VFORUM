@@ -166,6 +166,12 @@ export default function Header() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
+                    <Link href={`/u/${user.uid}`} className="flex items-center">
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      Your profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/my-forums" className="flex items-center">
                       <MessageSquare className="mr-2 h-4 w-4" />
                       My Forums

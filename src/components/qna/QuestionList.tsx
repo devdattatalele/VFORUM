@@ -371,9 +371,12 @@ export default function QuestionList() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="text-right">
-                        <div className="font-medium text-foreground">
+                        <Link
+                          href={`/u/${question.author.uid}`}
+                          className="block font-medium text-foreground hover:text-primary hover:underline"
+                        >
                           {question.author.displayName || "Anonymous"}
-                        </div>
+                        </Link>
                         <div>
                           {formatDistanceToNow(
                             new Date(
