@@ -3,6 +3,7 @@
 import { adminDb } from "@/lib/firebase-admin"
 import { toEvent, toQuestion } from "@/lib/server/docs"
 import { COMMUNITIES } from "@/lib/constants"
+import { excerpt } from "@/lib/markdown"
 import { searchTerm as searchTermSchema } from "@/lib/schemas"
 
 export interface SearchResult {
@@ -31,9 +32,6 @@ export interface SearchOptions {
   maxResults?: number
   communityId?: string
 }
-
-const excerpt = (text: string) =>
-  text.substring(0, 150) + (text.length > 150 ? "..." : "")
 
 export async function searchAll(
   searchTerm: string,

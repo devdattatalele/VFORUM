@@ -32,7 +32,7 @@ const commentFormSchema = z.object({
   content: z
     .string()
     .min(1, "Please write something.")
-    .max(2000, "Comment is too long."),
+    .max(5000, "Comment is too long."),
 })
 
 type CommentFormValues = z.infer<typeof commentFormSchema>
@@ -186,7 +186,7 @@ export default function CompactCommentForm({
 
             <div className="flex items-center justify-between">
               <div className="text-xs text-muted-foreground">
-                {watchedContent.length}/2000
+                {watchedContent.length}/5000 &middot; Markdown supported
               </div>
 
               <div className="flex items-center gap-2">

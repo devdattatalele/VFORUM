@@ -24,6 +24,7 @@ import { formatDistanceToNow } from "date-fns"
 import VoteButtons from "./VoteButtons"
 import { COMMUNITIES } from "@/lib/constants"
 import React from "react"
+import { excerpt } from "@/lib/markdown"
 
 interface QuestionCardProps {
   question: Question
@@ -91,7 +92,7 @@ export default function QuestionCard({ question }: QuestionCardProps) {
       </CardHeader>
       <CardContent className="py-0 pb-4">
         <CardDescription className="mb-3 line-clamp-2 text-sm leading-relaxed text-foreground/80">
-          {question.content}
+          {excerpt(question.content, 200)}
         </CardDescription>
         {question.tags && question.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">

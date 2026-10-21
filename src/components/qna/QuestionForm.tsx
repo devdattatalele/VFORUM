@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select"
 import { addQuestion } from "@/lib/services/questionService"
 import { idToken } from "@/lib/client-auth"
+import Markdown from "@/components/Markdown"
 
 const questionFormSchema = z.object({
   title: z
@@ -44,7 +45,7 @@ const questionFormSchema = z.object({
   content: z
     .string()
     .min(20, "Question content must be at least 20 characters.")
-    .max(5000, "Content too long."),
+    .max(10000, "Content too long."),
   tags: z
     .array(z.string())
     .min(1, "Please add at least one tag.")
@@ -62,6 +63,7 @@ export default function QuestionForm() {
   const [tagInput, setTagInput] = useState("")
   const [isTaggingAi, setIsTaggingAi] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [preview, setPreview] = useState(false)
 
   const form = useForm<QuestionFormValues>({
     resolver: zodResolver(questionFormSchema),
@@ -191,14 +193,40 @@ export default function QuestionForm() {
           name="content"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Detailed Question</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Elaborate on your question. Include any code snippets, error messages, or context that might help others understand and answer."
-                  className="min-h-[150px] resize-y"
-                  {...field}
-                />
-              </FormControl>
+              <div className="flex items-center justify-between">
+                <FormLabel>Detailed Question</FormLabel>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPreview((v) => !v)}
+                >
+                  {preview ? "Edit" : "Preview"}
+                </Button>
+              </div>
+              {preview ? (
+                <div className="min-h-[150px] rounded-md border p-3">
+                  {field.value.trim() ? (
+                    <Markdown>{field.value}</Markdown>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Nothing to preview yet.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <FormControl>
+                  <Textarea
+                    placeholder="Elaborate on your question. Include any code snippets, error messages, or context that might help others understand and answer."
+                    className="min-h-[150px] resize-y font-mono text-sm"
+                    {...field}
+                  />
+                </FormControl>
+              )}
+              <FormDescription>
+                Markdown supported: **bold**, `inline code`, and fenced code
+                blocks with a language, like ```python.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

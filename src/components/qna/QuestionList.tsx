@@ -41,6 +41,7 @@ import { formatDistanceToNow } from "date-fns"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { UserCircle } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
+import { excerpt } from "@/lib/markdown"
 
 export default function QuestionList() {
   const { user } = useAuth()
@@ -287,8 +288,7 @@ export default function QuestionList() {
                       ))}
                     </div>
                     <p className="line-clamp-1 text-xs text-muted-foreground">
-                      {question.content.substring(0, 100)}
-                      {question.content.length > 100 ? "..." : ""}
+                      {excerpt(question.content, 100)}
                     </p>
                   </TableCell>
                   <TableCell className="text-center align-middle">

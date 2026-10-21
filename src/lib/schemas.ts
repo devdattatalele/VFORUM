@@ -26,7 +26,8 @@ const tags = z
   )
 
 const title = z.string().trim().min(10).max(200)
-const body = z.string().trim().min(20).max(5000)
+// Markdown with code blocks needs room.
+const body = z.string().trim().min(20).max(10000)
 
 export const questionInput = z.object({
   title,
@@ -38,7 +39,7 @@ export const questionInput = z.object({
 export const questionUpdate = z.object({ title, content: body, tags })
 
 export const commentInput = z.object({
-  content: z.string().trim().min(1).max(2000),
+  content: z.string().trim().min(1).max(5000),
   parentId: docId.nullish(),
 })
 

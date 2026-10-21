@@ -21,6 +21,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/hooks/use-toast"
 import { updateComment } from "@/lib/services/commentService"
 import { idToken } from "@/lib/client-auth"
+import Markdown from "@/components/Markdown"
 
 interface ThreadedCommentCardProps {
   comment: CommentType
@@ -190,11 +191,9 @@ export default function ThreadedCommentCard({
             {/* Comment content */}
             {!isCollapsed && (
               <>
-                <div className="mb-4 whitespace-pre-wrap text-base leading-relaxed text-foreground/90">
-                  {" "}
-                  {/* Increased font size and margin */}
+                <Markdown className="mb-4 text-base leading-relaxed text-foreground/90">
                   {comment.content}
-                </div>
+                </Markdown>
 
                 {/* Comment actions */}
                 <div className="flex items-center gap-3">

@@ -38,6 +38,7 @@ import { getQuestionById, updateQuestion } from "@/lib/services/questionService"
 import { getThreadedComments, addComment } from "@/lib/services/commentService"
 import { COMMUNITIES } from "@/lib/constants"
 import { idToken } from "@/lib/client-auth"
+import Markdown from "@/components/Markdown"
 
 // Helper function to build comment tree
 function buildCommentTree(comments: CommentType[]): CommentWithReplies[] {
@@ -397,9 +398,9 @@ export default function QuestionDetailPage() {
                 )}
               </CardHeader>
               <CardContent className="pb-6">
-                <p className="whitespace-pre-wrap text-lg leading-relaxed text-foreground/90">
+                <Markdown className="text-lg leading-relaxed text-foreground/90">
                   {question.content}
-                </p>
+                </Markdown>
               </CardContent>
               <CardFooter className="flex items-center justify-between border-t pt-6">
                 <VoteButtons

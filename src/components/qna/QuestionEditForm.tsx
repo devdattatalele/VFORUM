@@ -42,7 +42,7 @@ const questionEditSchema = z.object({
   content: z
     .string()
     .min(20, "Content must be at least 20 characters")
-    .max(5000, "Content is too long"),
+    .max(10000, "Content is too long"),
   tagInput: z.string().optional(),
 })
 

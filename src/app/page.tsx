@@ -27,6 +27,7 @@ import { getEvents } from "@/lib/services/eventService"
 import { getQuestions } from "@/lib/services/questionService"
 import { COMMUNITIES } from "@/lib/constants"
 import type { Event, Question } from "@/lib/types"
+import { excerpt } from "@/lib/markdown"
 
 export default function HomePage() {
   const { user, loading } = useAuth()
@@ -280,7 +281,7 @@ export default function HomePage() {
                           </div>
 
                           <p className="line-clamp-2 text-sm text-muted-foreground">
-                            {question.content}
+                            {excerpt(question.content, 200)}
                           </p>
 
                           <div className="flex items-center justify-between">
