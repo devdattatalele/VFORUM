@@ -2,9 +2,12 @@
 // forum with threaded answers and votes, and events. `npm run dev:local` runs it
 // on every start; `npm run dev:seed` reruns it against emulators already up.
 //
-// It never touches a real project: it refuses to run unless both emulator hosts
-// are set and the project id is a demo- project.
-import { initializeApp } from "firebase-admin/app"
+// A real project only gets `npm run seed:live`, with FIREBASE_SERVICE_ACCOUNT_PATH
+// set: it adds the same content beside what is there, wipes nothing and creates
+// no sign-in accounts, so the personas exist only as authors. Everything it adds
+// is by a persona, which is how `npm run seed:live -- --remove` finds it again.
+import { readFileSync } from "node:fs"
+import { cert, initializeApp } from "firebase-admin/app"
 import { getAuth } from "firebase-admin/auth"
 import {
   FieldValue,
@@ -16,19 +19,30 @@ import { DEV_PASSWORD, DEV_PERSONAS } from "../src/lib/dev-personas"
 import { commentRecipients } from "../src/lib/notify"
 import { getPermissionsForRole } from "../src/lib/utils/userUtils"
 
+const live = process.argv.includes("--live")
+const remove = live && process.argv.includes("--remove")
 const firestoreHost = process.env.FIRESTORE_EMULATOR_HOST
 const authHost = process.env.FIREBASE_AUTH_EMULATOR_HOST
-const projectId = process.env.GCLOUD_PROJECT ?? "demo-vforum"
+const keyPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH
+const key =
+  firestoreHost || !keyPath ? null : JSON.parse(readFileSync(keyPath, "utf8"))
+const projectId: string =
+  key?.project_id ?? process.env.GCLOUD_PROJECT ?? "demo-vforum"
 
-if (!firestoreHost || !authHost || !projectId.startsWith("demo-")) {
+// Emulators need a demo- project; a real one needs --live and a key.
+if (
+  firestoreHost
+    ? !projectId.startsWith("demo-") || (!live && !authHost)
+    : !live || !key
+) {
   console.error(
-    "Refusing to seed: run this through `npm run dev:local`, or with " +
-      "FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST set and a demo- project."
+    "Refusing to seed: run this through `npm run dev:local`, or run " +
+      "`npm run seed:live` with FIREBASE_SERVICE_ACCOUNT_PATH set."
   )
   process.exit(1)
 }
 
-initializeApp({ projectId })
+initializeApp(key ? { credential: cert(key), projectId } : { projectId })
 const db = getFirestore()
 const auth = getAuth()
 
@@ -48,6 +62,22 @@ const author = (uid: Uid) => ({
   photoURL: null,
 })
 
+// A spam account outside the persona list, so the moderation queue has
+// something to review.
+const spammer = { uid: "dev-spammer", displayName: "Promo Bot", photoURL: null }
+
+// Live runs make no accounts: a known password on a real project is a way in.
+async function createAccount(uid: string, email: string, displayName: string) {
+  if (live) return
+  await auth.createUser({
+    uid,
+    email,
+    password: DEV_PASSWORD,
+    displayName,
+    emailVerified: true,
+  })
+}
+
 async function wipe() {
   const firestore = `http://${firestoreHost}/emulator/v1/projects/${projectId}/databases/(default)/documents`
   const accounts = `http://${authHost}/emulator/v1/projects/${projectId}/accounts`
@@ -59,13 +89,7 @@ async function wipe() {
 
 async function seedPeople() {
   for (const p of DEV_PERSONAS) {
-    await auth.createUser({
-      uid: p.uid,
-      email: p.email,
-      password: DEV_PASSWORD,
-      displayName: p.displayName,
-      emailVerified: true,
-    })
+    await createAccount(p.uid, p.email, p.displayName)
     await db.doc(`users/${p.uid}`).set({
       uid: p.uid,
       email: p.email,
@@ -437,24 +461,13 @@ async function seedForum(): Promise<Map<string, string>> {
   return questionIds
 }
 
-// A spam comment from an account outside the persona list, reported twice,
-// so the moderation queue has something to review.
+// A spam comment from the spammer, reported twice.
 async function seedReports(questionIds: Map<string, string>) {
-  const spammer = {
-    uid: "dev-spammer",
-    displayName: "Promo Bot",
-    photoURL: null,
-  }
-  await auth.createUser({
-    uid: spammer.uid,
-    email: "promo.bot@vit.edu.in",
-    password: DEV_PASSWORD,
-    displayName: spammer.displayName,
-    emailVerified: true,
-  })
+  const email = "promo.bot@vit.edu.in"
+  await createAccount(spammer.uid, email, spammer.displayName)
   await db.doc(`users/${spammer.uid}`).set({
     uid: spammer.uid,
-    email: "promo.bot@vit.edu.in",
+    email,
     displayName: spammer.displayName,
     photoURL: null,
     role: "user",
@@ -550,8 +563,47 @@ async function seedEvents() {
   }
 }
 
+// Finds what a live run added by its authors. Answers other people left on
+// those questions go with them; audit entries stay, since they record real
+// moderator actions.
+async function removeDemo() {
+  const uids = [...DEV_PERSONAS.map((p) => p.uid), spammer.uid]
+  const questions = await db
+    .collection("questions")
+    .where("author.uid", "in", uids)
+    .get()
+  for (const q of questions.docs) {
+    const comments = await q.ref.collection("comments").select().get()
+    for (const c of comments.docs) {
+      await db.recursiveDelete(db.collection(`votes/comments/${c.id}`))
+    }
+    await db.recursiveDelete(db.collection(`votes/questions/${q.id}`))
+    const reports = await db
+      .collection("reports")
+      .where("questionId", "==", q.id)
+      .get()
+    for (const r of reports.docs) await r.ref.delete()
+    await db.recursiveDelete(q.ref)
+  }
+  const events = await db
+    .collection("events")
+    .where("author.uid", "in", uids)
+    .get()
+  for (const e of events.docs) await e.ref.delete()
+  for (const uid of uids) await db.recursiveDelete(db.doc(`users/${uid}`))
+  console.log(
+    `Removed ${questions.size} questions and ${events.size} events from ${projectId}.`
+  )
+}
+
 async function main() {
-  await wipe()
+  if (remove) return removeDemo()
+  if (!live) await wipe()
+  else if ((await db.doc(`users/${DEV_PERSONAS[0].uid}`).get()).exists) {
+    throw new Error(
+      `${projectId} already has the demo content; --remove takes it out.`
+    )
+  }
   await seedPeople()
   await seedReports(await seedForum())
   await seedEvents()
