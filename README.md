@@ -6,6 +6,15 @@ Students ask once and the answer stays findable for every batch after. Clubs pos
 
 Live: https://vforum-devdattataleles-projects.vercel.app
 
+## What it does
+
+- **Q&A with code.** Questions and answers are Markdown with syntax-highlighted code blocks. Threaded replies, votes, and search.
+- **Accepted answers.** The asker marks the answer that worked; it leads the thread and the question shows Solved. Filter the forum by unanswered or solved.
+- **Notifications.** A bell tells you when someone answers your question, replies to you or accepts your answer.
+- **Profiles.** Every member has a page with their questions, answers, accepted answers and upvotes.
+- **Moderation.** Students report spam or abuse; moderators work a queue, pin and lock questions, and remove content. Every privileged action lands in an audit log.
+- **Events.** Clubs post upcoming events with RSVP links.
+
 ## Stack
 
 | Layer     | Choice                                                                      |

@@ -18,6 +18,14 @@ Working in production:
 - Admin panel: look up a user, change their role
 - Light and dark theme, mobile layout
 
+Added on the `voss-model` branch (phase 0 and most of phase 1):
+
+- Markdown with highlighted code in questions and answers
+- Accepted answers, Solved badges, All / Unanswered / Solved filters
+- Notifications for answers, replies and accepted answers
+- Public profiles at `/u/<uid>`
+- Moderation: reports, a moderation queue, pin, lock, in-place comment deletion, audit log
+
 ## Tech stack
 
 Current:
@@ -38,7 +46,7 @@ Target, the VOSS stack (phase 3):
 
 ## Phases
 
-### Phase 0 — Adopt the VOSS project model (done in this PR)
+### Phase 0 — Adopt the VOSS project model (done)
 
 - MIT license, README with stack and scripts tables, CONTRIBUTING, issue and PR templates
 - CI runs lint, typecheck, format check, tests and build; `npm run check` locally
@@ -49,16 +57,14 @@ Target, the VOSS stack (phase 3):
 
 ### Phase 1 — A forum people come back to
 
-One PR per item, each with its own issue.
+Done: accepted answers, Markdown with code highlighting, notifications, public profiles, moderation (reports, queue, pin, lock, delete, audit log), Unanswered and Solved filters.
 
-1. Accepted answer: the question author marks one comment as the answer; it is shown first with a check; the list shows answered state and has an Unanswered filter
-2. Pagination and sorting on the question list (newest, most votes, unanswered, most viewed); stop loading the whole collection
-3. Markdown bodies with code blocks and syntax highlighting, sanitized on render
-4. Notifications: a `notifications` collection written when someone answers your question or replies to your comment; bell in the header; mark as read
-5. Public profile `/u/[uid]`: display name, joined, questions asked, answers given, votes received
-6. Tag pages `/tags` and `/tags/[tag]` with counts; tag autocomplete when asking
-7. Moderation: pin and lock a question, delete comments, report content, audit trail of moderator actions
-8. Allowed email domains configured in the environment, not hardcoded, so the project can run for other colleges
+Remaining, one PR per item, each with its own issue:
+
+1. Pagination on the question list; stop loading the whole collection once it reaches a few hundred questions
+2. Tag pages `/tags` and `/tags/[tag]` with counts; tag autocomplete when asking
+3. Allowed email domains configured in the environment, not hardcoded, so the project can run for other colleges
+4. Require a verified mailbox before posting (today it is only required for `ADMIN_EMAILS`)
 
 ### Phase 2 — Sign in with VOSS
 
@@ -100,8 +106,12 @@ change roles, list users            = manage_users (admin)
 ## Data model (Firestore)
 
 - `users/{uid}`: uid, email, displayName, photoURL, role, permissions, createdAt, updatedAt
-- `questions/{id}`: title, content, tags[], communityId, author {uid, email, displayName, photoURL}, upvotes, downvotes, views, replyCount, createdAt, updatedAt, lastActivityAt
-- `questions/{id}/comments/{id}`: questionId, parentId, content, author, upvotes, downvotes, createdAt, updatedAt
+- `users/{uid}/notifications/{id}`: type (answer, comment, reply, accepted), questionId, questionTitle, commentId, actor {uid, displayName, photoURL}, read, createdAt
+- `questions/{id}`: title, content (Markdown), tags[], communityId, author {uid, displayName, photoURL}, upvotes, downvotes, views, replyCount, acceptedAnswerId, pinned, locked, createdAt, updatedAt, lastActivityAt
+- `questions/{id}/comments/{id}`: questionId, parentId, content (Markdown), author, upvotes, downvotes, deleted, createdAt, updatedAt
 - `votes/questions/{questionId}/{uid}` and `votes/comments/{commentId}/{uid}`: voteType, updatedAt
 - `events/{id}`: title, description, posterImageUrl, clubName, communityId, dateTime, rsvpLink, rsvpCount, author, createdAt
-- Composite indexes in `firestore.indexes.json`; rules in `firestore.rules` (default-deny)
+- `reports/{questionId}_{commentId|question}_{uid}`: questionId, commentId, questionTitle, excerpt, targetAuthor, reason, details, reporter, status (open, dismissed, removed), createdAt
+- `audit_log/{id}`: actorUid, actorEmail, action, target, details, createdAt
+- Older documents embed the whole author profile; reads strip it to uid, name and photo
+- Composite indexes in `firestore.indexes.json`; rules in `firestore.rules` (default-deny). Every query uses single-field indexes or the two composites already deployed, so this branch needs no index deploy
