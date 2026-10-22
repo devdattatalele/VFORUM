@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -37,8 +38,9 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import React from "react"
 import { useAuth } from "@/contexts/AuthContext"
-import { addEvent } from "@/lib/services/eventService"
+import { addEvent, updateEvent } from "@/lib/services/eventService"
 import { idToken } from "@/lib/client-auth"
+import { safeHttpUrl } from "@/lib/urls"
 
 const eventFormSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters long."),
@@ -61,10 +63,9 @@ type EventFormValues = z.infer<typeof eventFormSchema>
 
 interface EventFormProps {
   event?: Event // For editing existing events
-  onSubmitSuccess?: () => void
 }
 
-export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
+export default function EventForm({ event }: EventFormProps) {
   const router = useRouter()
   const { user } = useAuth()
   const [isLoading, setIsLoading] = React.useState(false)
@@ -87,6 +88,7 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
     resolver: zodResolver(eventFormSchema),
     defaultValues,
   })
+  const poster = safeHttpUrl(form.watch("posterImageUrl"))
 
   async function onSubmit(data: EventFormValues) {
     if (!user) {
@@ -105,7 +107,7 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
         communityId,
         rsvpLink,
       } = data
-      await addEvent(await idToken(), {
+      const input = {
         title,
         description,
         posterImageUrl,
@@ -113,16 +115,17 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
         communityId,
         rsvpLink,
         dateTime: data.dateTime,
-      })
+      }
+      if (event) {
+        await updateEvent(await idToken(), event.id, input)
+      } else {
+        await addEvent(await idToken(), input)
+      }
       toast.success(event ? "Event Updated!" : "Event Created!", {
         description: `"${data.title}" has been successfully ${event ? "updated" : "created"}.`,
       })
-      if (onSubmitSuccess) {
-        onSubmitSuccess()
-      } else {
-        router.push("/events")
-        router.refresh() // To ensure the new event list is fetched
-      }
+      router.push(event ? `/events/${event.id}` : "/events")
+      router.refresh() // To ensure the new event list is fetched
     } catch (error) {
       console.error("Error submitting event:", error)
       toast.error("Error", {
@@ -183,6 +186,16 @@ export default function EventForm({ event, onSubmitSuccess }: EventFormProps) {
                 Link to the event&apos;s promotional image.
               </FormDescription>
               <FormMessage />
+              {poster && (
+                <Image
+                  src={poster}
+                  alt="Poster preview"
+                  width={800}
+                  height={400}
+                  unoptimized
+                  className="aspect-[2/1] w-full rounded-lg border object-cover"
+                />
+              )}
             </FormItem>
           )}
         />

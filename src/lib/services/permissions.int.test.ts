@@ -15,7 +15,7 @@ import {
   updateComment,
 } from "@/lib/services/commentService"
 import { getUserVote, voteOnQuestion } from "@/lib/services/voteService"
-import { addEvent } from "@/lib/services/eventService"
+import { addEvent, updateEvent } from "@/lib/services/eventService"
 import {
   getAllUsers,
   getMyProfile,
@@ -244,6 +244,31 @@ describe("events", () => {
       addEvent(moderator, { ...event, rsvpLink: "javascript:alert(1)" })
     ).rejects.toThrow()
     expect(await addEvent(moderator, event)).toMatch(/^[A-Za-z0-9]+$/)
+  })
+
+  it("lets moderators and admins edit events, auditing other people's", async () => {
+    const id = await addEvent(moderator, event)
+    const poster = "https://placehold.co/800x400.png"
+    await expect(
+      updateEvent(student, id, { ...event, posterImageUrl: poster })
+    ).rejects.toThrow(/permission/)
+    await expect(
+      updateEvent(moderator, id, { ...event, posterImageUrl: "data:x" })
+    ).rejects.toThrow()
+
+    const before = await auditCount("event.edit")
+    await updateEvent(moderator, id, { ...event, posterImageUrl: poster })
+    expect(await auditCount("event.edit")).toBe(before)
+    await updateEvent(admin, id, {
+      ...event,
+      posterImageUrl: poster,
+      title: "Renamed by an admin",
+    })
+    expect(await auditCount("event.edit")).toBe(before + 1)
+
+    const doc = (await adminDb.collection("events").doc(id).get()).data()
+    expect(doc?.posterImageUrl).toBe(poster)
+    expect(doc?.title).toBe("Renamed by an admin")
   })
 })
 

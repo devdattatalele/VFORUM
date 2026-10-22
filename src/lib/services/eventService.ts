@@ -3,7 +3,7 @@
 import { FieldValue } from "firebase-admin/firestore"
 import { adminDb } from "@/lib/firebase-admin"
 import { requirePermission } from "@/lib/server/auth"
-import { toEvent } from "@/lib/server/docs"
+import { auditEntry, auditLog, toEvent } from "@/lib/server/docs"
 import { docId, eventInput } from "@/lib/schemas"
 import type { IdToken, Event } from "@/lib/types"
 
@@ -28,6 +28,31 @@ export async function addEvent(
     rsvpCount: 0,
   })
   return ref.id
+}
+
+// Moderators and admins fix an event's details or swap its poster. Editing
+// someone else's event is audited.
+export async function updateEvent(
+  idToken: IdToken,
+  eventId: string,
+  input: unknown
+): Promise<void> {
+  const actor = await requirePermission(idToken, "manage_events")
+  const ref = events().doc(docId.parse(eventId))
+  const { dateTime, rsvpLink, ...data } = eventInput.parse(input)
+  await adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref)
+    if (!snap.exists) throw new Error("Event not found.")
+    tx.update(ref, {
+      ...data,
+      rsvpLink: rsvpLink || null,
+      dateTime: dateTime.toISOString(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+    if (actor.uid !== snap.get("author.uid")) {
+      tx.set(auditLog().doc(), auditEntry(actor, "event.edit", ref.path))
+    }
+  })
 }
 
 export async function getEvents(): Promise<Event[]> {

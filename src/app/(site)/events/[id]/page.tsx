@@ -5,17 +5,20 @@ import Image from "next/image"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { format } from "date-fns"
-import { ArrowLeft, ArrowUpRight, CalendarDays } from "lucide-react"
+import { ArrowLeft, ArrowUpRight, CalendarDays, Pencil } from "lucide-react"
 import EmptyState from "@/components/EmptyState"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useAuth } from "@/contexts/AuthContext"
 import { COMMUNITIES } from "@/lib/constants"
 import { getEventById } from "@/lib/services/eventService"
 import type { Event } from "@/lib/types"
 import { safeHttpUrl } from "@/lib/urls"
+import { hasPermission } from "@/lib/utils/userUtils"
 
 export default function EventPage() {
   const { id } = useParams<{ id: string }>()
+  const { user } = useAuth()
   const [event, setEvent] = useState<Event | null | undefined>(undefined)
 
   useEffect(() => {
@@ -62,12 +65,21 @@ export default function EventPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <Link
-        href="/events"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" /> Events
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          href="/events"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" /> Events
+        </Link>
+        {hasPermission(user, "manage_events") && (
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/events/${event.id}/edit`}>
+              <Pencil className="h-4 w-4" /> Edit
+            </Link>
+          </Button>
+        )}
+      </div>
       <Image
         src={
           safeHttpUrl(event.posterImageUrl) ??

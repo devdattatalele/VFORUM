@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Moderators and admins can edit events, including the poster image, from an Edit button on the event page; the form previews the poster. Editing someone else's event is audited.
 - Redesigned in the VOSS Labs design language: Geist, ink-on-paper neutrals, the VOSS orange accent, flat bordered cards, top navigation like vboard and a sidebar workspace for moderators and admins. Renamed to vforum. One theme system (next-themes, follows the system) and one toast system (sonner).
 - Admin analytics at `/admin`: questions, answer rate, solved rate, median time to first answer, members; weekly questions and answers, time-to-first-answer histogram, top tags, questions by community and top contributors.
 - Members page lists everyone with inline role changes; the audit log has its own page.
